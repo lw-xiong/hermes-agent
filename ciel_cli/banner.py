@@ -82,15 +82,15 @@ CIEL_LOGO = """[bold #4A8CD8]      ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
 ╚██████╗██║███████╗███████╗
  ╚═════╝╚═╝╚══════╝╚══════╝[/]"""
 
-CIEL_BRAILLE = """[#4A8CD8]⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣤⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣻⣿⣿⣿⣶⡀⡲⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⢿⣿⢻⣟⣿⣿⣿⣿⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⣴⣿⣿⣿⣯⡿⣟⣿⣿⣿⣿⣦⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠨⠝⠛⠛⠛⠿⢿⡿⠿⠛⠛⠛⠫⠅⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⡤⠒⠐⠲⠀⢨⡅⠀⣶⠂⠒⠆⢰⡖⠀⠀⠀⠀⠀⠀⠀[/]"""
+CIEL_BRAILLE = """[#4A8CD8]⠀⠀⠀⠀⠀⠀⠀⣬⣯⣯⣯⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⢩⣫⣯⣯⣯⣯⣫⢫⠉⠀⠀⠀⠀⠀
+⠀⠀⠀⢠⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⢫⠀⠀⠀⠀
+⠀⠀⠀⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⠋⠀⠀⠀
+⠀⠀⣠⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣫⠀⠀⠀
+⠀⢠⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⢫⠀⠀
+⣩⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣫⠉
+⣬⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⠀
+⠀⠀⠀⠀⠀⠀⠀⡀⣯⣯⡋⠀⠀⠀⠀⠀⠀⠀⠀"""
 
 # === Skills scanning ===
 
@@ -222,7 +222,9 @@ def format_banner_version_label() -> str:
             return f"{label} · installer"
         return label
 
-    base = f"Ciel v{get_version_info().derived_version} ({RELEASE_DATE})"
+    from ciel import __version__ as ciel_version
+
+    base = f"Ciel v{ciel_version} (engine {get_version_info().derived_version}, {RELEASE_DATE})"
     from ciel_cli.config import load_config
     from ciel_cli.update_channel import resolve_update_channel
 

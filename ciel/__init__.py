@@ -7,4 +7,8 @@ too rather than in upstream modules.
 
 from ciel.persona import CIEL_BODY_GUIDANCE, CIEL_IDENTITY
 
-__all__ = ["CIEL_IDENTITY", "CIEL_BODY_GUIDANCE"]
+# Ciel's own version. Hermes is the engine underneath, so its base version is shown beside ours
+# rather than replacing it.
+__version__ = "0.1.0"
+
+__all__ = ["CIEL_IDENTITY", "CIEL_BODY_GUIDANCE", "__version__"]
