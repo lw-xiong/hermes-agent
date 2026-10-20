@@ -111,6 +111,31 @@ def _temp_copy(data: bytes, suffix: str) -> Iterator[str]:
             os.unlink(fh.name)
 
 
+_TINGBUDONT_TIMEOUT = 900.0
+
+
+def _tingbudont_pdf(path: str) -> Optional[str]:
+    """Convert a PDF through ``tingbudont`` when it is installed (native text + local OCR).
+
+    Returns None when the binary is absent, fails, or yields nothing, so the caller
+    silently falls back to anydoc. Override the binary with ``$HERMES_PDF_CONVERTER``.
+    """
+    exe = shutil.which(os.environ.get("HERMES_PDF_CONVERTER", "tingbudont"))
+    if not exe:
+        return None
+    try:
+        proc = subprocess.run(
+            [exe, path, "--stdout", "--ocr"],
+            stdin=subprocess.DEVNULL, capture_output=True, timeout=_TINGBUDONT_TIMEOUT, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if proc.returncode != 0:
+        return None
+    text = proc.stdout.decode("utf-8", errors="replace").strip()
+    return text or None
+
+
 def extract_document_text(path: str) -> str:
     ext = _extension(path)
     if ext in _STDLIB_EXTRACTORS:
@@ -195,7 +220,11 @@ def _finalize_anydoc_text(text: Any, path: str, pdf_note: Callable[[], str]) -> 
 
 
 def _ocr_scanned_pdf(mod: Any, path: str, exc: BaseException) -> str:
-    """anydoc >= 0.2 scanned-pages signal: hosted OCR when a route exists, else teach recovery."""
+    """anydoc >= 0.2 scanned-pages signal: local tingbudont, else hosted OCR when a route exists,
+    else teach recovery."""
+    converted = _tingbudont_pdf(path)
+    if converted is not None:
+        return converted + "\n"
     pages = list(getattr(exc, "pages", []) or [])
     enabled, api_key, api_url = _hosted_ocr_config()
     hosted_error = ""
@@ -236,6 +265,12 @@ def _extract_anydoc_bytes(data: bytes, path: str) -> str:
     try:
         text = mod.to_markdown_bytes(data)
     except Exception as exc:
+        needs_ocr = getattr(mod, "NeedsOcrError", None)
+        if needs_ocr is not None and isinstance(exc, needs_ocr):
+            with _temp_copy(data, ".pdf") as temp_path:
+                converted = _tingbudont_pdf(temp_path)
+            if converted is not None:
+                return converted + "\n"
         raise ExtractionError(f"{type(exc).__name__}: {exc}") from exc
     return _finalize_anydoc_text(text, path, lambda: _pdf_coverage_note_from_bytes(data, path))
 
