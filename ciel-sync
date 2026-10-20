@@ -7,7 +7,7 @@ cd "$(dirname "$(readlink -f "$0")")"
 git fetch --quiet upstream --tags
 TAG=$(git describe --tags --abbrev=0 --match 'v*' --exclude='*canary*' upstream/main 2>/dev/null \
       || git tag --list 'v*' --sort=-v:refname | grep -v canary | head -1)
-echo "upstream tag: $TAG  (current base: $(git describe --tags --abbrev=0 HEAD))"
+echo "upstream tag: $TAG  (current base: $(git describe --tags --abbrev=0 --match 'v*' HEAD))"
 [ "$1" = "--check" ] && exit 0
 if git merge-base --is-ancestor "$TAG" HEAD; then
   echo "already on or past $TAG"
