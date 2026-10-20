@@ -1,0 +1,23 @@
+#!/bin/sh
+# Rebase the ciel branch onto the newest upstream release tag, then run the touched tests.
+# Usage: ciel-sync            (fetch + rebase + test)
+#        ciel-sync --check    (report only, no rebase)
+set -e
+cd "$(dirname "$(readlink -f "$0")")"
+git fetch --quiet upstream --tags
+TAG=$(git describe --tags --abbrev=0 --match 'v*' --exclude='*canary*' upstream/main 2>/dev/null \
+      || git tag --list 'v*' --sort=-v:refname | grep -v canary | head -1)
+echo "upstream tag: $TAG  (current base: $(git describe --tags --abbrev=0 HEAD))"
+[ "$1" = "--check" ] && exit 0
+if git merge-base --is-ancestor "$TAG" HEAD; then
+  echo "already on or past $TAG"
+else
+  git rebase "$TAG" || {
+    echo "CONFLICT — resolve, then: git rebase --continue"
+    git status --short | sed -n '1,20p'
+    exit 1
+  }
+fi
+python3 -m pytest -q tests/tools/test_skill_manage_schema_diet.py tests/tools/test_skill_manage_batch.py \
+  tests/tools/test_skill_manager_tool.py tests/tools/test_threat_patterns.py tests/tools/test_read_extract.py \
+  2>&1 | tail -6
