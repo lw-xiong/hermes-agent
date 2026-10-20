@@ -2,6 +2,8 @@
 # Rebase the ciel branch onto the newest upstream release tag, then run the touched tests.
 # Usage: ciel-sync            (fetch + rebase + test)
 #        ciel-sync --check    (report only, no rebase)
+# Rebasing is all a sync does: the editable install reads this tree directly, so never add a
+# build, reinstall or native-compile step here — it would turn a 20-second sync into minutes.
 set -e
 cd "$(dirname "$(readlink -f "$0")")"
 git fetch --quiet upstream --tags
