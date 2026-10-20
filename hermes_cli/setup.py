@@ -1,4 +1,4 @@
-"""Interactive setup wizard for Hermes Agent (config lives in ~/.hermes/).
+"""Interactive setup wizard for Ciel (config lives in ~/.hermes/).
 
 Independently-runnable sections: Model & Provider, Terminal Backend, Agent Settings, Messaging
 Platforms, Tools. Section bodies live in sibling setup_* modules and are re-exported here; they
@@ -85,7 +85,7 @@ def is_interactive_stdin() -> bool:
 def print_noninteractive_setup_guidance(reason: str | None = None) -> None:
     """Print guidance for headless/non-interactive setup flows."""
     print()
-    print(color("☤ Hermes Setup — Non-interactive mode", Colors.CYAN, Colors.BOLD))
+    print(color("☤ Ciel Setup — Non-interactive mode", Colors.CYAN, Colors.BOLD))
     print()
     if reason:
         print_info(reason)
@@ -618,7 +618,7 @@ def _run_setup_section(config: dict, section: str) -> None:
         print_info(f"Available sections: {', '.join(k for k, _, _ in SETUP_SECTIONS)}")
         return
     label, func = entry
-    _print_banner(f"│     ☤ Hermes Setup — {label:<34s} │")
+    _print_banner(f"│     ☤ Ciel Setup — {label:<34s} │")
     _run_setup_steps([(label, lambda: func(config))])
     save_config(config)
     print()
@@ -709,9 +709,9 @@ def _run_setup_wizard_impl(args):
     from hermes_cli.auth import get_active_provider
     is_existing = bool(get_env_value("OPENROUTER_API_KEY") or get_env_value("OPENAI_BASE_URL")
                        or get_active_provider() is not None)
-    _print_banner("│             ☤ Hermes Agent Setup Wizard                │",
+    _print_banner("│             ☤ Ciel Setup Wizard                │",
                   "├─────────────────────────────────────────────────────────┤",
-                  "│  Let's configure your Hermes Agent installation.       │",
+                  "│  Let's configure your Ciel installation.       │",
                   "│  Press Ctrl+C at any time to exit.                     │")
     migration_ran = False
     if is_existing:

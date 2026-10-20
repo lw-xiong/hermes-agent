@@ -292,7 +292,7 @@ def emit_llms_index() -> str:
             absorbed.setdefault(section_for(slug), []).append(slug)
 
     lines: list[str] = []
-    lines.append("# Hermes Agent")
+    lines.append("# Ciel")
     lines.append("")
     lines.append(
         "> The self-improving AI agent built by Nous Research. A terminal-native "
@@ -337,9 +337,9 @@ def emit_llms_full() -> str:
     """Concatenate every doc under website/docs/ into a single markdown file."""
     seen: set[Path] = set()
     chunks: list[str] = [
-        "# Hermes Agent — Full Documentation\n",
+        "# Ciel — Full Documentation\n",
         (
-            "This file is the entire Hermes Agent documentation concatenated for LLM "
+            "This file is the entire Ciel documentation concatenated for LLM "
             "context ingestion. Section order reflects docs-site navigation: Getting "
             "Started, Using Hermes, Features, Messaging, Integrations, Guides, "
             "Developer Guide, Reference, then everything else.\n"

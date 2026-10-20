@@ -1,4 +1,4 @@
-"""Hermes Agent — Web UI server: FastAPI app assembly, auth/host middleware, ``start_server``.
+"""Ciel — Web UI server: FastAPI app assembly, auth/host middleware, ``start_server``.
 
 Route handlers live in ``web_routers/``; their helpers live in the sibling
 ``web_server_<concern>`` modules and are re-imported here so ``web_server.<name>``
@@ -382,7 +382,7 @@ def _get_pty_active_session_files(app: FastAPI) -> dict[str, Path]:
     return _app_state_default(app, "pty_active_session_files", dict)
 
 
-app = FastAPI(title="Hermes Agent", version=get_version_info().base_version, lifespan=_lifespan)
+app = FastAPI(title="Ciel", version=get_version_info().base_version, lifespan=_lifespan)
 
 from hermes_cli.dashboard_auth.body_limit import AuthBodyLimitMiddleware
 
@@ -1503,7 +1503,7 @@ def _on_server_started(
     else:
         from hermes_cli.url_utils import format_url_host
 
-        print(f"  Hermes Web UI → http://{format_url_host(host)}:{actual_port}")
+        print(f"  Ciel Web UI → http://{format_url_host(host)}:{actual_port}")
     _maybe_open_browser(host, actual_port, open_browser, initial_profile)
 
     if start_mcp_discovery_after_bind:

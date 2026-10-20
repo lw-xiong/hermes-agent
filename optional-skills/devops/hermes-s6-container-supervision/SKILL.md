@@ -2,7 +2,7 @@
 name: hermes-s6-container-supervision
 description: Modify or debug s6 services in the Hermes Docker image.
 version: 1.0.0
-author: Hermes Agent
+author: Ciel
 license: MIT
 platforms: [linux]
 environments: [s6]

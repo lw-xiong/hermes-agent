@@ -1,4 +1,4 @@
-"""Shared constants for Hermes Agent.
+"""Shared constants for Ciel.
 
 Import-safe, stdlib-only — importable from anywhere without circular-import risk.
 """

@@ -1,4 +1,4 @@
-"""Single source of truth for provider identity in Hermes Agent."""
+"""Single source of truth for provider identity in Ciel."""
 
 from __future__ import annotations
 

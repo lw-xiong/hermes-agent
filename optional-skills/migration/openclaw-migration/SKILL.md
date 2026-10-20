@@ -2,7 +2,7 @@
 name: openclaw-migration
 description: Import an OpenClaw setup (memories, skills) into Hermes.
 version: 1.0.0
-author: Hermes Agent (Nous Research)
+author: Ciel (Nous Research)
 license: MIT
 platforms: [linux, macos, windows]
 metadata:

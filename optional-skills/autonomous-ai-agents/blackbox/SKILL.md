@@ -2,7 +2,7 @@
 name: blackbox
 description: Delegate coding tasks to the Blackbox AI multi-model CLI.
 version: 1.0.1
-author: Hermes Agent (Nous Research)
+author: Ciel (Nous Research)
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
