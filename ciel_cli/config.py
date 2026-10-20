@@ -4002,7 +4002,66 @@ def _inject_profile_env_vars() -> None:
         pass
 
 
-_inject_profile_env_vars()
+class _ProviderEnvVars(dict):
+    """``OPTIONAL_ENV_VARS`` with the provider api-key vars injected on first read.
+
+    Building them imports every provider module and rescans plugin manifests — 325 ms of the
+    570 ms launch, paid by ``--version``, ``--help`` and every command that never asks for a
+    provider key. A read is the only thing that needs them, so a read is what fills them.
+    """
+
+    _ready = False
+
+    def _fill(self) -> None:
+        if _ProviderEnvVars._ready:
+            return
+        _ProviderEnvVars._ready = True  # before the calls: both injectors write back into self
+        _inject_profile_env_vars()
+        _bundled_platform_secrets()
+
+    def __getitem__(self, key):
+        self._fill()
+        return super().__getitem__(key)
+
+    def __setitem__(self, key, value):
+        self._fill()
+        return super().__setitem__(key, value)
+
+    def __contains__(self, key):
+        self._fill()
+        return super().__contains__(key)
+
+    def __iter__(self):
+        self._fill()
+        return super().__iter__()
+
+    def __len__(self):
+        self._fill()
+        return super().__len__()
+
+    def get(self, *args, **kwargs):
+        self._fill()
+        return super().get(*args, **kwargs)
+
+    def keys(self):
+        self._fill()
+        return super().keys()
+
+    def items(self):
+        self._fill()
+        return super().items()
+
+    def values(self):
+        self._fill()
+        return super().values()
+
+    def copy(self):
+        self._fill()
+        return super().copy()
+
+
+_STATIC_OPTIONAL_ENV_KEYS = frozenset(OPTIONAL_ENV_VARS)  # core names, before provider injection
+OPTIONAL_ENV_VARS = _ProviderEnvVars(OPTIONAL_ENV_VARS)
 
 
 PlatformManifestSource = Literal["all", "bundled", "user"]
@@ -4135,8 +4194,9 @@ def platform_manifest_secret_envs(home: Optional[Path] = None, source: PlatformM
     """Secret env names declared by one source's platform plugin manifests: ``"user"`` reads only
     ``home``'s user-installed plugins, which belong to that profile alone; ``"bundled"`` returns
     the set read once at import (re-read strictly if that read hit an I/O error)."""
-    if source == "bundled" and BUNDLED_PLATFORM_SECRET_ENVS is not None:
-        return BUNDLED_PLATFORM_SECRET_ENVS
+    bundled_secrets = _bundled_platform_secrets()
+    if source == "bundled" and bundled_secrets is not None:
+        return bundled_secrets
     return _manifest_secret_envs(_platform_plugin_manifests(home, source, strict=strict))
 
 
@@ -4184,5 +4244,18 @@ def _inject_platform_plugin_env_vars() -> frozenset[str] | None:
 # Names declared in core, before any platform manifest is read. A manifest never reclassifies
 # one: the config form keeps the core entry, and the child-env scrub keeps a plugin that lists
 # OPENAI_API_KEY from turning a provider key into an adapter secret.
-CORE_DECLARED_ENV_NAMES: frozenset[str] = frozenset(OPTIONAL_ENV_VARS)
-BUNDLED_PLATFORM_SECRET_ENVS: frozenset[str] | None = _inject_platform_plugin_env_vars()
+CORE_DECLARED_ENV_NAMES: frozenset[str] = _STATIC_OPTIONAL_ENV_KEYS
+_UNSET = object()
+BUNDLED_PLATFORM_SECRET_ENVS: frozenset[str] | None | object = _UNSET
+
+
+def _bundled_platform_secrets() -> frozenset[str] | None:
+    """The bundled platform secret names, scanned once on first need.
+
+    The scan reads every bundled manifest — 205 ms of the launch — and the only consumers are
+    the env policy and the config form, neither of which runs before a config is actually read.
+    """
+    global BUNDLED_PLATFORM_SECRET_ENVS
+    if BUNDLED_PLATFORM_SECRET_ENVS is _UNSET:
+        BUNDLED_PLATFORM_SECRET_ENVS = _inject_platform_plugin_env_vars()
+    return None if BUNDLED_PLATFORM_SECRET_ENVS is _UNSET else BUNDLED_PLATFORM_SECRET_ENVS
