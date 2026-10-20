@@ -69,6 +69,7 @@ class TestSkillManagePerActionShapes(unittest.TestCase):
                    {"name": "s", "action": "patch", "content": "# whole file"},
                    {"name": "s", "action": "write_file", "file_path": "references/a.md", "file_content": "x"},
                    {"name": "s", "action": "remove_file", "file_path": "references/a.md"},
+                   {"name": "s", "action": "rename", "new_name": "t"},
                    {"name": "s", "action": "delete"}):
             self.assertEqual(len(self._matches(op)), 1, op)
 

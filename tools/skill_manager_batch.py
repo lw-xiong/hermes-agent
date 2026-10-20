@@ -13,6 +13,10 @@ from pathlib import Path
 logger = logging.getLogger("tools.skill_manager_tool")
 
 _BATCH_OP_ACTIONS = {"create", "patch", "write_file", "remove_file"}
+# Legal only as the sole op of a call: each routes to the single-op handler because it
+# cannot be rolled back by re-copying a snapshot (a delete has an archive path, a rename
+# moves the directory the snapshot is keyed on).
+_SOLE_OP_ACTIONS = {"delete", "rename"}
 _BATCH_MAX_OPS = 20
 
 # --- Per-op argument shape (checked before any effect) ---------------------------------
@@ -26,7 +30,9 @@ _REQUIRED_ARGS = {
     "write_file": [
         ("file_path", _MISSING, "file_path is required for 'write_file'. Example: 'references/api-guide.md'"),
         ("file_content", _IS_NONE, "file_content is required for 'write_file'.")],
-    "remove_file": [("file_path", _MISSING, "file_path is required for 'remove_file'.")]}
+    "remove_file": [("file_path", _MISSING, "file_path is required for 'remove_file'.")],
+    "rename": [("new_name", _MISSING,
+                "new_name is required for 'rename' — the new skill name (lowercase, hyphens).")]}
 # A bare "required" error is a dead end: the model retries blindly and often escapes to
 # action='write_file', clobbering the whole file.
 _PATCH_NEEDS_OLD_STRING = (
@@ -96,7 +102,7 @@ def _validate_batch_ops(operations, default_name, tool_error):
         act = op["action"]
         if act not in _BATCH_OP_ACTIONS:
             return fail(i, f": unknown action '{act}'. Batchable: "
-                           f"{', '.join(sorted(_BATCH_OP_ACTIONS))}; delete must be sole.")
+                           f"{', '.join(sorted(_BATCH_OP_ACTIONS))}; delete/rename must be sole.")
         nm = op.get("name") or default_name
         if not nm:
             return fail(i, " needs a 'name' (the skill it targets).")
@@ -219,9 +225,9 @@ _ADVISORY_KEYS = ("lint_warnings", "lint_hint")
 def _skill_manage_batch(operations, default_name: str | None = None, task_id: str | None = None,
                         session_id: str | None = None) -> str:
     """Apply operations atomically: every touched skill is snapshotted first and any
-    failure rolls ALL of them back (batch-created skills are removed). ``delete`` is
-    only legal as the SOLE op (its recoverable-archive path doesn't compose with
-    rollback) and routes to the single-op handler. ``default_name`` is the legacy
+    failure rolls ALL of them back (batch-created skills are removed). ``delete`` and
+    ``rename`` are only legal as the SOLE op (neither composes with rollback) and
+    route to the single-op handler. ``default_name`` is the legacy
     top-level ``name`` fallback (staged replay)."""
     from tools import skill_manager_tool as _smt
     from tools.registry import tool_error
@@ -229,13 +235,22 @@ def _skill_manage_batch(operations, default_name: str | None = None, task_id: st
         return tool_error("operations must be a non-empty array.", success=False)
     if len(operations) > _BATCH_MAX_OPS:
         return tool_error(f"operations is capped at {_BATCH_MAX_OPS} ops per call.", success=False)
-    if any(isinstance(op, dict) and op.get("action") == "delete" for op in operations):
+    for op in operations:
+        act_sole = op.get("action") if isinstance(op, dict) else None
+        if act_sole not in _SOLE_OP_ACTIONS:
+            continue
         if len(operations) != 1:
-            return tool_error("delete must be the SOLE op in its call — it doesn't "
+            return tool_error(f"{act_sole} must be the SOLE op in its call — it doesn't "
                               "compose with other ops' rollback.", success=False)
         nm = operations[0].get("name") or default_name
         if not nm:
-            return tool_error("operations[0] (delete) needs a 'name'.", success=False)
+            return tool_error(f"operations[0] ({act_sole}) needs a 'name'.", success=False)
+        if act_sole == "rename":
+            if not operations[0].get("new_name"):
+                return tool_error("operations[0] (rename) needs a 'new_name' (the new skill name).",
+                                  success=False)
+            return _smt.skill_manage(action="rename", name=nm, new_name=operations[0]["new_name"],
+                                     task_id=task_id, session_id=session_id)
         return _smt.skill_manage(action="delete", name=nm, task_id=task_id, session_id=session_id,
                                  absorbed_into=operations[0].get("absorbed_into"))
     names, err = _validate_batch_ops(operations, default_name, tool_error)

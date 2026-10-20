@@ -596,6 +596,42 @@ def _delete_skill(name: str, absorbed_into: Optional[str] = None) -> dict[str, A
     return {"success": True, "message": f"Skill '{name}' deleted.{absorbed_note}"}
 
 
+def _rename_skill(name: str, new_name: str) -> dict[str, Any]:
+    """Rename a skill: move its directory, then rewrite the frontmatter ``name:`` in place.
+    Sole op only (routed like ``delete``) — a create+delete pair costs two calls and orphans the
+    usage/provenance row of what is the same logical skill."""
+    if err := _validate_name(new_name):
+        return _err(err)
+    if new_name == name:
+        return _err("new_name must differ from name.")
+    skill_dir, guard = _locate_for_write(name, "rename", " Create it first with action='create'.")
+    if guard:
+        return guard
+    if pinned_err := _pinned_guard(name):
+        return _err(pinned_err)
+    if _find_skill(new_name):
+        return _err(f"A skill named '{new_name}' already exists.")
+    target = skill_dir.parent / new_name
+    if target.exists():
+        return _err(f"'{target}' already exists on disk.")
+    skill_md = skill_dir / "SKILL.md"
+    if not skill_md.exists():
+        return _err(f"Skill '{name}' has no SKILL.md; refusing to rename.")
+    before = skill_md.read_text(encoding="utf-8")
+    after = re.sub(r"(?m)^name:[ \t]*.*$", f"name: {new_name}", before, count=1)
+    if after == before:
+        return _err("SKILL.md has no 'name:' line in the frontmatter to rewrite.")
+    skill_dir.rename(target)
+    try:
+        atomic_write_text(target / "SKILL.md", after)
+    except Exception as e:  # never leave a half-renamed package: put the directory back
+        with suppress(Exception):
+            target.rename(skill_dir)
+        return _err(f"rename failed rewriting SKILL.md ({e}); directory restored.")
+    return {"success": True, "name": new_name, "renamed_from": name, "path": str(target),
+            "message": f"Skill '{name}' renamed to '{new_name}'."}
+
+
 def _rmdir_if_empty(parent: Path, stop: Path) -> None:
     if parent != stop and parent.exists() and not any(parent.iterdir()):
         parent.rmdir()
@@ -687,7 +723,7 @@ def _apply_skill_write_gate(action, name, **payload_kwargs):
 
 
 _FLAT_OP_KEYS = ("content", "category", "file_path", "file_content", "old_string", "new_string",
-                 "absorbed_into", "operations")
+                 "absorbed_into", "new_name", "operations")
 
 
 def _skill_manage_from(payload: dict[str, Any], **extra) -> str:
@@ -725,7 +761,8 @@ _ACTION_HANDLERS = {
     "patch": _act_patch,
     "delete": lambda a: _delete_skill(a["name"], absorbed_into=a["absorbed_into"]),
     "write_file": lambda a: _write_file(a["name"], a["file_path"], a["file_content"]),
-    "remove_file": lambda a: _remove_file(a["name"], a["file_path"])}
+    "remove_file": lambda a: _remove_file(a["name"], a["file_path"]),
+    "rename": lambda a: _rename_skill(a["name"], a["new_name"])}
 
 
 def _record_success(action, name, result, *, file_path, absorbed_into, task_id,
@@ -737,7 +774,8 @@ def _record_success(action, name, result, *, file_path, absorbed_into, task_id,
         _post = _find_skill(name)
         # delete: consolidation vs prune, and whether the recoverable archive handled it
         _evidence = ({"absorbed_into": absorbed_into, "archived": bool(result.get("_archived"))}
-                     if action == "delete" else {})
+                     if action == "delete" else
+                     {"renamed_from": result.get("renamed_from")} if action == "rename" else {})
         _evidence.update({k: v for k, v in (("session_id", session_id), ("file_path", file_path)) if v})
         _ledger.record_mutation(
             action, name, before=ledger_before if ledger_before is not None else [],
@@ -763,13 +801,19 @@ def _record_success(action, name, result, *, file_path, absorbed_into, task_id,
             bump_patch(name, action=action, task_id=task_id, session_id=session_id)
         elif action == "delete" and not result.get("_archived"):
             forget(name)
+        elif action == "rename":
+            # Same logical skill under a new name: drop the stale row so usage/provenance
+            # follow the directory instead of orphaning it.
+            forget(name)
+            record_created(result.get("name") or name, agent_created=is_background_review(),
+                           task_id=task_id, session_id=session_id)
 
 
 def skill_manage(
     action: str, name: str, content: str | None = None, category: str | None = None, file_path: str | None = None,
     file_content: str | None = None, old_string: str | None = None, new_string: str | None = None,
-    replace_all: bool = False, absorbed_into: str | None = None, task_id: str | None = None,
-    session_id: str | None = None, operations=None) -> str:
+    replace_all: bool = False, absorbed_into: str | None = None, new_name: str | None = None,
+    task_id: str | None = None, session_id: str | None = None, operations=None) -> str:
     """Dispatch to the action handler -> JSON string. ``operations`` (atomic batch shape,
     see _skill_manage_batch) overrides the flat fields."""
     if operations is not None:
@@ -781,7 +825,7 @@ def skill_manage(
     # of origin; bypassed when replaying an approved staged write.
     args = dict(content=content, category=category, file_path=file_path, file_content=file_content,
                 old_string=old_string, new_string=new_string, replace_all=replace_all,
-                absorbed_into=absorbed_into)
+                absorbed_into=absorbed_into, new_name=new_name)
     if (gate_result := _apply_skill_write_gate(action, name, **args)) is not None:
         return gate_result
     if (shape_err := _op_shape_error(action, args)) is not None:
@@ -806,7 +850,7 @@ def skill_manage(
             _ledger_before = _ledger.capture_before(
                 _pre["path"] if _pre else None, complete_package=(action == "delete"), skill=name)
         handler = _ACTION_HANDLERS.get(action, lambda a: _err(
-            f"Unknown action '{action}'. Use: create, edit, patch, delete, write_file, remove_file"))
+            f"Unknown action '{action}'. Use: create, edit, patch, delete, rename, write_file, remove_file"))
         result = handler({"name": name, **args})
         if isinstance(result, str):
             return result  # tool_error JSON for argument-shape problems (patch)
@@ -829,7 +873,8 @@ def _skill_manage_description() -> str:
         "ops), patch (targeted old_string/new_string fix — preferred; "
         "content alone REPLACES the whole file, read it via skill_view() "
         "first), write_file/remove_file (supporting files), delete (sole "
-        "op only). Existing skills are modified wherever they live. Keep "
+        "op only; rename (sole op only) moves a skill to a new name). "
+        "Existing skills are modified wherever they live. Keep "
         "the description's first 57 chars a self-contained trigger: 'Use "
         "when <trigger>. <one-line behavior>.' Write lessons, not logs: "
         "imperative rule + why, no PR numbers/dates/incident narration, one "
@@ -910,6 +955,12 @@ SKILL_MANAGE_SCHEMA = {
                                           "description": "Curator consolidation only: umbrella skill "
                                                          "that absorbed this one (must exist)."},
                     }, ()),
+                    # rename: sole op only (routed like delete). One call instead of
+                    # create+delete, and no orphaned usage row for the same skill.
+                    _op_schema("rename", {
+                        "new_name": {"type": "string",
+                                     "description": "New skill name (lowercase, hyphens/underscores)."},
+                    }, ("new_name",)),
                 ]},
             },
             # Also accepted, never advertised: the legacy flat single-op fields.
