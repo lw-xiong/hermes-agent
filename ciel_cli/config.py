@@ -524,37 +524,9 @@ def seed_config_file(config_path: Path, template: Optional[Path] = None) -> bool
 
 
 def _ensure_default_soul_md(home: Path) -> None:
-    """Seed DEFAULT_SOUL_MD on first run; upgrade a legacy comment-only scaffold in place.
-    A SOUL.md the user actually customized is never touched."""
-    soul_path = home / "SOUL.md"
-    if soul_path.exists():
-        try:
-            existing = soul_path.read_text(encoding="utf-8-sig")
-        except (OSError, UnicodeDecodeError):
-            return
-        if not is_legacy_template_soul(existing):
-            return
-    try:
-        soul_path.write_text(DEFAULT_SOUL_MD, encoding="utf-8")
-    except OSError:
-        if not soul_path.is_symlink():
-            raise
-        # A symlink the seed cannot write through — cyclic (``SOUL.md -> SOUL.md``, ELOOP) or
-        # dangling into a missing directory (ENOENT) — can never hold an identity file, and the
-        # OSError became HomeInitializationError on EVERY boot (launchd exit-75 relaunch storm,
-        # #114592). Seed the default IN PLACE OF the link, never through it; mkstemp + replace
-        # keeps concurrent gateway boots off one shared path. A working link is never reached
-        # here: the write above succeeds through it.
-        fd, tmp_name = tempfile.mkstemp(prefix=".SOUL.md.", suffix=".seed", dir=str(home))
-        try:
-            with os.fdopen(fd, "w", encoding="utf-8") as handle:
-                handle.write(DEFAULT_SOUL_MD)
-            os.replace(tmp_name, soul_path)
-        except OSError:
-            with suppress(OSError):
-                os.unlink(tmp_name)
-            raise
-    _secure_file(soul_path)
+    """No-op: Ciel's persona lives in code (``ciel/persona.py``), which is what an empty home gets.
+    Seeding a SOUL.md here would only shadow that persona with a shorter copy of itself."""
+    return
 
 
 # Home paths whose directory skeleton was created this process. Only successful passes are
