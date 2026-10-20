@@ -87,7 +87,14 @@ _PATTERNS: list[tuple[str, str, str]] = [
     (r'(?:\b(?:echo|cat|cp|mv|dd|tee|install|printf|rsync|scp|ln|append|add|write'
      r'|sed|chmod|chown|truncate|rm|touch|curl|wget|git)\b|\bopen\s*\(|>>?)'
      r'[^\n]{0,512}(?:\$HOME/\.ssh|~/\.ssh)', "ssh_access", "strict"),
-    (r'\$HOME/\.hermes/\.env|\~/\.hermes/\.env', "hermes_env", "strict"),
+    # Verb-gated like ssh_access above: a bare path match blocked ordinary notes
+    # ("sudo creds live in ~/.hermes/.env"), while the shapes that actually exfiltrate are
+    # read/copy/serialize verbs. Any of them within 512 chars before the path still blocks.
+    (r'(?:\b(?:echo|cat|cp|mv|dd|tee|install|printf|rsync|scp|ln|append|add|write'
+     r'|sed|chmod|chown|truncate|rm|touch|curl|wget|git|grep|awk|source|read|tar'
+     r'|zip|less|more|head|tail|strings|base64|xxd|od|printenv|export|env)\b'
+     r'|\bopen\s*\(|>>?)[^\n]{0,512}(?:\$HOME/\.hermes/\.env|~/\.hermes/\.env)',
+     "hermes_env", "strict"),
     (rf'{_MODIFY}(?:AGENTS\.md|CLAUDE\.md|\.cursorrules|\.clinerules)', "agent_config_mod", "strict"),
     (rf'{_MODIFY}\.hermes/(config\.yaml|SOUL\.md)', "hermes_config_mod", "strict"),
 
