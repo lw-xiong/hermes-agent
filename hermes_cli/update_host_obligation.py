@@ -3,7 +3,7 @@
 Multiplex-only (Teknium ruling): exactly ONE ``hermes gateway run`` per host serves every
 profile, so "this pull still owes the fleet a restart" is a property of the HOST, not of one
 profile's ``HERMES_HOME``. The legacy ``$HERMES_HOME/fleet_restart_pending`` marker was
-per-home: ``hermes -p coder update`` armed and cleared coder's copy while restarting the
+per-home: ``ciel -p coder update`` armed and cleared coder's copy while restarting the
 SHARED process, and every other profile's CLI could neither see nor discharge that obligation
 — it simply armed its own and re-killed the same host process.
 

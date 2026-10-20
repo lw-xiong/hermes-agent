@@ -242,7 +242,7 @@ class CLIAgentSetupMixin:
         try:
             # target_model: the ladder's model-keyed rungs (Zen/Go api_mode, Copilot/Nous
             # api_mode) must see the model this CLI will actually send, not config's `default`,
-            # or `hermes -m mimo-v2.5 --provider opencode-go` resolves an api_mode/base_url the
+            # or `ciel -m mimo-v2.5 --provider opencode-go` resolves an api_mode/base_url the
             # sent model cannot use (#112600).
             runtime = resolve_runtime_provider(
                 requested=self.requested_provider, explicit_api_key=self._explicit_api_key,

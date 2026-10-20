@@ -234,12 +234,12 @@ _SHELL_LINE_CONTINUATION = re.compile(r"\\\r?\n[ \t]*")
 # See #68289.
 _ARGV_LIST_PUNCTUATION = re.compile(r"[\[\],]+")
 
-# Branch A2: `hermes -p <profile> gateway restart|stop` (also `--profile <name>` /
+# Branch A2: `ciel -p <profile> gateway restart|stop` (also `--profile <name>` /
 # `--profile=<name>`). The selector breaks Branch A's adjacency. A sibling-profile restart is a
 # legitimate fleet operation, so the profile name is captured and blocked only when it equals the
 # profile running the guard. `start` stays excluded as in Branch A.
 # Unlike Branch A this form is NOT unconditionally self-targeting: issued from inside gateway `zeus`,
-# `hermes -p venus gateway restart` operates on a sibling profile's gateway and is a legitimate fleet
+# `ciel -p venus gateway restart` operates on a sibling profile's gateway and is a legitimate fleet
 # operation. The pattern captures the named profile so `contains_gateway_lifecycle_command` can block only
 # the self-targeting shape (named profile == the profile running the guard). See #78028.
 _PROFILE_FLAG_LIFECYCLE_PATTERN = re.compile(
@@ -425,7 +425,7 @@ def contains_gateway_lifecycle_command(text: str) -> bool:
     if _GATEWAY_LIFECYCLE_PATTERN.search(normalized):
         return True
     # Profile-flag form: blocked only when the named profile IS the one running the guard.
-    # Profile-flag form (#78028): `hermes -p <profile> gateway restart|stop` bypasses Branch A because the
+    # Profile-flag form (#78028): `ciel -p <profile> gateway restart|stop` bypasses Branch A because the
     # selector sits between `hermes` and `gateway`. It is only the same foot-gun when the named profile IS
     # the profile running the guard — sibling-profile restarts are legitimate fleet operations and stay
     # allowed.

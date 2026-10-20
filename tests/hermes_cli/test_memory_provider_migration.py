@@ -194,8 +194,8 @@ def test_update_asks_once_and_names_each_profile(tmp_path, monkeypatch):
         assert len(prompts) == 1
         if answer == "n":
             assert "[profile 'default']" in said[1] and "dependency install declined" in said[1]
-            assert "hermes -p work-a plugins install twin" in said[2]
-            assert "hermes -p work-b plugins install twin" in said[2]
+            assert "ciel -p work-a plugins install twin" in said[2]
+            assert "ciel -p work-b plugins install twin" in said[2]
             assert not any((h / "plugins").exists() for h in homes)
         else:
             assert [line.split("]")[0] for line in said[1:]] == [
@@ -245,12 +245,12 @@ def test_unattended_update_refusal_in_one_profile_does_not_skip_the_others(tmp_p
 
 def test_startup_hint_installs_into_the_profile_that_printed_it(tmp_path, monkeypatch):
     """A bare `hermes plugins install` from a shell targets the sticky profile, so the hint an agent
-    started for a named profile (Desktop, gateway, `hermes -p`) prints must carry `-p`."""
+    started for a named profile (Desktop, gateway, `ciel -p`) prints must carry `-p`."""
     from pm import install as pm_install
 
     default, work = _profile_homes(tmp_path, monkeypatch, "work")
     monkeypatch.setattr(pm_install, "lazy_installs_allowed", lambda: False)
-    for profile_home, command in ((work, "hermes -p work plugins install twin"),
+    for profile_home, command in ((work, "ciel -p work plugins install twin"),
                                   (default, "hermes plugins install twin")):
         monkeypatch.setattr(mig, "_attempted", set())
         monkeypatch.setenv("HERMES_HOME", str(profile_home))
@@ -271,7 +271,7 @@ def test_missing_catalog_provider_recovery_names_the_profile_install_command(tmp
     home.mkdir(parents=True)
     (home / "config.yaml").write_text("memory:\n  provider: honcho\n", encoding="utf-8")
     monkeypatch.setenv("HERMES_HOME", str(home))
-    want = "hermes -p work plugins install honcho"
+    want = "ciel -p work plugins install honcho"
 
     doctor_state._memory_provider_generic("honcho")
     memory_setup.cmd_status(SimpleNamespace())

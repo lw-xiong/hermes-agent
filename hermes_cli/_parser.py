@@ -45,7 +45,7 @@ def top_level_value_flag_sets() -> tuple[frozenset[str], frozenset[str]]:
 
     Introspects ``build_top_level_parser()`` (every option with nargs != 0) so the argv scanners in
     ``main.py`` (``_first_positional_argv``, ``_apply_profile_override``) can never drift from the
-    argparse surface — the drift that made ``hermes --reasoning high chat …`` misread ``high`` as
+    argparse surface — the drift that made ``ciel --reasoning high chat …`` misread ``high`` as
     the subcommand and forced eager plugin discovery.
 
     Mirrors the ``update_cmd._holder_value_flags`` precedent, including the handwritten-snapshot fallback
@@ -91,13 +91,13 @@ _EPILOGUE = """
 Examples:
     hermes                        Start interactive chat
     hermes chat -q "Hello"        Single query mode
-    hermes --tui                  Launch the modern TUI (or set display.interface: tui)
-    hermes --cli                  Force the classic REPL (overrides display.interface: tui)
-    hermes -c                     Resume the most recent session
-    hermes -c "my project"        Resume a session by name (latest in lineage)
-    hermes --resume <session_id>  Resume a specific session by ID
-    hermes --resume latest        Resume the most recent session (same as -c)
-    hermes --tui --resume latest --in ./dir   Resume ./dir's latest session in the TUI
+    ciel --tui                  Launch the modern TUI (or set display.interface: tui)
+    ciel --cli                  Force the classic REPL (overrides display.interface: tui)
+    ciel -c                     Resume the most recent session
+    ciel -c "my project"        Resume a session by name (latest in lineage)
+    ciel --resume <session_id>  Resume a specific session by ID
+    ciel --resume latest        Resume the most recent session (same as -c)
+    ciel --tui --resume latest --in ./dir   Resume ./dir's latest session in the TUI
     hermes setup                  Run setup wizard
     hermes logout                 Clear stored authentication
     hermes auth add <provider>    Add a pooled credential
@@ -118,10 +118,10 @@ Examples:
     hermes gateway start          Start the installed gateway service
     hermes gateway stop           Stop the gateway service
     hermes gateway status         Show gateway status
-    hermes -p <profile> <cmd>     Run any command against a named profile's
-                                  home (also --profile) — e.g. hermes -p coder gateway stop
+    ciel -p <profile> <cmd>     Run any command against a named profile's
+                                  home (also --profile) — e.g. ciel -p coder gateway stop
     hermes -s hermes-agent-dev,github-auth
-    hermes -w                     Start in isolated git worktree
+    ciel -w                     Start in isolated git worktree
     hermes sessions list          List past sessions
     hermes sessions browse        Interactive session picker
     hermes sessions rename ID T   Rename/title a session
@@ -217,7 +217,7 @@ def _build_chat_parser(subparsers) -> argparse.ArgumentParser:
     """The ``chat`` subparser (also the implicit default command).
 
     Flags ALSO declared on the top-level parser use ``default=argparse.SUPPRESS``: for
-    ``hermes -m foo chat`` argparse first sets ``args.model`` from the top-level parser, then
+    ``ciel -m foo chat`` argparse first sets ``args.model`` from the top-level parser, then
     dispatches to the chat subparser, which shares the namespace and ``dest`` — a plain ``None``
     default would silently clobber the top-level value. SUPPRESS keeps the subparser action a no-op
     unless the flag is actually passed after the subcommand (tests/hermes_cli/
@@ -381,6 +381,6 @@ def build_top_level_parser():
         formatter_class=argparse.RawDescriptionHelpFormatter, epilog=_EPILOGUE)
     _add_top_level_flags(parser)
     # metavar keeps the usage line to ``hermes [...] <command>`` instead of the brace list of
-    # every subcommand name; ``hermes --help`` still lists each command with its help row.
+    # every subcommand name; ``ciel --help`` still lists each command with its help row.
     subparsers = parser.add_subparsers(dest="command", help="Command to run", metavar="<command>")
     return parser, subparsers, _build_chat_parser(subparsers)

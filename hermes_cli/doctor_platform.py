@@ -209,7 +209,7 @@ def _report_host_gateway_slot(mgr, issues: list[str]) -> None:
             return check_info("No gateway registered yet — run `hermes gateway install`")
         up = [p for p in slots if mgr.is_running(f"gateway-{p}")]
         issues.append("No host gateway owns the gateway role — start the ONE host multiplexer: "
-                      "hermes --profile default gateway start")
+                      "ciel --profile default gateway start")
         return check_warn(f"No host gateway owns the gateway role ({len(up)}/{len(slots)} supervision "
                           f"slots up: {', '.join(slots)})", "(nothing is serving these profiles)")
     check_ok(f"Host gateway: {topology.describe()}")
@@ -218,7 +218,7 @@ def _report_host_gateway_slot(mgr, issues: list[str]) -> None:
         check_warn(f"LEGACY per-profile gateway slots still supervised: {', '.join(legacy_up)}",
                    "(multiplex-only: the host gateway already serves every profile from one process)")
         issues.append("Fold the legacy per-profile gateways into the host gateway: "
-                      "hermes --profile default gateway migrate --multiplex")
+                      "ciel --profile default gateway migrate --multiplex")
 
 
 def check_certificates(should_fix: bool = False, issues: list | None = None) -> None:

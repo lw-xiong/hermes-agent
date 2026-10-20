@@ -338,7 +338,7 @@ def test_repo_named_filters_never_run_from_kanban_gc_or_hints(tmp_path, attrs, c
     sub = create_subagent_worktree(str(repo), "filters")
     assert sub is not None and (Path(sub["path"]) / "README").read_text() == "hi\n"
     # The subagent's automatic finalization and kanban teardown re-hash a touched file (status);
-    # hermes -w checks out a worktree of its own.
+    # ciel -w checks out a worktree of its own.
     from hermes_cli import worktree_ops
     from tools.subagent_worktree import finalize_subagent_worktree
     for tree in (Path(sub["path"]), tmp_path / "wt"):

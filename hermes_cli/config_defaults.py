@@ -57,7 +57,7 @@ DEFAULT_CONFIG = {
     # 0/null disables.
     "max_live_sessions": 16,
     "session": {
-        # Per-terminal `hermes -c`: each CLI session writes a breadcrumb under
+        # Per-terminal `ciel -c`: each CLI session writes a breadcrumb under
         # $HERMES_HOME/terminal-sessions/<terminal-id>, so bare -c/--continue resumes THIS
         # terminal's session (tmux/kitty/wezterm pane, tty). false = resume globally most-recent.
         "terminal_continue": True,
@@ -841,7 +841,7 @@ DEFAULT_CONFIG = {
         # Native TUI uses the terminal's primary buffer and scrollback instead of the custom
         # alternate-screen viewport. Flags win: `--native` / `--tui-native` and `--cli`.
         "tui_native": False,
-        # `hermes --tui` auto-resumes the most recent human-facing session (like `hermes -c`).
+        # `ciel --tui` auto-resumes the most recent human-facing session (like `ciel -c`).
         # HERMES_TUI_RESUME=<id> always wins.
         "tui_auto_resume_recent": False,
         # Desktop reopens the last chat/page on cold start (also in Settings → Appearance).
@@ -1881,7 +1881,7 @@ DEFAULT_CONFIG = {
         "failure_repeat_alert_hours": 6,
     },
     # Kanban multi-agent coordination. The dispatcher ticks every N seconds, reclaims stale claims,
-    # promotes dependency-satisfied todos to ready, and fires `hermes -p <assignee> chat -q ...` per
+    # promotes dependency-satisfied todos to ready, and fires `ciel -p <assignee> chat -q ...` per
     # claimable task. Run ONE dispatcher per profile; two on the same kanban.db race for claims.
     "kanban": {
         # Auto-subscribe the originating gateway/TUI session to completion + block events when
@@ -2406,7 +2406,7 @@ DEFAULT_CONFIG = {
         # Directories (~ expanded; everything under an entry counts) whose projects a language
         # server may load code from: the project's own .venv/venv interpreter, node_modules
         # TypeScript SDK, svelte.config.js, build files (cargo, Gradle, mix, ...). The worktree of
-        # the launch dir or the session's workspace (hermes -w, a Desktop project, terminal.cwd) is
+        # the launch dir or the session's workspace (ciel -w, a Desktop project, terminal.cwd) is
         # always trusted; in any other checkout (a clone the agent made) only servers that run no
         # project code start, pinned to Hermes-side tools, and the npx tsc / rustfmt lint fallbacks
         # are skipped.

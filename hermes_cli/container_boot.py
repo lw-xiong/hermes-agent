@@ -98,7 +98,7 @@ def reconcile_profile_gateways(
     review).
     """
     actions: list[ReconcileAction] = []
-    # ONE multiplexing gateway per container: named slots are registered (so `hermes -p X gateway
+    # ONE multiplexing gateway per container: named slots are registered (so `ciel -p X gateway
     # start` has a target and `s6-svstat` can report them) but are never booted from their persisted
     # run intent, except a `gateway.standalone` profile's (below).
     # This is the s6 leg of the multiplex-only convergence: an image upgraded from a release that
@@ -119,7 +119,7 @@ def reconcile_profile_gateways(
         hermes_home, container_argv=container_argv, dry_run=dry_run)
     default_prior_state = legacy_default_state or _read_desired_state(hermes_home)
     # The root slot INHERITS every named slot's autostart intent, because it is the one process
-    # that serves them. Without this an image only ever driven as `hermes -p coder gateway start`
+    # that serves them. Without this an image only ever driven as `ciel -p coder gateway start`
     # booted with ZERO gateways: it has no root state (or "stopped"), every named slot is now
     # registered down unconditionally, and every action reported "registered" — a container that
     # looks healthy while nothing is listening.
@@ -308,7 +308,7 @@ def _register_service(scandir: Path, profile: str, *, start: bool) -> None:
         _write_exec(tmp_dir / "finish", S6ServiceManager._render_finish_script())
         (tmp_dir / "log").mkdir()
         _write_exec(tmp_dir / "log" / "run", S6ServiceManager._render_log_run(profile))
-        if not start:  # `hermes -p <profile> gateway start` brings it up later (s6-svc -u)
+        if not start:  # `ciel -p <profile> gateway start` brings it up later (s6-svc -u)
             (tmp_dir / "down").touch()
         # Pre-create supervise/ with hermes ownership BEFORE publishing so s6-supervise inherits
         # it and runtime s6-svc calls as the hermes user won't EACCES.

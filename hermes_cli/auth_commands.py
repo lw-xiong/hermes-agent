@@ -319,7 +319,7 @@ def _add_nous_oauth_credential(args, provider: str) -> PooledCredential:
         return entry
 
     # Codex-style auto-import: a shared Nous credential at <hermes-root>/shared/nous_auth.json
-    # (written by any previous login) makes `hermes --profile <name> auth add nous --type oauth`
+    # (written by any previous login) makes `ciel --profile <name> auth add nous --type oauth`
     # a one-tap operation for multi-profile users.
     from hermes_cli.anon_auth import is_guest_state
 

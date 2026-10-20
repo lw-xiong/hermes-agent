@@ -267,7 +267,7 @@ def attach_message(gateway: HostGateway, profile: str) -> str:
         f"✓ The host gateway already serves profile '{profile}' — nothing to start.\n"
         f"  {gateway.describe()}\n"
         f"  One gateway per host serves every profile; manage it with "
-        f"`hermes -p {gateway.profile_label} gateway restart`.")
+        f"`ciel -p {gateway.profile_label} gateway restart`.")
 
 
 def _unknown_served_message(gateway: HostGateway, profile: str) -> str:

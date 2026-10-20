@@ -415,8 +415,8 @@ class TestGatewayRuntimeStatus:
         monkeypatch.setattr(status, "_pid_exists", lambda pid: True)
         monkeypatch.setattr(status, "_get_process_start_time", lambda pid: 1000)
         for cmdline in (
-            "hermes -p coder gateway run --replace",
-            "/opt/hermes/.venv/bin/hermes --profile coder gateway run --replace",
+            "ciel -p coder gateway run --replace",
+            "/opt/hermes/.venv/bin/ciel --profile coder gateway run --replace",
             "hermes_home=/opt/data/profiles/coder hermes gateway run --replace",
         ):
             monkeypatch.setattr(status, "_read_process_cmdline", lambda pid, c=cmdline: c)
@@ -432,11 +432,11 @@ class TestGatewayRuntimeStatus:
         (#100817), while a foreign ``-p coder`` keeps being rejected."""
         default_home = Path("/opt/hermes-data")
         for cmdline in (
-            "hermes --profile default gateway run --replace --external-supervisor",
-            "/opt/hermes/.venv/bin/hermes -p default gateway run",
+            "ciel --profile default gateway run --replace --external-supervisor",
+            "/opt/hermes/.venv/bin/ciel -p default gateway run",
         ):
             assert status._command_line_belongs_to_profile(cmdline, default_home) is True, cmdline
-        assert status._command_line_belongs_to_profile("hermes -p coder gateway run", default_home) is False
+        assert status._command_line_belongs_to_profile("ciel -p coder gateway run", default_home) is False
 
     def test_command_line_belongs_to_profile_normalizes_separators(self):
         """A Windows argv renders HERMES_HOME with backslashes while the

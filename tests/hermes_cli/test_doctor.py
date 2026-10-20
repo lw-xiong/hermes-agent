@@ -1650,7 +1650,7 @@ def test_profile_alias_status_follows_the_wrapper_the_profile_really_has(monkeyp
         (tmp_path / ".hermes" / "profiles" / name / "config.yaml").write_text("model: m\n", encoding="utf-8")
     profiles.create_wrapper_script("dev")
     profiles.create_wrapper_script("w", target="work")
-    (tmp_path / ".local" / "bin" / "old").write_text('#!/bin/sh\nexec hermes -p old "$@"\n', encoding="utf-8")
+    (tmp_path / ".local" / "bin" / "old").write_text('#!/bin/sh\nexec ciel -p old "$@"\n', encoding="utf-8")
     for foreign in ("ops.bat", "old.bat"):  # same-named non-Hermes commands
         (tmp_path / ".local" / "bin" / foreign).write_text("@echo off\r\nnotepad %*\r\n", encoding="utf-8")
 

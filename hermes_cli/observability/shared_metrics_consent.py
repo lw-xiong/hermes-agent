@@ -8,7 +8,7 @@ Every answer also writes ``offer_version``. A "No thanks" without it predates th
 the reason, and any response (Esc or dismiss included) settles it for good.
 Desktop paints the offer as a composer strip (``consent-strip.tsx`` over the ``shared_metrics.*``
 RPCs). The terminal asks at the end of every ``hermes setup`` flow and, for a profile that never
-answered, once before an interactive ``hermes`` / ``hermes --tui`` chat (which also covers the
+answered, once before an interactive ``hermes`` / ``ciel --tui`` chat (which also covers the
 dashboard's Chat tab, a PTY-hosted TUI). The messaging gateway never asks: a chat participant is
 not the install owner.
 """

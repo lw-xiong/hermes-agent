@@ -34,7 +34,7 @@ ACCEPT = [
     "python -m hermes_cli.main gateway -p work run",
     "hermes gateway --profile=work run",
     # a profile literally NAMED "gateway"
-    "hermes -p gateway gateway run",
+    "ciel -p gateway gateway run",
     "python -m hermes_cli.main --profile gateway gateway run",
     # quoted Windows paths with spaces (shlex-aware tokenization)
     r'"C:\Program Files\Hermes\hermes-gateway.exe"',

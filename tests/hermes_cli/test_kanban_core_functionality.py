@@ -1332,7 +1332,7 @@ _WORKER_LOG_TAIL = (
     "│ the board protocol requires reassigning this card to orchestrator, but the │\n"
     "│ native kanban_* tools available here have no reassignment operation.       │\n"
     "╰──────────────────────────────╯\n"
-    "\nResume this session with:\n  hermes --resume 20260915_000000_abc\n\n"
+    "\nResume this session with:\n  ciel --resume 20260915_000000_abc\n\n"
     "Session:        20260915_000000_abc\nMessages:       3 (1 user, 2 tool calls)\n"
 )
 

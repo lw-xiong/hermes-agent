@@ -313,7 +313,7 @@ async def _resolve_gateway_status(profile_dir: Optional[Path], health_url) -> di
     if liveness.runtime is not None:
         # Served by the multiplexer: its record is this profile's runtime, with the profile's own
         # adapters under ``<profile>:<platform>`` re-keyed to the standalone shape. Unscoped, the
-        # profile is the process's own home (a pooled ``hermes --profile X serve``).
+        # profile is the process's own home (a pooled ``ciel --profile X serve``).
         # Fold on the profile NAME, never ``profile_dir.name``: ``?profile=default`` resolves the
         # root itself, whose basename (``.hermes``) matched nothing and read as a named id (#123088).
         served_name = profile_name_for_home(profile_dir or get_process_hermes_home())
@@ -656,7 +656,7 @@ async def set_curator_paused(body: CuratorPause, profile: Optional[str] = None):
 
 
 def _spawn_action(argv: list, name: str, prefix: str, profile: Optional[str] = None) -> dict:
-    """Spawn a background ``hermes -p <profile> <argv>`` action; a spawn failure is
+    """Spawn a background ``ciel -p <profile> <argv>`` action; a spawn failure is
     ``500 "<prefix>: <exc>"``."""
     try:
         proc = _spawn_hermes_action(_profile_cli_args(profile) + argv, name)

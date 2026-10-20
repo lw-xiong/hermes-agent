@@ -102,7 +102,7 @@ def _s6_running() -> bool:
 # ---------------------------------------------------------------------------
 # Host backends: thin facades over ``hermes_cli.gateway`` (systemd/launchd) and
 # ``hermes_cli.gateway_windows``. The protocol's ``name`` parameter is unused here — host backends
-# operate on the currently active profile (``hermes -p <profile>``); the shape exists for s6 where
+# operate on the currently active profile (``ciel -p <profile>``); the shape exists for s6 where
 # each profile maps to a distinct service directory.
 # ---------------------------------------------------------------------------
 
@@ -467,7 +467,7 @@ class S6ServiceManager:
         if profile == "default":
             gateway_cmd = "hermes gateway run --replace"
         else:
-            gateway_cmd = f"hermes -p {shlex.quote(profile)} gateway run --replace"
+            gateway_cmd = f"ciel -p {shlex.quote(profile)} gateway run --replace"
         # Skip the drop when already non-root (setgroups() lacks CAP_SETGID → s6 boot-loop).
         lines.append(f'[ "$(id -u)" = 0 ] || exec {gateway_cmd}')
         lines.append(f"exec s6-setuidgid hermes {gateway_cmd}")

@@ -169,13 +169,13 @@ def test_stale_remote_desktop_ssh_serve_is_deferred_to_its_client_not_unaccounte
 # ---------------------------------------------------------------------------
 
 def test_scan_dashboard_processes_includes_ledger_only_serves(monkeypatch):
-    """A profiled serve (`hermes --profile p serve ...`) matches no scan
+    """A profiled serve (`ciel --profile p serve ...`) matches no scan
     pattern; the ledger row must still surface it."""
     import hermes_cli.dashboard_procs as dp
 
     profiled = _ledger_entry(
         pid=8123,
-        argv="hermes --profile work serve --host 100.94.65.93 --port 9119",
+        argv="ciel --profile work serve --host 100.94.65.93 --port 9119",
         profile="work",
     )
     fake_pi = SimpleNamespace(ledger_entries=lambda **k: [profiled])

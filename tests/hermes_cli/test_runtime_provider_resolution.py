@@ -2257,7 +2257,7 @@ def test_bare_custom_resolves_model_key_env_for_configured_base_url(monkeypatch)
     monkeypatch.setenv("CUSTOM_BASE_URL", "https://other.example.test/v1")
     assert rp.resolve_runtime_provider(requested="custom")["api_key"] == "no-key-required"
 
-    # Direct-alias rung (`hermes --resume` provider change, `/model` direct aliases pass explicit_base_url):
+    # Direct-alias rung (`ciel --resume` provider change, `/model` direct aliases pass explicit_base_url):
     # the declared key follows the configured endpoint and stays home for any other endpoint.
     monkeypatch.delenv("CUSTOM_BASE_URL", raising=False)
     direct = rp.resolve_runtime_provider(requested="custom", explicit_base_url="https://api.example.test/v1")

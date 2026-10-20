@@ -1,7 +1,7 @@
 """Invariant tests for the plain-language startup messages of the ``hermes`` CLI.
 
 Contracts (not snapshots): a mistyped subcommand names the typo, offers the closest
-match and ``hermes --help`` without dumping the 70-entry choice list; a rejected
+match and ``ciel --help`` without dumping the 70-entry choice list; a rejected
 profile name explains the rule; missing optional dependencies point at ``hermes update``.
 """
 
@@ -30,7 +30,7 @@ def test_unknown_subcommand_names_typo_suggests_closest_and_hides_choice_list():
     text = _parse_error(["sesions"])
     assert "'sesions' is not a `hermes` command" in text
     assert "Did you mean: sessions" in text
-    assert "hermes --help" in text
+    assert "ciel --help" in text
     assert "choose from" not in text
     assert "invalid choice" not in text
 

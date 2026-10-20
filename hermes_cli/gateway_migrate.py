@@ -95,7 +95,7 @@ def _service_label(service: tuple[str, bool]) -> str:
 
 
 def _remove_verb(service: tuple[str, bool]) -> str:
-    """An s6 slot is parked down (it stays registered as the `hermes -p X gateway start` target), every
+    """An s6 slot is parked down (it stays registered as the `ciel -p X gateway start` target), every
     other unit is uninstalled."""
     return "park" if service[0] == "s6" else "uninstall"
 
@@ -384,7 +384,7 @@ def _stop_gateway_process(home: Path) -> None:
 
 def _s6_slot_op(verb: str, home: Path) -> None:
     """The s6 leg of :func:`_service_op`. A named profile's slot is never uninstalled: it stays
-    registered DOWN (``down`` file) as the target of a later ``hermes -p X gateway start``, exactly
+    registered DOWN (``down`` file) as the target of a later ``ciel -p X gateway start``, exactly
     the shape the container's boot produces. The root slot is (re)started so it re-reads its config."""
     from hermes_cli.gateway_multiplex_s6 import bring_root_slot_up, park_named_slot
     from hermes_constants import profile_name_for_home

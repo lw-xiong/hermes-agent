@@ -1,6 +1,6 @@
 """`hermes profile install` / `hermes profile update` against a real distribution with cron jobs.
 
-A distribution author schedules jobs with the real CLI (``hermes -p author cron create``) and
+A distribution author schedules jobs with the real CLI (``ciel -p author cron create``) and
 publishes the profile directory; a user installs it, schedules a job of their own, and later
 pulls the author's next version with ``hermes profile update``. Every step is a fresh sandboxed
 CLI process over a fake HOME; the assertions read the cron store the scheduler itself reads

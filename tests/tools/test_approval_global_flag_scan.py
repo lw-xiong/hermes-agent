@@ -37,7 +37,7 @@ for command, description in cases.items():
 def test_nonmatching_flag_runs_finish():
     _run('''
 from tools.approval_detection import detect_dangerous_command
-for prefix in ("rclone lsf $HOME/.hermes --recursive --files-only", "hermes", "docker",
+for prefix in ("rclone lsf $HOME/.ciel --recursive --files-only", "hermes", "docker",
                "docker compose", "podman"):
     for run in ("--exclude " * 58, "--opt val " * 58, "--opt=val " * 58, "--opt" + " " * 100 + "val "):
         assert detect_dangerous_command(f"{prefix} {run}ps 2>/dev/null")[0] is False, prefix
@@ -59,7 +59,7 @@ cases = {
     "podman --log-level  debug --url tcp://prod ps": False,
     "docker compose --project-name  demo down": False,
     "docker compose --project-name demo  down": True,
-    "hermes --config  x.yaml gateway restart": True,
+    "ciel --config  x.yaml gateway restart": True,
 }
 for command, dangerous in cases.items():
     assert detect_dangerous_command(command)[0] is dangerous, command

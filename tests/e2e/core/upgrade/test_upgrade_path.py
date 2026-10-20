@@ -25,7 +25,7 @@ live gap fixed by #120339); ``kill_before_deps``
 
 Invariants after every leg (fresh processes only): the final update's exit code matches reality
 (0 and HEAD checked out and the editable install serves HEAD's tree, or non-zero and nothing
-changed); ``hermes --version``, ``hermes doctor`` and a one-shot turn succeed; state.db and the
+changed); ``ciel --version``, ``hermes doctor`` and a one-shot turn succeed; state.db and the
 profile's state.db pass ``integrity_check`` with unchanged row counts and byte-identical
 pre-existing messages (also after HEAD's first real use of the DB); the cron job survives; the
 venv satisfies HEAD's dependency set; config.yaml of both profiles equals exactly what HEAD's own

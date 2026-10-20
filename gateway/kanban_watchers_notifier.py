@@ -608,7 +608,7 @@ class _KanbanNotification:
     def _served_wake_profile(self) -> Optional[str]:
         """The subscription's profile when THIS gateway is a multiplexer serving it, else ``None``.
 
-        ``None`` keeps the historical path: a standalone ``hermes -p <name>`` gateway owns its own
+        ``None`` keeps the historical path: a standalone ``ciel -p <name>`` gateway owns its own
         listener and key, so its api_server wakes keep using the HTTP self-post.
         """
         if not self.sub_profile:

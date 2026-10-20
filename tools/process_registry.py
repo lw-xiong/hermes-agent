@@ -1724,7 +1724,7 @@ class ProcessRegistry(ProcessTerminationMixin, ProcessCheckpointMixin):
         disables). Each pass re-reconciles child state so an orphaned-pipe exit can't wedge
         the linger. Returns ``{"waited", "completed", "timed_out"}`` id lists.
 
-        Bot Mode handoff REPLIES are the visible casualty (#90879): a recipient invoked as ``hermes -p <bot>
+        Bot Mode handoff REPLIES are the visible casualty (#90879): a recipient invoked as ``ciel -p <bot>
         chat -Q --query-file ...`` dispatches its reply via ``message_agent`` / ``bot_relay`` exactly this
         way, then exits, and the reply process is destroyed ~3s later. The sender waits forever for a reply
         that was already killed.

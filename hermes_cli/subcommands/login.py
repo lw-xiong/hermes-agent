@@ -9,7 +9,7 @@ def build_login_parser(subparsers, *, cmd_login: Callable) -> None:
     """Attach the deprecated ``login`` subcommand (handler only prints a deprecation notice).
 
     Kept registered so old scripts get the actionable message instead of argparse's
-    ``invalid choice``. Registered WITHOUT ``help=`` so it is omitted from ``hermes --help``
+    ``invalid choice``. Registered WITHOUT ``help=`` so it is omitted from ``ciel --help``
     (``help=SUPPRESS`` leaks ``==SUPPRESS==`` for top-level subparsers on 3.12+). ``--provider``
     takes ANY value (no ``choices=``) so the handler is reached rather than argparse erroring.
 

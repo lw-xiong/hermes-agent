@@ -180,7 +180,7 @@ def test_messaging_card_keeps_a_live_own_gateway_record_over_the_multiplexer(ser
     real_pid_exists = status._pid_exists
     monkeypatch.setattr(status, "_pid_exists", lambda pid: pid == own_pid or real_pid_exists(pid))
     monkeypatch.setattr(status, "_read_process_cmdline",
-                        lambda pid: "hermes -p alpha gateway run" if pid == own_pid else "hermes gateway run")
+                        lambda pid: "ciel -p alpha gateway run" if pid == own_pid else "hermes gateway run")
     assert status.multiplexer_liveness_for_profile(alpha) is not None
     entry = {"id": "telegram", "name": "Telegram", "description": "", "docs_url": "", "env_vars": [],
              "required_env": []}

@@ -52,7 +52,7 @@ save_config = late("save_config", "hermes_cli.config")
 
 def _spawn_action(argv: list[str], name: str, *, log_msg: str, prefix: str,
                   profile: Optional[str] = None) -> dict:
-    """Spawn a ``hermes -p <profile> <argv>`` action; spawn failure -> 500.
+    """Spawn a ``ciel -p <profile> <argv>`` action; spawn failure -> 500.
 
     The profile reaches the child as argv (``_profile_cli_args``) — the only mechanism
     that retargets a fresh process's import-time home bindings.
@@ -292,7 +292,7 @@ async def set_webhook_enabled(name: str, body: WebhookEnabledToggle, profile: Op
 @router.post("/api/gateway/start")
 async def start_gateway(profile: Optional[str] = None):
     from hermes_cli.web_server_gateway import multiplexed_profile_refusal
-    # The spawned `hermes -p X gateway start` would refuse with exit 78 into an action log nobody reads;
+    # The spawned `ciel -p X gateway start` would refuse with exit 78 into an action log nobody reads;
     # surface the same refusal here so the UI can point at the multiplexer instead of showing "started".
     refusal = await asyncio.to_thread(multiplexed_profile_refusal, profile, "start")
     if refusal:

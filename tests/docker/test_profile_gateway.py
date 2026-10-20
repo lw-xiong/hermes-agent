@@ -2,7 +2,7 @@
 
 Multiplex-only (#118273, #118433): ONE gateway per container serves every profile. ``hermes
 profile create`` still registers the profile's s6 slot (so ``--force`` has something to drive),
-but ``hermes -p <profile> gateway start`` without ``--force`` refuses, names the escape, and
+but ``ciel -p <profile> gateway start`` without ``--force`` refuses, names the escape, and
 leaves the slot's want-state DOWN. ``--force`` is the only path to a second, supervised
 per-profile gateway, and that path keeps working (its slot wants up, and stop takes it down).
 
@@ -89,7 +89,7 @@ def test_named_profile_gateway_start_refuses_without_force(
     r = _sh(container_name, f"test -d /run/service/gateway-{PROFILE}")
     assert r.returncode == 0, "s6 service slot not created on profile create"
 
-    r = _sh(container_name, f"hermes -p {PROFILE} gateway start", timeout=60)
+    r = _sh(container_name, f"ciel -p {PROFILE} gateway start", timeout=60)
     assert r.returncode != 0, f"a named profile started its own gateway: {r.stdout!r}"
     assert not _svstat_wants_up(container_name), (
         f"refused start still flipped the slot's want-state: {_svstat(container_name)!r}")
@@ -102,12 +102,12 @@ def test_named_profile_gateway_force_start_then_stop(
     r = _sh(container_name, f"hermes profile create {PROFILE}")
     assert r.returncode == 0, f"profile create failed: {r.stderr}"
 
-    r = _sh(container_name, f"hermes -p {PROFILE} gateway start --force", timeout=60)
+    r = _sh(container_name, f"ciel -p {PROFILE} gateway start --force", timeout=60)
     assert r.returncode == 0, (
         f"--force gateway start failed: stderr={r.stderr!r} stdout={r.stdout!r}"
     )
     _wait_for_want_state(container_name, want_up=True)
 
-    r = _sh(container_name, f"hermes -p {PROFILE} gateway stop", timeout=30)
+    r = _sh(container_name, f"ciel -p {PROFILE} gateway stop", timeout=30)
     assert r.returncode == 0
     _wait_for_want_state(container_name, want_up=False)

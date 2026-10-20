@@ -36,7 +36,7 @@ def fold_named_slot_intent(default_prior_state: Optional[str],
 
     A named slot is never booted from its own intent (a started named slot IS a second gateway on
     this host); its ``running`` intent moves to the root slot, which is the process that serves it.
-    Without the fold an image only ever driven as ``hermes -p coder gateway start`` came up with
+    Without the fold an image only ever driven as ``ciel -p coder gateway start`` came up with
     ZERO gateways: no root state, every named slot registered down, every action "registered".
     """
     folded = tuple(sorted(name for name, prior in named_states if prior in AUTOSTART_STATES))
@@ -52,7 +52,7 @@ def named_slot_name(profile: str) -> str:
 def running_named_slots(profiles: Sequence[str], manager=None) -> list[str]:
     """Named profiles whose s6 slot is UP right now — the only s6 state that is a second gateway.
 
-    A registered-down slot (what boot leaves behind) is a start target for ``hermes -p X gateway
+    A registered-down slot (what boot leaves behind) is a start target for ``ciel -p X gateway
     start``, not a running gateway, and must never veto the multiplex default.
     """
     manager = manager or _manager()

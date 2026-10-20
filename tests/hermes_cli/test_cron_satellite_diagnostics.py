@@ -63,16 +63,16 @@ def test_status_preserves_profile_health_contract(served_root, capsys, monkeypat
         mode in {"missing", "fresh", "stale"})
     assert ("will fire automatically" in output) == (mode in {"fresh", "local"})
     if mode in {"missing", "stale"}:
-        assert "hermes --profile default gateway restart" in output
+        assert "ciel --profile default gateway restart" in output
     if mode == "missing":
         assert "has not reported a heartbeat" in output
     if mode == "stale":
         assert "STALLED" in output
     if mode in {"disabled", "excluded", "unrelated_pid"}:
         assert "No scheduler is serving profile" in output
-        assert "hermes --profile default gateway install" in output
-        assert "sudo hermes --profile default gateway install --system" in output
-        assert "hermes --profile default gateway run" in output
+        assert "ciel --profile default gateway install" in output
+        assert "sudo ciel --profile default gateway install --system" in output
+        assert "ciel --profile default gateway run" in output
         # Multiplex-only: a per-profile service is not offered at all any more, not even as a
         # "legacy" fallback -- the one host gateway is the only topology, and an old per-profile
         # install is something to FOLD IN, not something to reinstall.
@@ -103,7 +103,7 @@ def test_host_record_rung_names_the_roster_and_a_runnable_restart(served_root, c
 
     assert f"Scheduler host: the host gateway (PID {os.getpid()}) serving profiles default, probe" in output
     assert "Scheduler host: the host gateway (multiplexing this profile)" not in output
-    assert "hermes --profile default gateway restart" in output
+    assert "ciel --profile default gateway restart" in output
     assert "\n  If heartbeat never appears, restart: hermes gateway restart" not in output
 
 
@@ -145,7 +145,7 @@ def test_standalone_guidance_matches_profile_membership(served_root, monkeypatch
     monkeypatch.setattr("gateway.status.is_gateway_runtime_lock_active", lambda lock_path=None: False)
     cron_status()
     output = capsys.readouterr().out
-    assert "hermes --profile default gateway install" in output
+    assert "ciel --profile default gateway install" in output
     # A named profile is told the host gateway serves it and how to fold an older per-profile
     # install in; it is never offered a second host process, legacy or otherwise.
     assert ("gateway migrate --multiplex" in output) == (home_kind == "named")
@@ -221,7 +221,7 @@ def test_in_process_ticker_heartbeat_counts_only_while_its_writer_lives(tmp_path
 
 
 def test_named_profile_output_names_the_profile_and_trusts_its_own_ticker(served_root, capsys, monkeypatch):
-    """`hermes -p probe cron list/status` names the inspected profile on every verdict (#99579) and
+    """`ciel -p probe cron list/status` names the inspected profile on every verdict (#99579) and
     answers "is a scheduler ticking THIS home": a fresh heartbeat written into probe's store counts
     even when the default multiplexer's record does not list probe — the serve/Desktop backend ticks
     every local profile without any gateway record (#121881, #99631)."""

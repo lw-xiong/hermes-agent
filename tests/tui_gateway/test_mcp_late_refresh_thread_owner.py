@@ -6,7 +6,7 @@ toolset on the desktop app + dashboard WebUI.
 Root cause: there are two independent background MCP discovery thread owners
 by surface:
 
-  * ``tui_gateway.entry`` — the stdio ``hermes --tui`` path.
+  * ``tui_gateway.entry`` — the stdio ``ciel --tui`` path.
   * ``hermes_cli.mcp_startup`` — the desktop app + dashboard WebSocket sidecar
     (``tui_gateway/ws.py``) and ``hermes dashboard``.
 

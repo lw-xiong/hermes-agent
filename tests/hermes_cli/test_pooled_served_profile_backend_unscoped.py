@@ -1,6 +1,6 @@
-"""A pooled Desktop backend (``hermes --profile X serve``, HERMES_HOME=<root>/profiles/X) answers its
+"""A pooled Desktop backend (``ciel --profile X serve``, HERMES_HOME=<root>/profiles/X) answers its
 REST without ``?profile=``. Those UNSCOPED reads/verbs are about X — a profile the live default
-multiplexer serves — and must agree with the scoped ``?profile=X`` answer and with ``hermes -p X status``:
+multiplexer serves — and must agree with the scoped ``?profile=X`` answer and with ``ciel -p X status``:
 running-via-multiplexer, start/stop refused, restart addressed to the multiplexer's home.
 
 Live repro (Desktop over a multiplexed HOME): Command Center said "Messaging gateway stopped" for X,

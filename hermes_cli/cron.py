@@ -575,11 +575,11 @@ def cron_status():
                 from hermes_cli.gateway import host_multiplexer_serving
                 owner = host_multiplexer_serving(active)
             host_profile = owner.profile_label if owner is not None else "default"
-            _print_ticker_health([host.pid], restart_command=f"hermes --profile {host_profile} gateway restart")
+            _print_ticker_health([host.pid], restart_command=f"ciel --profile {host_profile} gateway restart")
         elif pids or gateway_alive_via_lock or served_by_multiplexer or in_process_ticker:
             if served_by_multiplexer:
                 print("  Scheduler host: the host gateway (multiplexing this profile)")
-                _print_ticker_health([], restart_command="hermes --profile default gateway restart")
+                _print_ticker_health([], restart_command="ciel --profile default gateway restart")
             elif in_process_ticker:
                 print(f"  Scheduler host: an in-process ticker (hermes serve / Desktop backend) ticking profile '{active}'")
                 _print_ticker_health([], restart_command="restart the Hermes Desktop app (or its serve backend)")
@@ -599,14 +599,14 @@ def cron_status():
                                 f"{_format_lateness(hb_age)} ago — jobs that came due "
                                 "since then have not fired.", Colors.YELLOW))
             print("\n  Start the ONE host gateway (it multiplexes every profile, this one included):\n"
-                  "    hermes --profile default gateway install   # user service\n"
-                  "    sudo hermes --profile default gateway install --system  # Linux servers: boot-time service\n"
-                  "    hermes --profile default gateway run       # Or run in foreground")
+                  "    ciel --profile default gateway install   # user service\n"
+                  "    sudo ciel --profile default gateway install --system  # Linux servers: boot-time service\n"
+                  "    ciel --profile default gateway run       # Or run in foreground")
             if active not in ("default", "custom"):
                 print("\n  It serves this profile automatically. If a per-profile service or gateway\n"
                       "  from an older release is still installed, fold it in (preflight + dry run):\n"
-                      "      hermes --profile default gateway migrate --multiplex --dry-run\n"
-                      "      hermes --profile default gateway migrate --multiplex\n"
+                      "      ciel --profile default gateway migrate --multiplex --dry-run\n"
+                      "      ciel --profile default gateway migrate --multiplex\n"
                       "  Check: hermes cron status from this profile should show its ticker heartbeat.\n")
 
     print()

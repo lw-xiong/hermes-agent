@@ -489,7 +489,7 @@ def _arm_exit_watchdog_on_shutdown_signal() -> None:
     several wedge points BEFORE ``_run_cleanup`` arms the normal watchdog: a main thread parked in a syscall
     that never observes the unwind, a prompt_toolkit teardown that never returns, or an agent worker
     blocking the ``finally``. When that happens the process has NO backstop and a "dead" CLI lingers
-    (observed: ``hermes --tui`` alive ~47 min at 4% CPU after terminal close — the #65998 class).
+    (observed: ``ciel --tui`` alive ~47 min at 4% CPU after terminal close — the #65998 class).
     """
     global _signal_watchdog_armed
     if _signal_watchdog_armed:

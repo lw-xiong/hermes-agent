@@ -239,7 +239,7 @@ def test_noop_on_posix(managed_install):
 
 
 def test_profile_session_still_heals_the_shared_bin(tmp_path, monkeypatch):
-    """Under ``hermes -p <name>`` HERMES_HOME points inside profiles/<name>;
+    """Under ``ciel -p <name>`` HERMES_HOME points inside profiles/<name>;
     the launcher dir is per-machine, so the heal must anchor on the default
     root and fire anyway — a habitual profile user gets the same repair."""
     home = tmp_path / "hermes"

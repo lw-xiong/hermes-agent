@@ -146,7 +146,7 @@ def test_adoption_stamp_never_discharges_an_owed_tail(tmp_path, monkeypatch, com
 
 @pytest.mark.parametrize("argv", [["--version"], ["-V"], ["--help"], ["-p", "work", "-h"]])
 def test_metadata_query_never_waits_on_source_completion(tmp_path, monkeypatch, argv):
-    """`hermes --version` offline must answer from the tree, not run a network-bound sync."""
+    """`ciel --version` offline must answer from the tree, not run a network-bound sync."""
     import pm
 
     root = _self_checkout(tmp_path, monkeypatch)

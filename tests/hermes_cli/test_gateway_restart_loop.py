@@ -307,7 +307,7 @@ class TestGatewayLifecyclePattern:
 
 
 class TestProfileFlagGatewayLifecycle:
-    """#78028: `hermes -p <profile> gateway restart|stop` bypasses Branch A's
+    """#78028: `ciel -p <profile> gateway restart|stop` bypasses Branch A's
     literal adjacency, so it needs its own pattern. It is only the same
     self-termination foot-gun when the named profile IS the profile running
     the guard; sibling-profile restarts are legitimate fleet operations and
@@ -321,35 +321,35 @@ class TestProfileFlagGatewayLifecycle:
         monkeypatch.delenv("HERMES_PROFILE_NAME", raising=False)
 
     @pytest.mark.parametrize("text", [
-        "hermes -p zeus gateway stop",
-        "hermes -p zeus gateway restart",
-        "hermes --profile zeus gateway restart",
-        "hermes --profile zeus gateway stop",
-        "hermes --profile=zeus gateway restart",
+        "ciel -p zeus gateway stop",
+        "ciel -p zeus gateway restart",
+        "ciel --profile zeus gateway restart",
+        "ciel --profile zeus gateway stop",
+        "ciel --profile=zeus gateway restart",
         # Global flags before/after the selector must not hide the shape.
         "hermes -v -p zeus gateway restart",
-        "hermes -p zeus -v gateway restart",
-        "hermes --debug --profile zeus gateway stop",
+        "ciel -p zeus -v gateway restart",
+        "ciel --debug --profile zeus gateway stop",
         # Shell quoting of the profile id is equivalent to the bare name.
-        "hermes -p 'zeus' gateway restart",
-        "hermes --profile \"zeus\" gateway stop",
+        "ciel -p 'zeus' gateway restart",
+        "ciel --profile \"zeus\" gateway stop",
     ])
     def test_self_target_blocked(self, text):
         assert _contains_gateway_lifecycle_command(text), f"Should block: {text!r}"
 
     @pytest.mark.parametrize("text", [
-        "hermes -p venus gateway stop",
-        "hermes -p venus gateway restart",
-        "hermes --profile venus gateway restart",
-        "hermes --profile=venus gateway stop",
-        "hermes -p venus -v gateway restart",
+        "ciel -p venus gateway stop",
+        "ciel -p venus gateway restart",
+        "ciel --profile venus gateway restart",
+        "ciel --profile=venus gateway stop",
+        "ciel -p venus -v gateway restart",
     ])
     def test_sibling_allowed(self, text):
         assert not _contains_gateway_lifecycle_command(text), f"Should allow: {text!r}"
 
     @pytest.mark.parametrize("text", [
-        "hermes -p zeus gateway start",
-        "hermes -p zeus gateway start --all",
+        "ciel -p zeus gateway start",
+        "ciel -p zeus gateway start --all",
     ])
     def test_start_still_allowed(self, text):
         # `start` is intentionally excluded from the guard, with or without
@@ -366,8 +366,8 @@ class TestProfileFlagGatewayLifecycle:
         import hermes_cli.profiles as profiles_mod
 
         monkeypatch.setattr(profiles_mod, "get_active_profile_name", lambda: "zeus")
-        assert _contains_gateway_lifecycle_command("hermes -p zeus gateway restart")
-        assert not _contains_gateway_lifecycle_command("hermes -p venus gateway restart")
+        assert _contains_gateway_lifecycle_command("ciel -p zeus gateway restart")
+        assert not _contains_gateway_lifecycle_command("ciel -p venus gateway restart")
 
     def test_no_profile_context_conservative_allow(self, monkeypatch):
         # With no profile identity the guard cannot prove self-targeting, so
@@ -376,7 +376,7 @@ class TestProfileFlagGatewayLifecycle:
         from cron import lifecycle_guard
 
         monkeypatch.setattr(lifecycle_guard, "_current_profile_name", lambda: None)
-        assert not _contains_gateway_lifecycle_command("hermes -p zeus gateway restart")
+        assert not _contains_gateway_lifecycle_command("ciel -p zeus gateway restart")
         assert _contains_gateway_lifecycle_command("hermes gateway restart")
 
 

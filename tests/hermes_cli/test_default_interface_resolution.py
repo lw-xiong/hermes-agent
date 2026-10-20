@@ -127,7 +127,7 @@ class TestWantsTuiEarly:
     # REGRESSION (#116902): mouse-residue suppression reads the interface
     # before `_apply_profile_override()` sets HERMES_HOME, so a cache that
     # ignored the home answered every later caller with the DEFAULT home's
-    # interface — `hermes -p <name>` booted the wrong one.
+    # interface — `ciel -p <name>` booted the wrong one.
     def test_reread_after_the_profile_rehomes_the_process(self, tmp_path, monkeypatch):
         default_home = tmp_path / "default"
         profile_home = tmp_path / "profiles" / "coder"

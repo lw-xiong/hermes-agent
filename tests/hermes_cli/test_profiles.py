@@ -1057,7 +1057,7 @@ class TestWrapperScript:
         assert wrapper.name == "mybot"
         content = wrapper.read_text(encoding="utf-8-sig")
         assert content.startswith("#!/bin/sh")
-        assert "exec /opt/hermes/bin/hermes -p mybot" in content
+        assert "exec /opt/hermes/bin/ciel -p mybot" in content
 
 
     @pytest.mark.platforms("windows")

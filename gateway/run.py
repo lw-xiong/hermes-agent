@@ -4931,7 +4931,7 @@ def _replace_target_belongs_to_other_profile(existing_pid: int) -> bool:
     by exact PID + start-time; live argv can never PROVE ownership (no HERMES_HOME), it is only a
     consistency check. Missing, legacy, conflicting or unprovable identity → refuse (fail closed)."""
     # Multiplex-only: the ONE host gateway serving this profile IS this profile's gateway, whatever
-    # home launched it — `hermes -p X gateway run --replace` means "replace the process serving X".
+    # home launched it — `ciel -p X gateway run --replace` means "replace the process serving X".
     # Argv and HERMES_HOME can never prove that (the host singleton runs one home's argv while
     # serving every profile), so the live served set answers first; everything below stays the
     # fail-closed rule for a host with no usable record.

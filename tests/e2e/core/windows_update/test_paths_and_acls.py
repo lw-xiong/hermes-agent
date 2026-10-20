@@ -165,7 +165,7 @@ def test_hermes_works_and_updates_from_that_profile(journey: Journey) -> None:
     m = journey.machine
     version, turn, update = journey["version"], journey["turn"], journey["update"]
     assert version.returncode == 0 and "Ciel v" in version.stdout, fail_with(
-        m, "hermes --version fails from a non-ASCII profile", version)
+        m, "ciel --version fails from a non-ASCII profile", version)
     assert turn.ok, fail_with(
         m, f"a turn fails from a non-ASCII profile (reply printed={turn.reply_id in turn.run.stdout}, "
            f"prompt reached provider={turn.reached_wire})", turn.run)

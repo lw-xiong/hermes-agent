@@ -279,7 +279,7 @@ class _SlashWorker:
         # The worker runs the agent → needs provider credentials; tier-1 secrets (gateway/GitHub/
         # infra) are still stripped. A served profile's worker gets THAT profile's home + secrets and
         # none of the launch profile's .env / TERMINAL_* residue, exactly what a standalone
-        # `hermes -p X` would load itself. The launch profile is a profile too: once the process hosts
+        # `ciel -p X` would load itself. The launch profile is a profile too: once the process hosts
         # a second home (multiplex flipped), its worker must name its own home or the fail-closed
         # no-target/no-scope path raises UnscopedSecretError (#115427).
         env = _prepend_tool_paths(served_profile_child_env(
@@ -1541,7 +1541,7 @@ def _clear_pending(sid: str | None = None) -> None:
 
 
 def _env_model_seed() -> str:
-    """The launch-scoped model seed (``hermes --tui -m``, hosted provisioning); "" when unset."""
+    """The launch-scoped model seed (``ciel --tui -m``, hosted provisioning); "" when unset."""
     return (os.environ.get("HERMES_MODEL", "") or os.environ.get("HERMES_INFERENCE_MODEL", "")).strip()
 
 
@@ -1562,7 +1562,7 @@ def _resolve_model() -> str:
 
 def _resolve_session_platform() -> str:
     """``HERMES_DESKTOP=1`` without ``HERMES_DESKTOP_TERMINAL`` → "desktop" (chat panel; the agent then
-    suggests TUI-only slash commands), else "tui" (embedded terminal pane or standalone ``hermes --tui``)."""
+    suggests TUI-only slash commands), else "tui" (embedded terminal pane or standalone ``ciel --tui``)."""
     desktop = is_truthy_value(os.environ.get("HERMES_DESKTOP"))
     return "desktop" if desktop and not is_truthy_value(os.environ.get("HERMES_DESKTOP_TERMINAL")) else "tui"
 

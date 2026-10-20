@@ -1034,7 +1034,7 @@ def test_symlinked_workspaces_root_does_not_widen_scratch_cleanup(kanban_home, t
 # Shared-board path resolution (issue #19348)
 #
 # The kanban board is a cross-profile coordination primitive: a worker
-# spawned with `hermes -p <profile>` must read/write the same kanban.db
+# spawned with `ciel -p <profile>` must read/write the same kanban.db
 # as the dispatcher that claimed the task. These tests exercise the
 # path-resolution layer directly and would have caught the regression
 # where `kanban_db_path()` resolved to the active profile's HERMES_HOME.

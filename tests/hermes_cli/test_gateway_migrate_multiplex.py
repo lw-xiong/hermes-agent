@@ -53,7 +53,7 @@ def fleet(tmp_path, monkeypatch):
         name = _name(home)
         state.ops.append((name, verb))
         if verb == "start" and name != "default":
-            # What the real `hermes -p <name> gateway run` checks first: is a live multiplexer
+            # What the real `ciel -p <name> gateway run` checks first: is a live multiplexer
             # still recorded as serving me? (exit 78 if so — the unit is then parked for good).
             from hermes_cli.gateway import named_profile_served_by_running_multiplexer
             state.refused_at_start[name] = named_profile_served_by_running_multiplexer(name)

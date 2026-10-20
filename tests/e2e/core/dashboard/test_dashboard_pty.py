@@ -1,4 +1,4 @@
-"""Dashboard embedded chat: the ``/api/pty`` WebSocket drives a REAL ``hermes --tui`` end to end.
+"""Dashboard embedded chat: the ``/api/pty`` WebSocket drives a REAL ``ciel --tui`` end to end.
 
 Issue class: the dashboard Chat tab talking to the wrong profile, or losing the conversation on a
 reconnect. Every cell runs the real ``hermes dashboard``, which

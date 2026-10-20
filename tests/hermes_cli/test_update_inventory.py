@@ -32,7 +32,7 @@ def fleet(monkeypatch, tmp_path):
     monkeypatch.setattr("gateway.status._pid_exists", lambda pid: pid in (100, 200))
     # A runtime is a VERIFIED gateway identity: live PID whose command line is a gateway's for that home.
     monkeypatch.setattr("gateway.status._read_process_cmdline", lambda pid: {
-        100: "hermes gateway run", 200: "hermes --profile work gateway run"}.get(pid))
+        100: "hermes gateway run", 200: "ciel --profile work gateway run"}.get(pid))
     monkeypatch.setattr("hermes_cli.gateway._get_service_pids", lambda all_profiles=False: {100})
     monkeypatch.setattr("hermes_cli.gateway.supports_systemd_services", lambda: True)
     monkeypatch.setattr("hermes_cli.gateway.find_profile_gateway_processes", lambda exclude_pids=None: [])
@@ -62,7 +62,7 @@ class TestCollectInventory:
         assert by_profile["work"].restart_via == "manual"
         from hermes_cli.update_inventory import describe_restart_mechanism
 
-        assert "hermes -p work gateway restart" in describe_restart_mechanism(
+        assert "ciel -p work gateway restart" in describe_restart_mechanism(
             by_profile["work"].restart_via, "work"
         )
 

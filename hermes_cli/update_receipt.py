@@ -239,7 +239,7 @@ def _receipt_dir() -> Path:
 def _receipt_dirs() -> list[Path]:
     """The root store, then the profile's own when a named profile makes them differ. ``pm/``
     writes its sync receipts to ``get_hermes_home()`` and receipts from before the root move live
-    there too, so readers take both and writers mirror ``latest.json`` into it (``hermes -p <name>
+    there too, so readers take both and writers mirror ``latest.json`` into it (``ciel -p <name>
     pm status`` reads only that one)."""
     from hermes_constants import get_hermes_home
 
@@ -1306,6 +1306,6 @@ def print_fleet_version_matrix(fleet: list[dict[str, Any]]) -> bool:
         print()
         print(
             f"⚠ Gateway restart still owed: {stale_or_down} gateway(s) still running the old code (or stopped).")
-        print("  Run `hermes gateway restart` (or `hermes -p <profile> gateway restart` for a named")
+        print("  Run `hermes gateway restart` (or `ciel -p <profile> gateway restart` for a named")
         print("  profile), then `hermes gateway status` to confirm.")
     return stale_or_down > 0

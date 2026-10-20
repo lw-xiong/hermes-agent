@@ -970,7 +970,7 @@ class GatewayAdapterLifecycleMixin:
         from gateway.run_profile_reconcile import profile_serve_signature
         if not self._multiplex_on():
             # Runtime-status publication re-stamps the previous writer's record in place, so a multiplexer's
-            # ``served_profiles`` would outlive it into this single-profile run and `hermes -p X ...`
+            # ``served_profiles`` would outlive it into this single-profile run and `ciel -p X ...`
             # would keep refusing (exit 78) / reporting "served" for profiles nobody serves.
             with _log_suppressed(logging.DEBUG, "could not clear served_profiles", exc_info=True):
                 from gateway.status import publish_runtime_status
@@ -1210,7 +1210,7 @@ class GatewayAdapterLifecycleMixin:
         noted.add((profile_name, platform))
         pv = platform.value
         if platform is Platform.WHATSAPP:
-            message = f"WhatsApp is not paired; pair it: hermes -p {profile_name} whatsapp"
+            message = f"WhatsApp is not paired; pair it: ciel -p {profile_name} whatsapp"
             logger.info("[MULTIPLEX] Profile '%s': %s", profile_name, message)
             self._update_platform_runtime_status(
                 f"{profile_name}:{pv}", platform_state="disabled",

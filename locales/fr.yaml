@@ -8,7 +8,7 @@ approval:
   prompt_smart_deny: "      Choix [o/R] : "
   smart_deny_once_inputs: "o,once,fois"
   smart_deny_deny_inputs: "d,deny,r,refuser"
-  timeout: "      ⏱ Aucune réponse en {waited} — la commande n'a pas été exécutée. Redemandez pour réessayer, ou augmentez la limite : hermes config set approvals.timeout {suggested}"
+  timeout: "      ⏱ Aucune réponse en {waited} — la commande n'a pas été exécutée. Redemandez pour réessayer, ou augmentez la limite : ciel config set approvals.timeout {suggested}"
   allowed_once: "      ✓ Autorisé une fois"
   allowed_session: "      ✓ Autorisé pour cette session"
   allowed_always: "      ✓ Ajouté à la liste d'autorisation permanente"
@@ -66,7 +66,7 @@ gateway:
     usage_switch_model: "`/model <name>` — changer de modèle"
     usage_switch_provider: "`/model <name> --provider <slug>` — changer de fournisseur"
     usage_persist: "`/model <name> --global` — conserver"
-    err_skew: "Ce gateway exécute le code de {boot_rev}, mais le checkout sur disque est maintenant à {disk_rev}. Changer de modèle risquerait un plantage dû à des modules obsolètes — redémarrez le gateway pour charger le nouveau code : hermes gateway restart"
+    err_skew: "Ce gateway exécute le code de {boot_rev}, mais le checkout sur disque est maintenant à {disk_rev}. Changer de modèle risquerait un plantage dû à des modules obsolètes — redémarrez le gateway pour charger le nouveau code : ciel gateway restart"
     err_switch_failed: "Le passage au modèle {model} a échoué ({error}) ; le modèle {current} est conservé."
     err_config_not_updated: "config.yaml non mis à jour ({error})"
     err_stale_override: "enregistré dans config.yaml, mais l'ancienne surcharge de session n'a pas été effacée ({error})"
@@ -116,7 +116,7 @@ gateway:
     rerun_hint: |2-
 
       Demandez-moi de la relancer ou d'afficher le journal complet.
-    no_credentials: "❌ La tâche d'arrière-plan n'a pas pu démarrer car aucune connexion à un modèle d'IA n'est configurée. Utilisez /login, ou lancez `hermes setup` sur l'hôte."
+    no_credentials: "❌ La tâche d'arrière-plan n'a pas pu démarrer car aucune connexion à un modèle d'IA n'est configurée. Utilisez /login, ou lancez `ciel setup` sur l'hôte."
     complete_header: |+
       ✅ Tâche d'arrière-plan terminée
       Prompt : "{preview}"
@@ -176,8 +176,8 @@ gateway:
     turnhold_deferred: "ℹ️ Compression du contexte différée — le résumé est encore en cours de diffusion. Poursuite sans compression pour ce tour."
     failed: "Échec de la compression : {error}"
     hygiene_timeout: "⚠️ Le raccourcissement de l'historique de la conversation a pris trop de temps ; je l'ai donc ignoré et tout conservé tel quel. Lancez /compress pour réessayer ou /new pour repartir de zéro."
-    hygiene_timeout_doctor_hint: " Si cela se reproduit, lancez `hermes doctor` sur l'hôte."
-    hygiene_failed: "⚠️ Le raccourcissement de l'historique de la conversation a échoué ; j'ai donc tout conservé tel quel. Lancez /compress pour réessayer ou /new pour repartir de zéro. Si cela se reproduit, lancez `hermes doctor` sur l'hôte."
+    hygiene_timeout_doctor_hint: " Si cela se reproduit, lancez `ciel doctor` sur l'hôte."
+    hygiene_failed: "⚠️ Le raccourcissement de l'historique de la conversation a échoué ; j'ai donc tout conservé tel quel. Lancez /compress pour réessayer ou /new pour repartir de zéro. Si cela se reproduit, lancez `ciel doctor` sur l'hôte."
     codex_nothing: "🗜️ Rien à compacter : cette session tourne sur le runtime app-server de Codex, dont le contexte réside dans un fil géré par Codex qui n'existe que tant que l'agent est actif. Envoyez d'abord un message, puis /compress — ou /reset pour repartir de zéro."
     codex_compacted: "🗜️ Fil app-server Codex compacté (thread/compact). Le miroir de la transcription est volontairement inchangé — c'est désormais l'app-server qui porte le contexte compacté."
     codex_incomplete: "⚠️ La compaction app-server Codex ne s'est pas terminée — le fil est inchangé. Consultez les journaux de l'app-server, relancez /compress, ou /reset pour une session propre."
@@ -185,7 +185,7 @@ gateway:
     upload_failed: "✗ Échec de l'envoi du rapport de débogage : {error}"
     header: "**Rapport de débogage envoyé :**"
     auto_delete: "⏱ Les pastes s'effaceront automatiquement dans 6 heures."
-    full_logs_hint: "Pour envoyer les journaux complets, utilisez `hermes debug share` depuis la CLI."
+    full_logs_hint: "Pour envoyer les journaux complets, utilisez `ciel debug share` depuis la CLI."
     share_hint: "Partagez ces liens avec l'équipe Hermes pour obtenir de l'aide."
     report_label: "Rapport"
   deny:
@@ -360,7 +360,7 @@ gateway:
     tip: "\n✦ Astuce : {tip}"
   restart:
     in_progress: "⏳ Redémarrage du gateway déjà en cours..."
-    restarting: "♻ Redémarrage du gateway. Si vous n'êtes pas notifié dans les 60 secondes, redémarrez depuis la console avec `hermes gateway restart`."
+    restarting: "♻ Redémarrage du gateway. Si vous n'êtes pas notifié dans les 60 secondes, redémarrez depuis la console avec `ciel gateway restart`."
   resume:
     db_unavailable: "Base de données des sessions indisponible."
     parse_error: "⚠️ Could not parse `/resume` arguments: {error}. Use quotes around titles with spaces, for example: `/resume \"Project A Plan\"`."
@@ -573,14 +573,14 @@ gateway:
     removed: "↩️ {turns} tour(s) annulé(s) ({count} message(s)).\nSauvegardé dans : « {preview} »\nCopiez/modifiez le texte ci-dessus et envoyez-le pour relancer à partir d'ici."
     invalid_count: "Nombre invalide « {arg} » — utilisez /undo ou /undo N."
   update:
-    platform_not_messaging: "✗ /update n'est disponible que depuis les plateformes de messagerie. Exécutez `hermes update` depuis le terminal."
+    platform_not_messaging: "✗ /update n'est disponible que depuis les plateformes de messagerie. Exécutez `ciel update` depuis le terminal."
     not_git_repo: "✗ Pas un dépôt git — impossible de mettre à jour."
-    hermes_cmd_not_found: "✗ Impossible de localiser la commande `hermes`. Hermes est en cours d'exécution, mais la commande de mise à jour n'a pas pu trouver l'exécutable dans le PATH ni via l'interpréteur Python actuel. Essayez d'exécuter `hermes update` manuellement dans votre terminal."
+    hermes_cmd_not_found: "✗ Impossible de localiser la commande `hermes`. Hermes est en cours d'exécution, mais la commande de mise à jour n'a pas pu trouver l'exécutable dans le PATH ni via l'interpréteur Python actuel. Essayez d'exécuter `ciel update` manuellement dans votre terminal."
     start_failed: "✗ Échec du démarrage de la mise à jour : {error}"
     starting: "☤ Démarrage de la mise à jour Hermes… Je diffuserai la progression ici."
     reply_failed: "✗ Échec de l'envoi de la réponse au processus de mise à jour : {error}"
     reply_sent: "✓ `{label}` envoyé au processus de mise à jour."
-    failed_notice: "❌ La mise à jour d'Hermes a échoué ; la version précédente tourne toujours. Lancez `hermes update` sur l'hôte pour voir l'erreur complète, ou réessayez /update plus tard."
+    failed_notice: "❌ La mise à jour d'Hermes a échoué ; la version précédente tourne toujours. Lancez `ciel update` sur l'hôte pour voir l'erreur complète, ou réessayez /update plus tard."
     prompt_default: " (par défaut : {default})"
     prompt: |-
       ☤ **La mise à jour a besoin de votre réponse :**
@@ -600,7 +600,7 @@ gateway:
       ```
     managed_action: "mettre à jour Hermes Agent"
     not_applicable: |-
-      ✗ `hermes update` ne s'applique pas à cette installation ({method}).
+      ✗ `ciel update` ne s'applique pas à cette installation ({method}).
       Mettez à jour avec : {command}
   usage:
     rate_limits: "⏱️ **Limites de débit :** {state}"
@@ -683,7 +683,7 @@ gateway:
     warn_passthrough: "⚠️ {error}"
     unknown_error: "erreur inconnue"
     error_prefix: "Erreur : {error}"
-    history_unreadable: "⚠️ Je ne peux pas lire l'historique de cette conversation pour le moment (vos messages précédents existent mais ne peuvent pas être chargés). Lancez `hermes doctor --fix` sur l'hôte, ou utilisez /new pour repartir de zéro."
+    history_unreadable: "⚠️ Je ne peux pas lire l'historique de cette conversation pour le moment (vos messages précédents existent mais ne peuvent pas être chargés). Lancez `ciel doctor --fix` sur l'hôte, ou utilisez /new pour repartir de zéro."
     agent_running_retry_later: "L'agent est en cours d'exécution — attendez la fin du tour, puis /{command}."
     none_marker: "(aucun)"
     none_value: "aucun"
@@ -766,17 +766,17 @@ gateway:
     skip_hint: 'Répondez « skip » pour passer cette question.'
   errors:
     rate_limited: "⏱️ Le service de modèle IA limite le débit des requêtes. Patientez un instant, puis utilisez /retry."
-    auth_failed: "⚠️ La connexion au service de modèle IA a échoué. Utilisez /login pour vous reconnecter, ou demandez à la personne qui gère ce bot de lancer `hermes doctor` sur l'hôte."
+    auth_failed: "⚠️ La connexion au service de modèle IA a échoué. Utilisez /login pour vous reconnecter, ou demandez à la personne qui gère ce bot de lancer `ciel doctor` sur l'hôte."
     bad_request: "⚠️ Le service de modèle IA a rejeté cette requête. Essayez de reformuler votre message, ou utilisez /model pour changer de modèle."
-    connection_interrupted: "⚠️ La connexion au service de modèle IA a été interrompue en cours de requête — c'est généralement passager. Utilisez /retry pour réessayer ; si cela se reproduit, lancez `hermes doctor` sur l'hôte."
-    unreachable: "⚠️ Le service de modèle IA est injoignable pour le moment — le point de terminaison configuré ne tourne pas ou n'est pas accessible. Patientez un instant puis utilisez /retry ; si le problème persiste, lancez `hermes doctor` sur l'hôte."
-    connection_unknown: "⚠️ Hermes n'a pas pu joindre le service de modèle IA (aucun détail supplémentaire fourni par le SDK). Utilisez /retry pour réessayer ; si le problème persiste, lancez `hermes doctor` sur l'hôte."
+    connection_interrupted: "⚠️ La connexion au service de modèle IA a été interrompue en cours de requête — c'est généralement passager. Utilisez /retry pour réessayer ; si cela se reproduit, lancez `ciel doctor` sur l'hôte."
+    unreachable: "⚠️ Le service de modèle IA est injoignable pour le moment — le point de terminaison configuré ne tourne pas ou n'est pas accessible. Patientez un instant puis utilisez /retry ; si le problème persiste, lancez `ciel doctor` sur l'hôte."
+    connection_unknown: "⚠️ Hermes n'a pas pu joindre le service de modèle IA (aucun détail supplémentaire fourni par le SDK). Utilisez /retry pour réessayer ; si le problème persiste, lancez `ciel doctor` sur l'hôte."
     context_overflow: "⚠️ Cette conversation est devenue trop longue pour que je puisse la lire d'un coup. Utilisez /compress pour raccourcir l'historique, ou /new pour démarrer une nouvelle conversation."
     usage_limit_resets: "⏱️ La limite de consommation du service de modèle IA est atteinte ; elle se réinitialise dans {window}. Utilisez /retry ensuite, ou /model pour changer de modèle."
-    provider_kept_failing: "⚠️ Le service de modèle IA a échoué à répétition. Utilisez /retry pour réessayer, ou /model pour changer de modèle. Les détails sont dans le journal du gateway (`hermes logs`)."
+    provider_kept_failing: "⚠️ Le service de modèle IA a échoué à répétition. Utilisez /retry pour réessayer, ou /model pour changer de modèle. Les détails sont dans le journal du gateway (`ciel logs`)."
     session_storage_unavailable_disk: "⚠️ Le stockage des sessions était temporairement indisponible ; ce tour a donc été arrêté pour protéger l'historique de votre conversation. Vérifiez l'espace disque disponible, puis renvoyez votre message."
     session_storage_unavailable: "⚠️ Le stockage des sessions était temporairement indisponible ; ce tour a donc été arrêté pour protéger l'historique de votre conversation. Votre message devrait déjà être enregistré — renvoyez-le dans un instant."
-    generic_failed: "⚠️ Une erreur s'est produite et je n'ai pas pu terminer cette réponse. Utilisez /retry pour réessayer, ou /new pour démarrer une nouvelle conversation. Les détails techniques sont dans le journal du gateway (`hermes logs`)."
+    generic_failed: "⚠️ Une erreur s'est produite et je n'ai pas pu terminer cette réponse. Utilisez /retry pour réessayer, ou /new pour démarrer une nouvelle conversation. Les détails techniques sont dans le journal du gateway (`ciel logs`)."
     interrupted_before_start: "⚠️ Votre message a été interrompu avant le début du traitement (probablement par un /stop récent). Veuillez le renvoyer."
     processing_incomplete: "traitement incomplet"
     stopped_before_finishing: "⚠️ J'ai dû m'arrêter avant de terminer{reason}. Utilisez /retry pour réessayer, ou /compress si cette conversation est devenue très longue."
@@ -793,22 +793,22 @@ gateway:
     hint_rejected: " Le service de modèle IA a rejeté la requête."
     generic_failed_with_hint: |-
       ⚠️ Une erreur s'est produite et je n'ai pas pu terminer cette réponse.{hint}
-      Utilisez /retry pour réessayer, ou /new pour démarrer une nouvelle conversation. Les détails techniques sont dans le journal du gateway (`hermes logs`).
+      Utilisez /retry pour réessayer, ou /new pour démarrer une nouvelle conversation. Les détails techniques sont dans le journal du gateway (`ciel logs`).
     history_unavailable: "⚠️ L'historique de cette session est temporairement indisponible ; ce message n'a donc pas été traité. Demandez à l'opérateur d'inspecter state.db, puis renvoyez-le une fois le problème réglé. N'utilisez /reset que si vous voulez vraiment démarrer une nouvelle conversation."
-    no_credentials: "⚠️ Je n'ai pas pu me connecter au service de modèle IA ; ce message n'a donc pas été traité. Utilisez /login pour vous reconnecter, ou /model pour choisir un autre modèle. Si l'échec persiste, lancez `hermes doctor` sur l'hôte."
+    no_credentials: "⚠️ Je n'ai pas pu me connecter au service de modèle IA ; ce message n'a donc pas été traité. Utilisez /login pour vous reconnecter, ou /model pour choisir un autre modèle. Si l'échec persiste, lancez `ciel doctor` sur l'hôte."
   skills:
     disabled: |-
       La skill **{name}** est installée mais désactivée.
-      Activez-la avec : `hermes skills config`
+      Activez-la avec : `ciel skills config`
     not_installed: |-
       La skill **{name}** est disponible mais pas installée.
-      Installez-la avec : `hermes skills install {install_name}`
+      Installez-la avec : `ciel skills install {install_name}`
     disabled_for_platform: |-
       La skill **{name}** est désactivée pour {platform}.
-      Activez-la avec : `hermes skills config`
+      Activez-la avec : `ciel skills config`
     stacked_disabled: |-
       La ou les skills **{names}** de cet appel empilé sont désactivées pour {platform}.
-      Activez-les avec : `hermes skills config`
+      Activez-les avec : `ciel skills config`
     stacked_load_failed: "Échec du chargement des skills empilées pour /{command}."
     gate_off: "L'approbation des écritures de skills est désactivée (skills.write_approval). Activez-la avec /skills approval on, puis examinez ici les écritures en attente avec /skills pending."
     unknown_subcommand: "Sous-commande /skills inconnue sur cette plateforme. Utilisez : pending, approve <id>, reject <id>, diff <id>, approval <on|off>. (Recherche et installation : CLI uniquement.)"
@@ -990,7 +990,7 @@ gateway:
   shutdown:
     action_shutting_down: "en cours d'arrêt"
     action_restarting: "en cours de redémarrage"
-    cron_interrupted: "⚠️ La tâche planifiée '{job}' a été interrompue car Hermes est {action} ; aucun résultat pour cette exécution. Elle se relancera selon son planning, ou lancez-la maintenant avec `hermes cron run {job}` une fois Hermes de retour."
+    cron_interrupted: "⚠️ La tâche planifiée '{job}' a été interrompue car Hermes est {action} ; aucun résultat pour cette exécution. Elle se relancera selon son planning, ou lancez-la maintenant avec `ciel cron run {job}` une fois Hermes de retour."
     notice_shutdown: "⚠️ Hermes s'arrête — votre tâche en cours va être interrompue. Une fois de retour en ligne, envoyez n'importe quel message et j'essaierai de reprendre là où nous en étions."
     notice_restart: "⚠️ Hermes redémarre — votre tâche en cours va être interrompue. Envoyez n'importe quel message après le redémarrage et j'essaierai de reprendre là où vous en étiez."
   startup:
@@ -1044,7 +1044,7 @@ gateway:
     unknown: "Plateforme inconnue : {name}"
     not_queued_pause: "{name} n'est pas dans la file de nouvelles tentatives (soit connectée, soit non activée)."
     already_paused: "{name} est déjà en pause."
-    paused: "✓ {name} mise en pause. Reprenez avec `/platform resume {name}` ou `hermes gateway restart` pour réinitialiser."
+    paused: "✓ {name} mise en pause. Reprenez avec `/platform resume {name}` ou `ciel gateway restart` pour réinitialiser."
     not_queued_resume: "{name} n'est pas dans la file de nouvelles tentatives — rien à reprendre."
     already_retrying: "{name} réessaie déjà — aucune reprise nécessaire."
     resumed: "✓ {name} reprise — nouvelle tentative au prochain cycle du watcher."
@@ -1085,7 +1085,7 @@ gateway:
     invalid_prefix: "Heartbeat invalide"
     set: |-
       ♥ Heartbeat défini (toutes les {interval}) : {prompt}
-      Se déclenche comme un tour normal dès que cette session est inactive et que l'intervalle est écoulé. Il ne vit que tant que le gateway tourne — utilisez `hermes cron` pour des planifications durables.
+      Se déclenche comme un tour normal dès que cette session est inactive et que l'intervalle est écoulé. Il ne vit que tant que le gateway tourne — utilisez `ciel cron` pour des planifications durables.
   refine:
     unavailable: "Refine indisponible (aucune session)."
     nothing_yet: "Rien à affiner pour l'instant — envoyez d'abord un message."
@@ -1474,7 +1474,7 @@ platform:
       error: "❌ erreur {verb} : {error}"
       appended_by: "— {label} par {user}"
     user_fallback: "Utilisateur"
-    install_hint: "Exécutez `hermes setup` pour installer la prise en charge de Telegram."
+    install_hint: "Exécutez `ciel setup` pour installer la prise en charge de Telegram."
   slack:
     approval:
       fallback_text: "⚠️ Approbation de commande requise : {command}"
@@ -1937,7 +1937,7 @@ cli:
     load_failed: "{label} : {error}"
     load_failed_label: "Facturation indisponible"
     not_logged_in: "Non connecté à Nous Portal."
-    run_portal_then: "Lancez `hermes portal` pour vous connecter, puis {cmd}."
+    run_portal_then: "Lancez `ciel portal` pour vous connecter, puis {cmd}."
     org_line: "Org : {org}"
     org_line_role: "Org : {org} · {role}"
     bar_plan_label: "abonnement"
@@ -2047,8 +2047,8 @@ cli:
     charge_error_idempotency_conflict: "🔴 Cette clé de débit a déjà été utilisée pour un montant différent. Démarrez une nouvelle recharge."
     revoked_by_admin: "Un admin a stoppé les dépenses de ce terminal."
     revoked_by_you: "Vous avez stoppé les dépenses de ce terminal."
-    revoked_reconnect: "🔴 {who} Reconnectez-vous pour les rétablir — lancez `hermes portal` pour réautoriser."
-    session_logged_out: "🔴 Votre session a été déconnectée. Lancez `hermes portal` pour vous reconnecter."
+    revoked_reconnect: "🔴 {who} Reconnectez-vous pour les rétablir — lancez `ciel portal` pour réautoriser."
+    session_logged_out: "🔴 Votre session a été déconnectée. Lancez `ciel portal` pour vous reconnecter."
     monthly_cap_reached_headroom: "🔴 Plafond de dépenses mensuel atteint — ${remaining} de marge restante."
     monthly_cap_reached: "🔴 Plafond de dépenses mensuel atteint."
     try_again_in_min: " (réessayez dans ~{minutes} min)"
@@ -2056,7 +2056,7 @@ cli:
     remote_spending_needs_approval: "🔴 Les Dépenses à distance nécessitent une approbation — lancez /topup pour les autoriser, puis réessayez."
     your_topup: "votre recharge"
     charge_stepup_explain: "Pour débiter depuis ce terminal, autorisez une seule fois les Dépenses à distance. Votre navigateur s'ouvre pour autoriser, puis {amount} reprend directement ici."
-    charge_stepup_noninteractive: "Lancez `hermes portal` et autorisez les Dépenses à distance, puis réessayez."
+    charge_stepup_noninteractive: "Lancez `ciel portal` et autorisez les Dépenses à distance, puis réessayez."
     charge_stepup_declined: "Aucun débit effectué. Lancez /topup quand vous voudrez autoriser les Dépenses à distance."
     charge_stepup_not_granted: "Impossible d'autoriser les Dépenses à distance — un admin ou propriétaire de l'org doit les approuver. Votre carte n'a pas été débitée."
     allowed_but_org_off: "Les Dépenses à distance sont autorisées pour ce terminal, mais toujours désactivées pour cette org. Un admin de facturation peut les activer depuis la page Hermes Agent du portail, puis relancez /topup."
@@ -2188,7 +2188,7 @@ cli:
     pending_resumed: "Annulé — vous restez sur votre forfait actuel."
     rerun_to_review: "Relancez /subscription à tout moment pour le consulter."
     stepup_explain: "Pour changer de forfait depuis le terminal, autorisez une fois Remote Spending. Votre navigateur s'ouvre pour l'autorisation, puis votre changement reprend directement ici."
-    stepup_noninteractive: "Exécutez `hermes portal` et autorisez Remote Spending, puis relancez /subscription."
+    stepup_noninteractive: "Exécutez `ciel portal` et autorisez Remote Spending, puis relancez /subscription."
     stepup_declined: "Aucun changement effectué. Autorisez Remote Spending quand vous serez prêt."
     stepup_not_granted: "Impossible d'autoriser Remote Spending — un administrateur ou propriétaire doit l'approuver pour cette organisation."
     remote_spending_not_allowed_yet: "🟡 Remote Spending n'est pas encore autorisé. Autorisez-le, puis réessayez."
@@ -2382,7 +2382,7 @@ cli:
     stdin_unavailable: |-
       Erreur : stdin (fd 0) n'est pas disponible.
       Cela peut arriver avec certaines installations de Python (p. ex. cPython géré par uv sur macOS).
-      Essayez de réinstaller Python via pyenv ou Homebrew, puis relancez : hermes setup
+      Essayez de réinstaller Python via pyenv ou Homebrew, puis relancez : ciel setup
     shutting_down: "Arrêt en cours… (finalisation de la session)"
     session_deleted: "✓ Session {session_id} supprimée"
     session_delete_missing: "✗ Session {session_id} introuvable pour la suppression"
@@ -2396,7 +2396,7 @@ cli:
     err_audio_capture: "Le mode vocal nécessite la capture audio."
     err_stt_provider: |-
       Le mode vocal nécessite un fournisseur STT pour la transcription.
-      Exécutez hermes tools et configurez Speech-to-Text, puis redémarrez Hermes.
+      Exécutez ciel tools et configurez Speech-to-Text, puis redémarrez Hermes.
     silence_autostop: "Silence détecté, arrêt automatique..."
     hint_continuous: "arrêt auto sur silence | {shortcut} pour arrêter et quitter le mode continu"
     hint_termux: "Capture Termux:API | {shortcut} pour arrêter"
@@ -2607,15 +2607,15 @@ cli:
     remaining: "↻ Boucle : {label}."
   plugins:
     none_installed: "Aucun plugin utilisateur installé."
-    install_hint: "Pour en installer un : hermes plugins install owner/repo"
+    install_hint: "Pour en installer un : ciel plugins install owner/repo"
     drop_dir_hint: "Ou déposez un répertoire de plugin dans {path}"
-    bundled_available: "({count} plugins intégrés disponibles — voir : hermes plugins list)"
+    bundled_available: "({count} plugins intégrés disponibles — voir : ciel plugins list)"
     user_plugins_header: "Plugins utilisateur ({count}) :"
     count_noun_tools: "outils"
     count_noun_hooks: "hooks"
     count_noun_commands: "commandes"
-    bundled_more: "(+{count} intégrés — voir : hermes plugins list)"
-    enable_disable_hint: "Activer/désactiver : hermes plugins enable/disable <name>"
+    bundled_more: "(+{count} intégrés — voir : ciel plugins list)"
+    enable_disable_hint: "Activer/désactiver : ciel plugins enable/disable <name>"
     system_error: "Erreur du système de plugins : {error}"
   queue:
     usage: "Usage : /queue <prompt> | /queue list | /queue edit N <prompt> | /queue rm N | /queue move FROM TO | /queue clear"
@@ -2663,7 +2663,7 @@ cli:
     event_delegation_completed: "délégation en arrière-plan terminée"
     event_process_finished: "processus en arrière-plan terminé"
     event_resumed_interrupted: "tour interrompu repris"
-    session_id_hint: "Utilisez un ID de session d'une exécution CLI précédente (hermes sessions list)."
+    session_id_hint: "Utilisez un ID de session d'une exécution CLI précédente (ciel sessions list)."
     session_not_found: "Session introuvable : {session_id}"
     compressed_into: "La session {session_id} a été compressée dans {descendant} ; reprise de la session descendante avec votre transcription."
     cannot_resume: "Impossible de reprendre la session : {error}"
@@ -2686,29 +2686,29 @@ cli:
     cooldown_cause_failed_request: "après une requête en échec"
     credential_cooling_down: "L'identifiant {provider} est en période de refroidissement {cause} ; il réintégrera la rotation dans environ {minutes} min."
     sign_in_lost: "connexion perdue"
-    sign_in_was_lost: "La connexion {provider} a été perdue ({reason}) ; exécutez `hermes auth add {provider}` pour vous reconnecter."
+    sign_in_was_lost: "La connexion {provider} a été perdue ({reason}) ; exécutez `ciel auth add {provider}` pour vous reconnecter."
     provider_resolution_failed: "La résolution du fournisseur a échoué."
     no_api_key_for_provider: "⚠️  Aucune clé API trouvée pour le fournisseur '{provider}'."
     no_provider_configured: "⚠️  Aucun fournisseur d'inférence n'est configuré."
-    run_model_or_setup: "Exécutez 'hermes model' pour choisir un fournisseur, ou 'hermes setup' pour la configuration initiale."
-    empty_base_url: "⚠️  Le résolveur de fournisseur a renvoyé une URL de base vide. Vérifiez la configuration de votre fournisseur ou exécutez : hermes setup"
+    run_model_or_setup: "Exécutez 'ciel model' pour choisir un fournisseur, ou 'ciel setup' pour la configuration initiale."
+    empty_base_url: "⚠️  Le résolveur de fournisseur a renvoyé une URL de base vide. Vérifiez la configuration de votre fournisseur ou exécutez : ciel setup"
     switching_to_fallback: "⚠️  {reason} — bascule vers le fournisseur de secours : {provider} / {model}"
     first_run_no_provider: "☤ Aucun fournisseur d'inférence n'est encore configuré — réglons cela."
     first_run_pick_provider: "Vous allez choisir un fournisseur (Nous Portal OAuth est le plus rapide ; aucune clé API requise) puis un modèle."
     first_run_prompt: "Configurer un fournisseur maintenant ? [Y/n] :"
-    first_run_skipped: "Ignoré. Exécutez 'hermes model' ou 'hermes setup' à tout moment."
-    first_run_cancelled: "Configuration annulée. Exécutez 'hermes model' à tout moment."
+    first_run_skipped: "Ignoré. Exécutez 'ciel model' ou 'ciel setup' à tout moment."
+    first_run_cancelled: "Configuration annulée. Exécutez 'ciel model' à tout moment."
     provider_setup_failed: "⚠️  La configuration du fournisseur a échoué : {error}"
-    run_model_to_retry: "Exécutez 'hermes model' pour réessayer."
+    run_model_to_retry: "Exécutez 'ciel model' pour réessayer."
     provider_configured: "✓ Fournisseur configuré — vous pouvez commencer à discuter."
-    provider_setup_incomplete: "La configuration du fournisseur n'a pas abouti. Exécutez 'hermes model' pour réessayer."
+    provider_setup_incomplete: "La configuration du fournisseur n'a pas abouti. Exécutez 'ciel model' pour réessayer."
     unknown_toolsets: "Avertissement : ensembles d'outils inconnus : {names}"
     stdin_unusable: |2-
 
       Erreur : stdin est inutilisable ({error}).
       Cela peut arriver avec certaines installations de Python (p. ex. cPython géré par uv sur macOS)
       où kqueue ne parvient pas à enregistrer le fd 0.
-      Essayez de réinstaller Python via pyenv ou Homebrew, puis relancez : hermes setup
+      Essayez de réinstaller Python via pyenv ou Homebrew, puis relancez : ciel setup
     warning: "Avertissement : {warning}"
   chat:
     initializing_agent: "Initialisation de l'agent..."
@@ -3012,7 +3012,7 @@ cli:
     export:
       usage: "Usage : /export [profil] [-o sortie.tar.gz]"
       exported: "✓ '{name}' exporté vers {path}"
-      share_hint: "Partagez-le : l'autre utilisateur lance /import ou `hermes profile import <archive>`."
+      share_hint: "Partagez-le : l'autre utilisateur lance /import ou `ciel profile import <archive>`."
     import:
       usage: "Usage : /import <archive.tar.gz> [--name <nom>]"
       imported: "✓ Profil '{name}' importé dans {path}"
@@ -3090,17 +3090,17 @@ cli:
       check_platform: "Vérifiez {platform} — la session peut encore y arriver."
       no_longer_waiting: "Cette CLI n'attend plus. Évitez de poursuivre cette session ici ;"
       retry_when_settled: "si rien n'arrive, réessayez /handoff une fois l'état stabilisé."
-      timed_out: "Délai dépassé en attendant le gateway. `hermes gateway` est-il lancé ?"
+      timed_out: "Délai dépassé en attendant le gateway. `ciel gateway` est-il lancé ?"
       session_intact: "Votre session CLI est intacte."
     resume:
       usage: "Usage : /resume <numéro|id_ou_titre_de_session>"
-      tip_find_sessions: "Astuce : utilisez /history ou `hermes sessions list` pour trouver des sessions."
+      tip_find_sessions: "Astuce : utilisez /history ou `ciel sessions list` pour trouver des sessions."
       already_on: "Vous êtes déjà sur cette session."
       resumed_one: "↻ Session {session_id}{title} reprise ({count} message utilisateur, {total} au total)"
       resumed_other: "↻ Session {session_id}{title} reprise ({count} messages utilisateur, {total} au total)"
       resumed_empty: "↻ Session {session_id}{title} reprise — aucun message, nouveau départ."
       not_found: "Session introuvable : {target}"
-      not_found_hint: "Utilisez /sessions ou `hermes sessions list` pour voir les sessions disponibles."
+      not_found_hint: "Utilisez /sessions ou `ciel sessions list` pour voir les sessions disponibles."
       compressed_redirect: "La session {session_id} a été compressée dans {resolved_id} ; reprise de la session descendante avec votre transcription."
     sessions:
       none_yet: "(._.) Aucune session précédente pour le moment."
@@ -3319,7 +3319,7 @@ cli:
       prompt_required: "Usage : /heartbeat every <interval> <prompt> — le prompt est obligatoire."
       invalid_label: "Heartbeat invalide"
       set: "♥ Heartbeat défini (toutes les {interval}) : {prompt}"
-      set_note: "Se déclenche comme un tour normal dès que la session est inactive et que l'intervalle est écoulé. /heartbeat pause | resume | clear pour le gérer ; il ne vit que tant que ce processus Hermes tourne — utilisez `hermes cron` pour des planifications durables."
+      set_note: "Se déclenche comme un tour normal dès que la session est inactive et que l'intervalle est écoulé. /heartbeat pause | resume | clear pour le gérer ; il ne vit que tant que ce processus Hermes tourne — utilisez `ciel cron` pour des planifications durables."
     refine:
       nothing_yet: "Rien à affiner pour l'instant — envoyez d'abord un message."
       empty: "Rien à affiner pour l'instant — la conversation est vide."
@@ -3381,7 +3381,7 @@ cli:
       choice_cancel: "Annuler"
       choice_cancel_desc: "conserver la session actuelle"
       title: "☤  Mettre à jour Hermes Agent"
-      detail: "Cela quittera la session actuelle et exécutera `hermes update`."
+      detail: "Cela quittera la session actuelle et exécutera `ciel update`."
       cancelled: "🟡 /update annulé."
       launching: "☤ Lancement de la mise à jour..."
     voice:
@@ -3404,7 +3404,7 @@ cli:
     hermes_models_lack_tools: "Ils ne disposent pas des capacités d'appel d'outils requises pour les workflows agentiques. Préférez un modèle agentique (Claude, GPT, Gemini, DeepSeek, etc.)."
     hermes_models_switch_hint: "Changez avec : /model sonnet  ou  /model gpt5"
     project_skills_loaded: "◆ {count} skill(s) de projet chargée(s) depuis ce dépôt"
-    project_skills_untrusted: "◆ {count} skill(s) de projet trouvée(s) dans {root} mais non chargée(s) — exécutez `hermes skills trust` pour les activer."
+    project_skills_untrusted: "◆ {count} skill(s) de projet trouvée(s) dans {root} mais non chargée(s) — exécutez `ciel skills trust` pour les activer."
   command:
     unknown_nothing_sent: "Commande inconnue {command} — rien n'a été envoyé.{hint}"
     did_you_mean_one: "Vouliez-vous dire {suggestion} ?"
@@ -3438,7 +3438,7 @@ cli:
     header: "🧠 Utilisation du contexte — {model}"
     compute_failed: "(._.) Impossible de calculer la répartition du contexte : {error}"
   error:
-    auth: "Votre clé {provider} a été rejetée. Exécutez `hermes model` pour la saisir de nouveau."
+    auth: "Votre clé {provider} a été rejetée. Exécutez `ciel model` pour la saisir de nouveau."
     billing: "Votre compte {provider} n'a plus de crédit. Rechargez chez le fournisseur, ou exécutez /model pour en changer."
     model_not_found: "'{model}' n'est pas disponible chez {provider}. Exécutez /model pour choisir un modèle valide."
     rate_limit: "Débit limité par {provider} ; patientez une minute ou utilisez /model pour changer."
@@ -3446,13 +3446,13 @@ cli:
     overloaded: "{provider} est surchargé pour le moment. Envoyez /retry dans un instant, ou /model pour changer."
     server_error: "{provider} a rencontré une erreur interne. Envoyez /retry dans un instant, ou /model pour changer."
     timeout: "{provider} n'a pas répondu à temps. Envoyez /retry, ou /model pour changer."
-    unknown: "La requête au modèle a échoué. Exécutez /model pour changer ou `hermes doctor` pour vérifier l'installation."
+    unknown: "La requête au modèle a échoué. Exécutez /model pour changer ou `ciel doctor` pour vérifier l'installation."
     the_provider: "le fournisseur"
     the_current_model: "le modèle actuel"
     with_details: |-
       {lead}
       Détails : {details}
-    agent_init_failed: "Hermes n'a pas pu établir la connexion au modèle : {error}. Votre message n'a pas été envoyé. Exécutez `hermes doctor` pour vérifier l'installation, ou /model pour choisir un autre fournisseur."
+    agent_init_failed: "Hermes n'a pas pu établir la connexion au modèle : {error}. Votre message n'a pas été envoyé. Exécutez `ciel doctor` pour vérifier l'installation, ou /model pour choisir un autre fournisseur."
   gateway:
     starting: "Démarrage du Hermes Gateway (plateformes de messagerie)..."
   gateway_status:
@@ -3568,7 +3568,7 @@ cli:
   usage:
     unknown_subcommand: "Sous-commande /usage inconnue : {args}. Essayez /usage ou /usage reset [--force]."
     reset_wrong_provider: "Les réinitialisations de consommation en réserve ne sont disponibles qu'avec le fournisseur openai-codex."
-    reset_switch_hint: "Changez d'abord avec `/model` ou `hermes auth`."
+    reset_switch_hint: "Changez d'abord avec `/model` ou `ciel auth`."
     checking_reset_credits: "⏳ Vérification des crédits de réinitialisation..."
     codex_timeout: "❌ Délai dépassé en contactant le backend Codex — réessayez dans un instant."
     no_api_calls: "(._.) Aucun appel API effectué dans cette session pour le moment."
@@ -3852,41 +3852,41 @@ tips:
   t048: "hermes -c reprend votre session CLI la plus récente. hermes -c \"nom du projet\" reprend par titre."
   t049: "hermes -w crée un worktree git isolé — idéal pour les workflows d'agents en parallèle."
   t050: "hermes -w -q \"Corrige l'issue #42\" combine l'isolation par worktree et une requête ponctuelle."
-  t051: "hermes chat -t web,terminal n'active que certains jeux d'outils pour une session ciblée."
-  t052: "hermes chat -s github-pr-workflow précharge une skill au lancement."
-  t053: "hermes chat -q \"requête\" exécute une seule requête non interactive puis quitte."
-  t054: "hermes chat --max-turns 1000 remplace la limite par défaut de 500 itérations par tour."
-  t055: "hermes chat --checkpoints active des instantanés du système de fichiers avant chaque modification destructive."
+  t051: "ciel chat -t web,terminal n'active que certains jeux d'outils pour une session ciblée."
+  t052: "ciel chat -s github-pr-workflow précharge une skill au lancement."
+  t053: "ciel chat -q \"requête\" exécute une seule requête non interactive puis quitte."
+  t054: "ciel chat --max-turns 1000 remplace la limite par défaut de 500 itérations par tour."
+  t055: "ciel chat --checkpoints active des instantanés du système de fichiers avant chaque modification destructive."
   t056: "hermes --yolo contourne toutes les demandes d'approbation de commandes dangereuses pour toute la session."
-  t057: "hermes chat --source telegram étiquette la session pour la filtrer dans hermes sessions list."
+  t057: "ciel chat --source telegram étiquette la session pour la filtrer dans ciel sessions list."
   t058: "hermes -p work chat s'exécute sous un profil précis sans changer votre profil par défaut."
-  t059: "hermes doctor --fix diagnostique et répare automatiquement les problèmes de configuration et de dépendances."
+  t059: "ciel doctor --fix diagnostique et répare automatiquement les problèmes de configuration et de dépendances."
   t060: "hermes dump produit un résumé compact de votre installation — parfait pour les rapports de bug."
-  t061: "hermes config set KEY VALUE dirige automatiquement les secrets vers .env et tout le reste vers config.yaml."
-  t062: "hermes config edit ouvre config.yaml dans votre éditeur par défaut."
-  t063: "hermes config check recherche les options de configuration manquantes ou obsolètes."
-  t064: "hermes sessions browse ouvre un sélecteur de sessions interactif avec recherche."
-  t065: "hermes sessions stats affiche le nombre de sessions par plateforme et la taille de la base de données."
-  t066: "hermes sessions prune --older-than 30 nettoie les anciennes sessions."
-  t067: "hermes skills search react --source skills-sh cherche dans l'annuaire public skills.sh."
-  t068: "hermes skills check vérifie si des mises à jour sont disponibles pour les skills installées depuis le hub."
-  t069: "hermes skills tap add myorg/skills-repo ajoute une source de skills GitHub personnalisée."
-  t070: "hermes skills snapshot export setup.json exporte votre configuration de skills pour sauvegarde ou partage."
-  t071: "hermes mcp add github --command npx ajoute des serveurs MCP depuis la ligne de commande."
-  t072: "hermes mcp serve fait tourner Hermes lui-même comme serveur MCP pour d'autres agents."
-  t073: "hermes auth add permet d'ajouter plusieurs clés API pour la rotation d'un pool d'identifiants."
-  t074: "hermes completion bash >> ~/.bashrc active la complétion par Tab pour toutes les commandes et tous les profils."
-  t075: "hermes logs -f suit agent.log en temps réel. --level WARNING --since 1h filtre la sortie."
-  t076: "hermes backup crée une sauvegarde zip de tout votre répertoire personnel Hermes."
-  t077: "hermes profile create coder crée un profil isolé qui devient sa propre commande."
-  t078: "hermes profile create work --clone copie votre configuration et vos clés actuelles dans un nouveau profil."
-  t079: "hermes update synchronise automatiquement les nouvelles skills intégrées vers TOUS les profils."
-  t080: "hermes gateway install installe Hermes comme service système (systemd/launchd)."
-  t081: "hermes memory setup permet de configurer un fournisseur de mémoire externe (Honcho, Mem0, etc.)."
-  t082: "hermes webhook subscribe crée des routes webhook événementielles avec validation HMAC."
-  t083: "Économisez : hermes tools désactive les outils inutilisés, hermes skills config allège les skills."
+  t061: "ciel config set KEY VALUE dirige automatiquement les secrets vers .env et tout le reste vers config.yaml."
+  t062: "ciel config edit ouvre config.yaml dans votre éditeur par défaut."
+  t063: "ciel config check recherche les options de configuration manquantes ou obsolètes."
+  t064: "ciel sessions browse ouvre un sélecteur de sessions interactif avec recherche."
+  t065: "ciel sessions stats affiche le nombre de sessions par plateforme et la taille de la base de données."
+  t066: "ciel sessions prune --older-than 30 nettoie les anciennes sessions."
+  t067: "ciel skills search react --source skills-sh cherche dans l'annuaire public skills.sh."
+  t068: "ciel skills check vérifie si des mises à jour sont disponibles pour les skills installées depuis le hub."
+  t069: "ciel skills tap add myorg/skills-repo ajoute une source de skills GitHub personnalisée."
+  t070: "ciel skills snapshot export setup.json exporte votre configuration de skills pour sauvegarde ou partage."
+  t071: "ciel mcp add github --command npx ajoute des serveurs MCP depuis la ligne de commande."
+  t072: "ciel mcp serve fait tourner Hermes lui-même comme serveur MCP pour d'autres agents."
+  t073: "ciel auth add permet d'ajouter plusieurs clés API pour la rotation d'un pool d'identifiants."
+  t074: "ciel completion bash >> ~/.bashrc active la complétion par Tab pour toutes les commandes et tous les profils."
+  t075: "ciel logs -f suit agent.log en temps réel. --level WARNING --since 1h filtre la sortie."
+  t076: "ciel backup crée une sauvegarde zip de tout votre répertoire personnel Hermes."
+  t077: "ciel profile create coder crée un profil isolé qui devient sa propre commande."
+  t078: "ciel profile create work --clone copie votre configuration et vos clés actuelles dans un nouveau profil."
+  t079: "ciel update synchronise automatiquement les nouvelles skills intégrées vers TOUS les profils."
+  t080: "ciel gateway install installe Hermes comme service système (systemd/launchd)."
+  t081: "ciel memory setup permet de configurer un fournisseur de mémoire externe (Honcho, Mem0, etc.)."
+  t082: "ciel webhook subscribe crée des routes webhook événementielles avec validation HMAC."
+  t083: "Économisez : ciel tools désactive les outils inutilisés, ciel skills config allège les skills."
   t084: "/reasoning low ou /reasoning minimal réduit la profondeur de réflexion sous la valeur par défaut (medium) — réponses plus rapides et moins chères."
-  t085: "hermes models route la vision, la compression et les tâches auxiliaires vers des modèles moins chers — réduit le coût des tokens d'arrière-plan de plus de 85 % sans dégrader votre modèle de chat principal."
+  t085: "ciel models route la vision, la compression et les tâches auxiliaires vers des modèles moins chers — réduit le coût des tokens d'arrière-plan de plus de 85 % sans dégrader votre modèle de chat principal."
   t086: "Définissez display.bell_on_complete: true dans config.yaml pour entendre une sonnerie à la fin des tâches longues."
   t087: "Définissez display.streaming: true pour voir les tokens apparaître en temps réel pendant que le modèle génère."
   t088: "Définissez display.show_reasoning: true pour suivre la chaîne de raisonnement du modèle."
@@ -3929,13 +3929,13 @@ tips:
   t125: "Les processus d'arrière-plan du terminal prennent en charge watch_patterns pour alerter sur des lignes de sortie précises."
   t126: "L'outil terminal prend en charge 6 backends : local, Docker, SSH, Modal, Daytona et Singularity."
   t127: "Chaque profil dispose de sa propre configuration, de ses clés API, de sa mémoire, de ses sessions, de ses skills et de ses tâches cron."
-  t128: "Les noms de profil deviennent des commandes shell — 'hermes profile create coder' crée la commande 'coder'."
-  t129: "hermes profile export coder -o backup.tar.gz crée une archive de profil portable."
+  t128: "Les noms de profil deviennent des commandes shell — 'ciel profile create coder' crée la commande 'coder'."
+  t129: "ciel profile export coder -o backup.tar.gz crée une archive de profil portable."
   t130: "Si deux profils partagent par erreur le même token de bot, le second gateway est bloqué avec une erreur explicite."
   t131: "Les sessions génèrent automatiquement un titre descriptif après le premier échange — aucun nommage manuel nécessaire."
   t132: "Les titres de session gèrent la filiation : \"mon projet\" → \"mon projet #2\" → \"mon projet #3\"."
   t133: "À la sortie, Hermes affiche une commande de reprise avec l'ID de session et des statistiques."
-  t134: "hermes sessions export backup.jsonl exporte toutes les sessions pour sauvegarde ou analyse."
+  t134: "ciel sessions export backup.jsonl exporte toutes les sessions pour sauvegarde ou analyse."
   t135: "hermes -r SESSION_ID reprend n'importe quelle session passée par son ID."
   t136: "La mémoire est un instantané figé — les changements n'apparaissent dans le prompt système qu'au démarrage de la session suivante."
   t137: "Les entrées de mémoire sont automatiquement analysées pour détecter les injections de prompt et les tentatives d'exfiltration."
@@ -3943,12 +3943,12 @@ tips:
   t139: "Les corrections que vous donnez à l'agent (\"non, fais-le comme ça\") sont souvent enregistrées automatiquement en mémoire."
   t140: "Plus de 80 skills intégrées couvrant github, creative, mlops, productivity, research et bien d'autres."
   t141: "Chaque skill installée devient automatiquement une commande slash — tapez / pour toutes les voir."
-  t142: "hermes skills install official/security/1password installe des skills optionnelles depuis le dépôt."
+  t142: "ciel skills install official/security/1password installe des skills optionnelles depuis le dépôt."
   t143: "Les skills peuvent être limitées à certains systèmes — certaines ne se chargent que sous macOS ou Linux."
   t144: "skills.external_dirs dans config.yaml permet de charger des skills depuis des répertoires personnalisés."
   t145: "L'agent peut créer ses propres skills comme mémoire procédurale grâce à skill_manage."
   t146: "/plan écrit un plan d'implémentation en markdown dans .hermes/plans/ sans rien exécuter."
-  t147: "Les tâches cron peuvent embarquer une skill : hermes cron add --skill blogwatcher \"Vérifie les nouveaux articles\"."
+  t147: "Les tâches cron peuvent embarquer une skill : ciel cron add --skill blogwatcher \"Vérifie les nouveaux articles\"."
   t148: "Les cibles de livraison cron incluent telegram, discord, slack, email, sms et plus de 12 autres plateformes."
   t149: "Si une réponse cron commence par [SILENT], la livraison est supprimée — pratique pour les tâches de simple surveillance."
   t150: "Cron accepte les délais relatifs (30m), les intervalles (every 2h), les expressions cron et les horodatages ISO."
@@ -3959,7 +3959,7 @@ tips:
   t155: "Le TTS en streaming lit les phrases au fil de leur génération — pas besoin d'attendre la réponse complète."
   t156: "Les messages vocaux sur Telegram, Discord, WhatsApp et Slack sont transcrits automatiquement."
   t157: "Hermes fonctionne sur 21 plateformes de messagerie : Telegram, Discord, Slack, WhatsApp, Signal, Matrix, IRC, Microsoft Teams, e-mail et plus."
-  t158: "hermes gateway install l'installe comme service système démarré au boot."
+  t158: "ciel gateway install l'installe comme service système démarré au boot."
   t159: "DingTalk utilise le Stream Mode — aucun webhook ni URL publique nécessaire."
   t160: "BlueBubbles apporte iMessage à Hermes via un serveur macOS local."
   t161: "Les routes webhook prennent en charge la validation HMAC, la limitation de débit et le filtrage d'événements."
@@ -3985,23 +3985,23 @@ tips:
   t181: "Camofox est un navigateur anti-détection — un fork de Firefox avec falsification d'empreinte en C++."
   t182: "browser_navigate renvoie automatiquement un instantané de la page — inutile d'appeler browser_snapshot ensuite."
   t183: "browser_vision avec annotate=true superpose des étiquettes numérotées sur les éléments interactifs."
-  t184: "hermes mcp ouvre un sélecteur interactif de MCP approuvés par Nous, installables en une touche."
-  t185: "hermes mcp catalog liste les serveurs MCP approuvés par Nous fournis avec le dépôt."
-  t186: "hermes mcp install <name> installe une entrée du catalogue, demande les identifiants et vous laisse choisir les outils à activer."
+  t184: "ciel mcp ouvre un sélecteur interactif de MCP approuvés par Nous, installables en une touche."
+  t185: "ciel mcp catalog liste les serveurs MCP approuvés par Nous fournis avec le dépôt."
+  t186: "ciel mcp install <name> installe une entrée du catalogue, demande les identifiants et vous laisse choisir les outils à activer."
   t187: "Les serveurs MCP se configurent dans config.yaml — transports stdio et HTTP pris en charge."
   t188: "Filtrage d'outils par serveur : tools.include met des outils en liste blanche, tools.exclude en liste noire."
-  t189: "Les serveurs MCP génèrent automatiquement des jeux d'outils à l'exécution — hermes tools peut les activer ou désactiver par plateforme."
+  t189: "Les serveurs MCP génèrent automatiquement des jeux d'outils à l'exécution — ciel tools peut les activer ou désactiver par plateforme."
   t190: "Prise en charge OAuth pour MCP : auth: oauth active l'autorisation via le navigateur avec PKCE."
   t191: "Les points de contrôle n'ont aucun surcoût quand aucun fichier n'est modifié — activés par défaut."
   t192: "Un instantané pré-rollback est enregistré automatiquement pour pouvoir annuler l'annulation."
   t193: "/rollback annule aussi le tour de conversation, si bien que l'agent ne se souvient pas des changements annulés."
   t194: "Les points de contrôle utilisent des dépôts fantômes dans ~/.hermes/checkpoints/ — le .git de votre projet n'est jamais touché."
   t195: "batch_runner.py traite des centaines de prompts en parallèle pour générer des données d'entraînement."
-  t196: "hermes chat -Q active le mode silencieux pour un usage programmatique — masque la bannière et le spinner."
+  t196: "ciel chat -Q active le mode silencieux pour un usage programmatique — masque la bannière et le spinner."
   t197: "L'enregistrement des trajectoires (--save-trajectories) capture les traces complètes d'utilisation des outils pour l'entraînement de modèles."
   t198: "Trois types de plugins : généraux (outils/hooks), fournisseurs de mémoire et moteurs de contexte."
-  t199: "hermes plugins install owner/repo installe des plugins directement depuis GitHub."
-  t200: "Fournisseurs de mémoire externes : Honcho, Hindsight, Mem0, OpenViking et d'autres via hermes plugins install."
+  t199: "ciel plugins install owner/repo installe des plugins directement depuis GitHub."
+  t200: "Fournisseurs de mémoire externes : Honcho, Hindsight, Mem0, OpenViking et d'autres via ciel plugins install."
   t201: "Les hooks de plugin incluent pre/post_tool_call, pre/post_llm_call et transform_terminal_output pour normaliser la sortie."
   t202: "Le cache de prompt (Anthropic) réduit les coûts en réutilisant les préfixes de prompt système déjà mis en cache."
   t203: "L'agent génère les titres de session dans un thread d'arrière-plan — aucun impact sur la latence."
@@ -4013,10 +4013,10 @@ tips:
   t209: "Fournisseurs personnalisés : enregistrez des endpoints nommés dans config.yaml sous custom_providers."
   t210: "HERMES_EPHEMERAL_SYSTEM_PROMPT injecte un prompt système qui n'est jamais conservé dans l'historique."
   t211: "credential_pool_strategies prend en charge les rotations fill_first, round_robin, least_used et random."
-  t212: "hermes auth add nous ou hermes auth add openai-codex configure des fournisseurs basés sur OAuth."
+  t212: "ciel auth add nous ou ciel auth add openai-codex configure des fournisseurs basés sur OAuth."
   t213: "Le serveur API prend en charge à la fois Chat Completions et l'API Responses avec état côté serveur."
   t214: "tool_preview_length: 0 dans la configuration affiche les chemins de fichiers complets dans le flux d'activité du spinner."
-  t215: "hermes status --deep effectue des vérifications de diagnostic approfondies sur tous les composants."
+  t215: "ciel status --deep effectue des vérifications de diagnostic approfondies sur tous les composants."
   t216: "Les tâches cron peuvent embarquer un script Python (--script) dont la sortie standard est injectée dans le prompt comme contexte."
   t217: "Les scripts cron vivent dans ~/.hermes/scripts/ et s'exécutent avant l'agent — parfait pour les pipelines de collecte de données."
   t218: "prefill_messages_file dans config.yaml injecte des exemples few-shot dans chaque appel API, sans jamais les enregistrer dans l'historique."
@@ -4068,8 +4068,8 @@ tips:
   t264: "Quand une compression échoue, les tentatives suivantes sont suspendues pendant 10 minutes pour éviter de marteler l'API."
   t265: "Les commandes dangereuses longues (>70 caractères) offrent une option 'view' dans l'invite d'approbation pour voir d'abord le texte complet."
   t266: "La visualisation du niveau audio affiche des barres ▁▂▃▄▅▆▇ pendant l'enregistrement vocal, selon le niveau RMS du micro."
-  t267: "Les noms de profil ne peuvent pas entrer en conflit avec des binaires existants du PATH — 'hermes profile create ls' serait refusé."
-  t268: "hermes profile create backup --clone-all copie tout (configuration, clés, SOUL.md, mémoires, skills, sessions)."
+  t267: "Les noms de profil ne peuvent pas entrer en conflit avec des binaires existants du PATH — 'ciel profile create ls' serait refusé."
+  t268: "ciel profile create backup --clone-all copie tout (configuration, clés, SOUL.md, mémoires, skills, sessions)."
   t269: "La touche d'enregistrement vocal est configurable via voice.record_key dans config.yaml — pas seulement Ctrl+B."
   t270: "Les fichiers .cursorrules et .cursor/rules/*.mdc sont détectés et chargés automatiquement comme contexte de projet."
   t271: "Les fichiers de contexte sont contrôlés contre plus de 10 schémas d'injection de prompt — Unicode invisible, « ignore les instructions », tentatives d'exfiltration."
@@ -4081,7 +4081,7 @@ tips:
   t277: "Les commandes slash ne déclenchent jamais le repli des gros collages — /command avec de gros arguments fonctionne correctement."
   t278: "En mode interruption, les commandes slash saisies pendant l'exécution de l'agent contournent la logique d'interruption et s'exécutent immédiatement."
   t279: "HERMES_DEV=1 contourne la détection du mode conteneur pour le développement local."
-  t280: "Chaque serveur MCP obtient son propre jeu d'outils (mcp-servername) activable indépendamment via hermes tools."
+  t280: "Chaque serveur MCP obtient son propre jeu d'outils (mcp-servername) activable indépendamment via ciel tools."
   t281: "Les marqueurs ${ENV_VAR} des MCP dans la configuration sont résolus au lancement du serveur — y compris les variables de ~/.hermes/.env."
   t282: "Les skills provenant de dépôts de confiance (NousResearch) reçoivent le niveau de sécurité 'trusted' ; les skills communautaires subissent une analyse supplémentaire."
   t283: "La quarantaine des skills dans ~/.hermes/skills/.hub/quarantine/ conserve les skills en attente de revue de sécurité."
@@ -4107,7 +4107,7 @@ tips:
   t303: "hermes curator run --dry-run prévisualise ce que le curateur archiverait ou consoliderait sans rien modifier."
   t304: "hermes curator pin <skill> verrouille une skill contre l'archivage automatique comme contre l'outil skill_manage de l'agent."
   t305: "hermes curator rollback restaure les skills depuis un instantané pré-exécution — les sauvegardes vivent sous skills/.curator_backups/."
-  t306: "hermes auth reset <provider> [target] efface les temps de repos et les indicateurs d'épuisement d'un pool d'identifiants entier, ou d'un seul identifiant par index, id ou libellé."
+  t306: "ciel auth reset <provider> [target] efface les temps de repos et les indicateurs d'épuisement d'un pool d'identifiants entier, ou d'un seul identifiant par index, id ou libellé."
   t307: "credential_pool_strategies.<provider>: round_robin fait tourner les clés de façon équitable au lieu du fill_first par défaut."
   t308: "use_gateway: true par outil route web, image, tts ou browser via votre abonnement Nous — aucune clé supplémentaire."
   t309: "provider_routing.data_collection: deny exclut les fournisseurs qui conservent les données sur OpenRouter."
@@ -4149,17 +4149,17 @@ tips:
   t345: "/indicator kaomoji|emoji|unicode|ascii choisit le style de l'indicateur d'activité de la TUI affiché pendant les exécutions de l'agent."
   t346: "/debug téléverse un bundle de support (infos système + journaux) et renvoie des liens partageables — fonctionne aussi dans le chat."
   t347: "hermes -z \"<prompt>\" est le one-shot le plus pur : la réponse finale sur stdout, rien d'autre — idéal pour les pipes dans des scripts."
-  t348: "hermes chat --pass-session-id injecte l'ID de session dans le prompt système pour que l'agent puisse y faire référence lui-même."
-  t349: "hermes chat --image path/to/pic.png joint une image locale à une requête -q unique, sans étape de téléversement séparée."
-  t350: "hermes chat --ignore-user-config ignore la configuration utilisateur active — pour des rapports de bug reproductibles et des exécutions en CI."
-  t351: "hermes chat --source tool étiquette les chats programmatiques pour qu'ils n'encombrent pas hermes sessions list."
+  t348: "ciel chat --pass-session-id injecte l'ID de session dans le prompt système pour que l'agent puisse y faire référence lui-même."
+  t349: "ciel chat --image path/to/pic.png joint une image locale à une requête -q unique, sans étape de téléversement séparée."
+  t350: "ciel chat --ignore-user-config ignore la configuration utilisateur active — pour des rapports de bug reproductibles et des exécutions en CI."
+  t351: "ciel chat --source tool étiquette les chats programmatiques pour qu'ils n'encombrent pas ciel sessions list."
   t352: "hermes dump --show-keys inclut des empreintes masquées des clés API pour un débogage plus poussé avec le support."
-  t353: "hermes sessions rename <ID> \"nouveau titre\" renomme n'importe quelle session passée ; hermes sessions delete <ID> en supprime une."
+  t353: "ciel sessions rename <ID> \"nouveau titre\" renomme n'importe quelle session passée ; ciel sessions delete <ID> en supprime une."
   t354: "hermes import restaure un zip de sauvegarde Hermes complet ; les exports JSON/JSONL de sessions s'importent depuis la page Sessions du tableau de bord."
   t355: "hermes fallback gère la chaîne fallback_model de manière interactive — sans modifier config.yaml à la main."
   t356: "hermes pairing renouvelle le token d'appairage des DM — la première personne qui écrit après le renouvellement obtient l'accès au bot."
-  t357: "hermes setup guide les nouveaux utilisateurs à travers le fournisseur, les clés et le branchement des plateformes en un seul parcours interactif."
-  t358: "hermes status --deep lance le bilan de santé complet de chaque composant ; hermes status seul donne la vue rapide."
+  t357: "ciel setup guide les nouveaux utilisateurs à travers le fournisseur, les clés et le branchement des plateformes en un seul parcours interactif."
+  t358: "ciel status --deep lance le bilan de santé complet de chaque composant ; ciel status seul donne la vue rapide."
   t359: "HERMES_AGENT_TIMEOUT=0 désactive l'arrêt pour inactivité du gateway sur un agent en cours — utile pour les longues sessions de recherche."
   t360: "HERMES_ENABLE_PROJECT_PLUGINS=1 charge automatiquement les plugins locaux au dépôt depuis ./.hermes/plugins/ — soumis à une validation de confiance par conception."
   t361: "HERMES_DISABLE_FILE_STATE_GUARD=1 désactive la protection « fichier modifié depuis votre lecture » sur patch et write_file."
@@ -4178,7 +4178,7 @@ tips:
   t374: "AUXILIARY_VISION_BASE_URL + AUXILIARY_VISION_API_KEY dirigent l'analyse d'images vers n'importe quel point de terminaison compatible OpenAI."
   t375: "API_SERVER_MODEL_NAME personnalise le nom du modèle sur /v1/models — indispensable pour les configurations Open WebUI multi-profils."
   t376: "Les plugins du tableau de bord sont servis depuis /dashboard-plugins/<name>/ — déposez les fichiers dans ~/.hermes/dashboard-plugins/."
-  t377: "Les chats --source tool sont exclus de hermes sessions list par défaut — passez --source explicitement pour les voir."
+  t377: "Les chats --source tool sont exclus de ciel sessions list par défaut — passez --source explicitement pour les voir."
   placeholder:
     p01: "Posez une question, ou tapez / pour les commandes…"
     p02: "Résume le contenu de ce dossier"

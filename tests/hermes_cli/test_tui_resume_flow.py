@@ -268,9 +268,9 @@ def test_launch_tui_exports_model_provider_and_toolsets(monkeypatch, main_mod):
 
 
 def test_launch_tui_prefers_launch_cwd_over_inherited_hermes_cwd(monkeypatch, main_mod, tmp_path):
-    """The directory `hermes --tui` was run from outranks an inherited HERMES_CWD.
+    """The directory `ciel --tui` was run from outranks an inherited HERMES_CWD.
 
-    A shell export - or an outer `hermes --tui` - leaves HERMES_CWD naming a real but stale
+    A shell export - or an outer `ciel --tui` - leaves HERMES_CWD naming a real but stale
     directory, and ui-tui/src/gatewayClient.ts:478 starts the gateway in whatever it names,
     so the session reads files and completions from the wrong project (#49637).
     """

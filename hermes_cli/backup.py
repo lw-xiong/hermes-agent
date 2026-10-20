@@ -1008,7 +1008,7 @@ def run_import(args) -> Optional[int]:
             gw_profiles = [n for n, _ in restored_profiles]
             print("\nTo re-enable gateway services for profiles:")
             for pname in gw_profiles:
-                print(f"  hermes -p {pname} gateway install")
+                print(f"  ciel -p {pname} gateway install")
 
         # Bring the restored install to life: the backup may contain bot
         # tokens and registered cron jobs, but they're inert without a

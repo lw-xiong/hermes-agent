@@ -4203,7 +4203,7 @@ def named_profile_served_by_running_multiplexer(profile_name: str | None = None)
             return False
         from hermes_cli.profiles import normalize_profile_name
         # The live gateway's own record wins: the CLI process cannot see an env-only opt-in on the
-        # default profile (`hermes -p X` loads X's .env) and a config edit after start is not live yet.
+        # default profile (`ciel -p X` loads X's .env) and a config edit after start is not live yet.
         # Only a record without the key (pre-multiplex writer) falls through to config derivation.
         recorded = recorded_served_profiles(default_root)
         if recorded is not None:
@@ -4226,7 +4226,7 @@ def _served_profile_needs_no_service() -> bool:
     and the ``hermes gateway setup`` wizard. See #111958."""
     if not named_profile_served_by_running_multiplexer():
         # Not served (yet): a named profile still gets no service of its own — same rule and text
-        # as `gateway install`, so `hermes -p X setup` cannot grow a fleet member the verb refuses.
+        # as `gateway install`, so `ciel -p X setup` cannot grow a fleet member the verb refuses.
         return _named_profile_refused_under_multiplexer()
     from hermes_cli.profiles import profile_is_standalone
     if profile_is_standalone(get_hermes_home()):
@@ -4297,7 +4297,7 @@ def _named_profile_refused_under_multiplexer(force: bool = False) -> bool:
     if served:
         print("  Manage the host gateway instead:")
         print()
-        print(f"    hermes -p {owner.profile_label if owner is not None else 'default'} gateway restart")
+        print(f"    ciel -p {owner.profile_label if owner is not None else 'default'} gateway restart")
     else:
         print("  Install or start the host gateway from the default profile; it serves this one too:")
         print()
@@ -4308,7 +4308,7 @@ def _named_profile_refused_under_multiplexer(force: bool = False) -> bool:
         print("    hermes gateway migrate --multiplex")
     print()
     print("  A separate per-profile gateway (for a fleet split across UNIX users or a")
-    print(f"  HERMES_HOME outside profiles/) needs --force:  hermes -p {suffix} gateway install --force")
+    print(f"  HERMES_HOME outside profiles/) needs --force:  ciel -p {suffix} gateway install --force")
     print()
     from hermes_constants import display_hermes_home
     from hermes_cli.gateway_multiplex_mode import STANDALONE_DEPRECATION_NOTICE
@@ -5118,7 +5118,7 @@ _NO_BACKEND_MESSAGES = {
     ("install", "s6"): (None,
         "Per-profile gateways are auto-registered when you create a profile.", "",
         "  hermes profile create <name>     # creates the s6 service slot",
-        "  hermes -p <name> gateway start   # bring it up via s6",
+        "  ciel -p <name> gateway start   # bring it up via s6",
         "  hermes status                    # see currently-supervised gateways"),
     ("install", "container"): (0,
         "Service installation is not needed inside a Docker container.",
@@ -5134,7 +5134,7 @@ _NO_BACKEND_MESSAGES = {
     ("uninstall", "s6"): (None,
         "Per-profile gateways are auto-unregistered when you delete the profile.", "",
         "  hermes profile delete <name>     # tears down the s6 service slot",
-        "  hermes -p <name> gateway stop    # stop without deleting the profile"),
+        "  ciel -p <name> gateway stop    # stop without deleting the profile"),
     ("uninstall", "container"): (0,
         "Service uninstall is not applicable inside a Docker container.",
         "To stop the gateway, stop or remove the container:", "",
@@ -5442,7 +5442,7 @@ def _restart_all(system: bool) -> None:
         print(f"  {owner.describe()}")
         print("  `--all` restarts the one host multiplexer, and this profile is not its owner.")
         print()
-        print(f"    hermes -p {owner.profile_label} gateway restart --all")
+        print(f"    ciel -p {owner.profile_label} gateway restart --all")
         sys.exit(GATEWAY_FATAL_CONFIG_EXIT_CODE)
     # No live owner: stop/kill/start as the host root, not as the invoking profile (whose own
     # gateway the run-side guard would refuse — the host stayed down after a Desktop update).

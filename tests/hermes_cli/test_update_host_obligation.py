@@ -1,7 +1,7 @@
 """The update→restart obligation is HOST-scoped, and one update restarts the host gateway once.
 
 Multiplex-only (Teknium ruling): exactly one ``hermes gateway run`` per host serves every
-profile. The obligation used to live in ONE profile's ``HERMES_HOME``, so ``hermes -p coder
+profile. The obligation used to live in ONE profile's ``HERMES_HOME``, so ``ciel -p coder
 update`` armed and cleared coder's copy while restarting the SHARED process; no other profile
 could see that obligation, and every profile that ran the catch-up killed the same gateway
 again. These tests pin the host-scoped contract:

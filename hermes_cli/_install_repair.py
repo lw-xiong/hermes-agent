@@ -72,7 +72,7 @@ def ensure_windows_bin_launchers(
     (``%LOCALAPPDATA%\\hermes\\bin``, next to the managed uv) — which lives
     OUTSIDE the git checkout so no git operation can ever touch it. It is
     a per-machine dir shared by every profile: ``get_hermes_home()`` would
-    point inside ``profiles\\<name>`` under ``hermes -p``, so the anchor
+    point inside ``profiles\\<name>`` under ``ciel -p``, so the anchor
     here is :func:`hermes_constants.get_default_hermes_root`.
 
     Earlier installer versions staged them at ``<checkout>\\bin`` instead —
@@ -111,7 +111,7 @@ def ensure_windows_bin_launchers(
     root = Path(root)
 
     # Per-machine anchor: the DEFAULT Hermes root, not get_hermes_home() —
-    # under ``hermes -p <name>`` that returns ``profiles\\<name>``, which
+    # under ``ciel -p <name>`` that returns ``profiles\\<name>``, which
     # would fail the managed-clone gate below and silently skip the heal
     # for profile users. The launcher dir serves the whole machine.
     from hermes_constants import get_default_hermes_root

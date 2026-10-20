@@ -1147,7 +1147,7 @@ class CLICommandsMixin(CLICommandsSessionToolsMixin):
     # ---- /worktree ------------------------------------------------------------------------
     def _handle_worktree_command(self, cmd_original: str) -> None:
         """Handle /worktree [new [name]|list|prune [--dry-run]] — isolated git worktrees.
-        ``new`` moves this session into the tree (as ``hermes -w``: kept on exit only with
+        ``new`` moves this session into the tree (as ``ciel -w``: kept on exit only with
         unpushed commits); ``prune`` never deletes tracked changes, unique commits, or in-use trees."""
         import cli as _cli
         parts = cmd_original.split(None, 2)
@@ -1219,13 +1219,13 @@ class CLICommandsMixin(CLICommandsSessionToolsMixin):
         wt_info = _cli._setup_worktree(repo_root=repo_root, sync_base=sync_base, name=rest or None)
         if not wt_info:
             return  # _setup_worktree already printed the failure
-        # Retarget the session's terminal/file tools at the new tree (as `hermes -w` does).
+        # Retarget the session's terminal/file tools at the new tree (as `ciel -w` does).
         try:
             os.chdir(wt_info["path"])
         except OSError as e:
             print(f"  {_t('worktree.enter_failed', error=e)}")
         os.environ["TERMINAL_CWD"] = wt_info["path"]
-        # Same keep-if-unpushed cleanup as `hermes -w`. Only one tree is "active" per process;
+        # Same keep-if-unpushed cleanup as `ciel -w`. Only one tree is "active" per process;
         # an earlier one keeps its own atexit registration (explicit info arg).
         _cli._active_worktree = wt_info
         atexit.register(_cli._cleanup_worktree, wt_info)

@@ -1318,7 +1318,7 @@ def multiplexer_liveness_for_profile(profile_dir: Path) -> Optional[tuple[int, d
     resolving from the host rendezvous record (``gateway/host_topology.py``) is what lets it be
     reported as SERVED rather than only as owner. A served profile owns no
     ``gateway.pid``/``gateway_state.json`` (#97120), so every PID-file rung of the dashboard ladder
-    reports it stopped while ``hermes -p X status`` says running — the two must agree.
+    reports it stopped while ``ciel -p X status`` says running — the two must agree.
     """
     name = profile_name_for_home(Path(profile_dir))
     if not name:
@@ -1460,9 +1460,9 @@ def resolve_gateway_liveness(
             running=True, pid=runtime_pid, source="runtime_status", health_body=health_body
         )
     # (4) A named profile served by the live default multiplexer: no identity files of its own, but
-    # the multiplexer IS its gateway (mirrors `hermes -p X status` / `gateway list`). Unscoped, the
+    # the multiplexer IS its gateway (mirrors `ciel -p X status` / `gateway list`). Unscoped, the
     # question is about the process's OWN home — which is a named profile inside a pooled
-    # `hermes --profile X serve` (the Desktop's per-profile backend answers its REST without
+    # `ciel --profile X serve` (the Desktop's per-profile backend answers its REST without
     # `?profile=`), so it takes the same rung instead of reporting the served profile stopped.
     own_home = profile_dir if scoped else _get_process_hermes_home()
     served = guarded(multiplexer_liveness_for_profile, own_home)

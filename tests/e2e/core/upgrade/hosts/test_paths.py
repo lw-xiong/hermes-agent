@@ -62,7 +62,7 @@ def test_install_update_gateway_and_turn_under_a_non_ascii_spaced_home(odd_home,
     assert not X.reran_completion(t1), "the first launch after install re-ran the completion:\n" + I.describe(t1)
 
     # A new login shell finds the launcher through the rc line the installer wrote.
-    probe = X.login_shell(sb, "command -v hermes; hermes --version >/dev/null && echo LAUNCH-OK")
+    probe = X.login_shell(sb, "command -v hermes; ciel --version >/dev/null && echo LAUNCH-OK")
     assert probe.returncode == 0, H.describe(probe)
     lines = probe.stdout.strip().splitlines()
     assert lines and lines[0] == sb.hermes and "LAUNCH-OK" in lines, (

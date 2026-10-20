@@ -42,7 +42,7 @@ def hosted(tmp_path, monkeypatch):
 
 
 def _enabled_under_own_scope(home: Path) -> set:
-    """What `hermes -p <profile> tools list` resolves: that profile's config under its own secrets."""
+    """What `ciel -p <profile> tools list` resolves: that profile's config under its own secrets."""
     from hermes_cli.config import load_config
     from hermes_cli.tools_config import _get_platform_tools
 

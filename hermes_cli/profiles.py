@@ -312,10 +312,10 @@ def _find_our_wrapper(alias: str) -> Optional[Path]:
 
 
 def _is_our_wrapper(path: Path) -> bool:
-    """True when *path* reads as a Hermes-generated wrapper (``hermes -p`` in its head)."""
+    """True when *path* reads as a Hermes-generated wrapper (``ciel -p`` in its head)."""
     try:
         with open(path, encoding="utf-8-sig") as f:
-            return "hermes -p" in f.read(_WRAPPER_READ_LIMIT)
+            return "ciel -p" in f.read(_WRAPPER_READ_LIMIT)
     except Exception:
         return False
 
@@ -608,7 +608,7 @@ def find_alias_for_profile(profile_name: str) -> Optional[str]:
 
 
 # Cap on how much of a wrapper file is read when reverse-looking-up its profile. Real
-# wrappers are a few hundred bytes with the ``hermes -p X`` needle near the top; the wrapper
+# wrappers are a few hundred bytes with the ``ciel -p X`` needle near the top; the wrapper
 # dir commonly also holds large binaries (ffmpeg, node, …) whose whole-file reads, N times,
 # dominated ``list_profiles`` (~4.5s).
 _WRAPPER_READ_LIMIT = 8192
@@ -625,7 +625,7 @@ def build_alias_map() -> dict[str, str]:
     if not wrapper_dir.is_dir():
         return result
     is_windows = sys.platform == "win32"
-    prefix = "hermes -p "
+    prefix = "ciel -p "
     for entry in sorted(wrapper_dir.iterdir()):
         if not entry.is_file():
             continue
@@ -1143,7 +1143,7 @@ def profiles_to_serve(multiplex: bool, *, include_standalone: bool = False,
     and parked profiles skipped). Pure directory read: never creates a profile dir (#94590).
 
     Named profiles that authored ``gateway.standalone: true`` are skipped because they opted
-    out of the host multiplexer; a ``gateway.parked`` marker (``hermes -p X gateway stop``) skips
+    out of the host multiplexer; a ``gateway.parked`` marker (``ciel -p X gateway stop``) skips
     a profile the host would otherwise serve. Callers enumerating INSTALLED profiles pass
     ``include_standalone=True, include_parked=True``; serving/ticking callers pass neither."""
     active = get_active_profile_name() or "default"
@@ -1335,7 +1335,7 @@ def _bootstrap_profile_dir(profile_dir: Path, source_dir: Optional[Path],
 
     ``sync_imports`` also copies the source's ``import-sync.json`` (the ``hermes import-agent``
     manifest) so the clone stays registered against the same external Claude Code / Codex trees
-    and ``hermes -p <clone> import-agent --sync`` keeps pulling from them. The link is to the
+    and ``ciel -p <clone> import-agent --sync`` keeps pulling from them. The link is to the
     external tree, never to the source profile: both profiles stay independent islands."""
     profile_dir.mkdir(parents=True, exist_ok=True)
     for subdir in _PROFILE_DIRS:
@@ -1433,7 +1433,7 @@ def create_profile(
         raise
 
     # Inside a container under s6, register the gateway as a runtime s6 service so
-    # `hermes -p <profile> gateway start` supervises via `s6-svc -u` instead of a bare
+    # `ciel -p <profile> gateway start` supervises via `s6-svc -u` instead of a bare
     # process. No-op on host (systemd/launchd/windows unit generation handles lifecycle).
     _maybe_register_gateway_service(canon)
     # A running multiplexer enumerates profiles/ at boot: ask it to serve this one now (it also
@@ -1458,7 +1458,7 @@ def _finish_profile_layout(profile_dir: Path, *, no_skills: bool, clone_all: boo
                            description: Optional[str]) -> None:
     """Seed files a fresh profile owns from day one; runs on the staging tree before publish."""
     # Seed an empty .env so the profile owns a credentials file from day one. Without it,
-    # profile-scoped env writes (dashboard Channels/Keys pages, `hermes -p <name> auth add`)
+    # profile-scoped env writes (dashboard Channels/Keys pages, `ciel -p <name> auth add`)
     # had no file until first write and the profile silently inherited shell API keys —
     # read by users as "the new profile reads the root .env". Skipped when a clone copied one.
     _seed_file_if_missing(profile_dir / ".env", _PLACEHOLDER_ENV, 0o600)
@@ -1624,7 +1624,7 @@ def _profile_bound_backend_pids(canon: str, profile_dir: Path) -> list[int]:
     except OSError:
         resolved_dir = profile_dir
 
-    # Never terminate ourselves or a parent (`hermes -p <canon> profile delete` runs under
+    # Never terminate ourselves or a parent (`ciel -p <canon> profile delete` runs under
     # the very profile it's deleting).
     skip: set[int] = {os.getpid()}
     with contextlib.suppress(Exception):
@@ -2472,7 +2472,7 @@ def rename_profile(old_name: str, new_name: str) -> Path:
             _notify_multiplexer(old_canon)
         _maybe_register_gateway_service(old_canon)
         if service_removed:
-            print(f"⚠ The gateway service was removed. Reinstall it with: hermes -p {old_canon} gateway install")
+            print(f"⚠ The gateway service was removed. Reinstall it with: ciel -p {old_canon} gateway install")
         raise
     print(f"✓ Renamed {old_dir.name} → {new_dir.name}")
     # The tombstone lives at profiles/.deleted/<old_name>; old_dir is gone so nothing can
@@ -2511,7 +2511,7 @@ def rename_profile(old_name: str, new_name: str) -> Path:
         _notify_multiplexer(new_canon)
     _maybe_register_gateway_service(new_canon)
     if service_removed:
-        print(f"⚠ The gateway service was removed. Reinstall it with: hermes -p {new_canon} gateway install")
+        print(f"⚠ The gateway service was removed. Reinstall it with: ciel -p {new_canon} gateway install")
     return new_dir
 
 

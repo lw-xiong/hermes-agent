@@ -168,7 +168,7 @@ def _hermes_home_for_pid(pid: int) -> str | None:
     (another user, hardened ``/proc``) — callers spare those, never guess.
 
     A readable environment always resolves, replaying ``_apply_profile_override`` on the target's
-    exec-time env + argv (``hermes -p X serve`` rewrites ``HERMES_HOME`` in ``os.environ`` AFTER
+    exec-time env + argv (``ciel -p X serve`` rewrites ``HERMES_HOME`` in ``os.environ`` AFTER
     startup, which ``/proc/<pid>/environ`` never reflects): a profile-shaped ``HERMES_HOME``
     without a flag is the home; otherwise the root is ``HERMES_HOME`` (its grandparent when
     profile-shaped) or the platform default of the process's own ``HOME`` / ``LOCALAPPDATA``
@@ -470,7 +470,7 @@ def _is_detached_session_leader(pid: int, tty: str) -> bool:
 
     Messaging-gateway bots and profile actions started from ``/api/gateway/*`` are such processes:
     they are the user's, not the dashboard's, and must survive a dashboard stop. A hosted
-    ``hermes --tui`` child is a session leader too (``pty.fork``) but owns the pts whose master the
+    ``ciel --tui`` child is a session leader too (``pty.fork``) but owns the pts whose master the
     dashboard held, so its tty column is set and it stays in the sweep.
 
     Known gap: the turn-isolation ``tui_gateway.compute_host`` and ``slash_worker`` children are
@@ -870,7 +870,7 @@ def _remote_lock_roots(base_dir: Path | None) -> list[Path]:
     """Every dir the Desktop may have written ``desktop-ssh/<ownershipId>/backend.lock.json`` under.
 
     The Desktop writes SSH locks beneath the ROOT home (``~/.hermes/desktop-ssh``), but a profile
-    backend (``hermes --profile X serve``) runs with ``HERMES_HOME=<root>/profiles/X`` — scanning only
+    backend (``ciel --profile X serve``) runs with ``HERMES_HOME=<root>/profiles/X`` — scanning only
     the process home found no lock there and its reaper killed the sibling profile's live SSH
     backend on every profile switch (#89811)."""
     if base_dir is not None:

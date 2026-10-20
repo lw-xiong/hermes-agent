@@ -327,7 +327,7 @@ class PairingStore:
 
     Files per platform: ``{platform}-pending.json``, ``{platform}-approved.json``, plus
     shared ``_rate_limits.json``. With ``profile="<name>"`` storage resolves from that
-    profile's HERMES_HOME exactly as ``hermes -p <name> pairing ...`` does, so multiplex
+    profile's HERMES_HOME exactly as ``ciel -p <name> pairing ...`` does, so multiplex
     gateways and profile-scoped CLI approvals share one whitelist.
     """
 

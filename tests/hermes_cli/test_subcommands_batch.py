@@ -65,7 +65,7 @@ def test_config_get_unset_subcommands_parse():
 
 
 def test_login_subparser_help_is_suppressed():
-    """The deprecated `login` row must not appear in `hermes --help`.
+    """The deprecated `login` row must not appear in `ciel --help`.
 
     Must hold without leaking argparse's literal `==SUPPRESS==` placeholder,
     which `help=argparse.SUPPRESS` emits for a top-level subparser on 3.12+.

@@ -5,7 +5,7 @@ stdin at EOF, setup wizard skipped) inside the bwrap sandbox with an empty fake 
 only a fresh distro's dotfiles. Its git clone is redirected to a local bare clone of this
 checkout (``_install_helpers``); uv comes from the host's warm cache. After the install the
 user's shell resolves ``hermes`` from ``~/.local/bin`` (the installer wires PATH into the
-shell rc), ``hermes --version`` answers from the installed checkout, and a one-shot turn reaches
+shell rc), ``ciel --version`` answers from the installed checkout, and a one-shot turn reaches
 the (fake) provider and is persisted.
 
 Re-running the installer on that live install (what users do to "repair" or to update) must be

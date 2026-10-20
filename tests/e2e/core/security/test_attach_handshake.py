@@ -1,4 +1,4 @@
-"""Session-attach handshake: ``hermes --tui --resume SID`` must hand the TUI only the REAL owner's socket.
+"""Session-attach handshake: ``ciel --tui --resume SID`` must hand the TUI only the REAL owner's socket.
 
 When a resumed session is already open elsewhere, the launcher reads the owner's lease from the
 active-session registry, calls ``GET <metadata.shared_runtime_url>/api/session-attach`` and exports the
@@ -9,7 +9,7 @@ Real processes throughout:
 
 * the lease holder is a separate Python process that creates the session through ``SessionDB`` and
   acquires its lease through ``try_acquire_active_session`` (the registry path production uses);
-* the client is the real ``hermes --tui --resume SID`` CLI (argparse, profile-home resolution, the
+* the client is the real ``ciel --tui --resume SID`` CLI (argparse, profile-home resolution, the
   launcher's discovery, its error exit);
 * the TUI child is a recording stand-in bundle selected through the supported prebuilt-bundle override
   (``HERMES_TUI_DIR/dist/entry.js``). It writes the environment the launcher handed it and exits, so the
@@ -245,7 +245,7 @@ def home(tmp_path: Path) -> Path:
 
 
 def _resume(home: Path, sid: str) -> tuple[subprocess.CompletedProcess, dict | None]:
-    """Run ``hermes --tui --resume SID``; return the process result and what the TUI child received."""
+    """Run ``ciel --tui --resume SID``; return the process result and what the TUI child received."""
     out = home.parent / f"handoff-{uuid.uuid4().hex}.json"
     result = run_hermes(
         ["--tui", "--resume", sid], home, timeout=90,

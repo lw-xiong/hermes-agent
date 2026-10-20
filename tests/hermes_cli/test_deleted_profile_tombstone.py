@@ -213,7 +213,7 @@ class TestDeletedProfileTombstone:
         assert not (shell / ".env").exists()
         assert _named_homes(profile_env) == ["legacy"]
         assert [name for name, _ in profiles_to_serve(True)] == ["default", "legacy"]
-        # ``hermes --profile ghost serve`` (a stale Desktop boot target) must not start a backend
+        # ``ciel --profile ghost serve`` (a stale Desktop boot target) must not start a backend
         # in the shell — its ensure_hermes_home() would rebuild the full profile tree.
         assert not profile_exists("ghost")
         with pytest.raises(FileNotFoundError):
