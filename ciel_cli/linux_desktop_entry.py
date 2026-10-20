@@ -577,15 +577,31 @@ def _quote_exec_arg(arg: str) -> str:
     return f'"{escaped}"'
 
 
+def launch_env_key() -> str:
+    """``KEY=VALUE`` pairs from the user's launch-env file, space-joined, or ``""``.
+
+    A menu click inherits no shell environment, so machine-specific switches that rescue
+    Electron (Wayland ozone hint, GPU process, sandbox) have to ride in ``Exec=`` itself.
+    Keeping them in a per-user file leaves the generated entry generic everywhere else.
+    """
+    path = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "ciel" / "desktop-launch.env"
+    try:
+        pairs = [line.strip() for line in path.read_text(encoding="utf-8").splitlines()]
+    except OSError:
+        return ""
+    return " ".join(p for p in pairs if p and not p.startswith("#"))
+
+
 def render_desktop_entry(exec_command: str, icon: str) -> str:
     """The app-id entry: identity lives in the file name and ``StartupWMClass``."""
+    launch_env = launch_env_key()
     return (
         "[Desktop Entry]\n"
         "Type=Application\n"
         "Name=Ciel\n"
         "GenericName=Ciel Desktop\n"
         "Comment=Launch Ciel Desktop\n"
-        f"Exec={exec_command}\n"
+        f"Exec={'env ' + launch_env + ' ' if launch_env else ''}{exec_command}\n"
         f"Icon={icon}\n"
         "Terminal=false\n"
         "Categories=Utility;\n"
