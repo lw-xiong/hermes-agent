@@ -1059,6 +1059,7 @@ def _lap_bare_custom_row(b: _PickerBuild, custom_providers: list | None) -> None
     if "custom" in b.seen_slugs:
         return
     base_url = default_model = ""
+    cfg_model: dict | None = None
     if b.current_provider_norm == "custom" and b.current_base_url:
         base_url = b.current_base_url
         default_model = b.current_model
@@ -1084,9 +1085,31 @@ def _lap_bare_custom_row(b: _PickerBuild, custom_providers: list | None) -> None
     is_current = b.current_provider_norm == "custom" and b.current_base_url_norm == _norm_url(api_url)
     models = [default_model] if default_model else []
     native_catalog_empty = False
+    # Resolve the endpoint key exactly like the custom-provider plugin does (model.api_key,
+    # then CUSTOM_API_KEY / OPENAI_API_KEY / OPENROUTER_API_KEY). The bare ``model.provider:
+    # custom`` row used to probe with an empty key, so any gateway that requires auth
+    # (e.g. 9router-go on :20130) returned 401 and the picker fell back to just the saved
+    # model — the full catalog was never shown even after a cache warm.
+    api_key = ""
+    if b.current_provider_norm == "custom":
+        try:
+            from hermes_cli.models import _get_model_config_dict
+            _cfg = _get_model_config_dict()
+            api_key = (
+                str(_cfg.get("api_key", "") or "").strip()
+                or os.getenv("CUSTOM_API_KEY", "")
+                or os.getenv("OPENAI_API_KEY", "")
+                or os.getenv("OPENROUTER_API_KEY", ""))
+        except Exception:
+            api_key = ""
+    else:
+        try:
+            api_key = str((cfg_model or {}).get("api_key", "") or "").strip()
+        except Exception:
+            api_key = ""
     try:
         discovered, native_catalog_empty = _discover_endpoint_models(
-            "", api_url, "custom", False, headers=None, api_mode=None,
+            api_key, api_url, "custom", False, headers=None, api_mode=None,
             probe_live=bool(b.refresh or (b.probe_current_custom_provider and is_current)),
             discovery_allowed=True,
             fast_custom_probe=b.resolved_fast_custom_probe)
