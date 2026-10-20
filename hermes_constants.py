@@ -13,6 +13,10 @@ from collections.abc import MutableMapping
 from contextvars import ContextVar, Token
 from pathlib import Path
 
+from ciel.env import mirror_env as _mirror_ciel_env  # fork: CIEL_* is the documented namespace
+
+_mirror_ciel_env()
+
 _profile_fallback_warned: bool = False
 _UNSET = object()
 _HERMES_HOME_OVERRIDE: ContextVar[str | object] = ContextVar("_HERMES_HOME_OVERRIDE", default=_UNSET)
