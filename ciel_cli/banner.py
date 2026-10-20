@@ -70,27 +70,72 @@ def _skin_color(key: str, fallback: str) -> str:
 from ciel_cli import __release_date__ as RELEASE_DATE
 from ciel_cli.version_info import get_version_info
 
-CIEL_LOGO = """[bold #4A8CD8]      ▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-    ▄██████████████████▄
-  ▄██████████ ✦ ██████████▄
- ▀██████████████████████████▀
-  ▀▀███▄▄█▀▀▀▀▀▀▀▀▀▀█▄▄███▀▀[/]
-[bold #E8EEF6] ██████╗██╗███████╗██╗     
-██╔════╝██║██╔════╝██║     
-██║     ██║█████╗  ██║     
-██║     ██║██╔══╝  ██║     
-╚██████╗██║███████╗███████╗
- ╚═════╝╚═╝╚══════╝╚══════╝[/]"""
 
-CIEL_BRAILLE = """[#4A8CD8]⠀⠀⠀⠀⠀⠀⠀⣬⣯⣯⣯⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⠀⠀⠀⢩⣫⣯⣯⣯⣯⣫⢫⠉⠀⠀⠀⠀⠀
-⠀⠀⠀⢠⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⢫⠀⠀⠀⠀
-⠀⠀⠀⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⠋⠀⠀⠀
-⠀⠀⣠⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣫⠀⠀⠀
-⠀⢠⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⢫⠀⠀
-⣩⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣫⠉
-⣬⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⣯⠀
-⠀⠀⠀⠀⠀⠀⠀⡀⣯⣯⡋⠀⠀⠀⠀⠀⠀⠀⠀"""
+# Ciel's mark: a starry dome rising from an open book. Sampled from the artwork at 56 columns and
+# quantised to the brand's five values, then drawn as half blocks — each cell carries two colours,
+# so the white leaves can sit against the blue cover without either one bleeding into the other.
+_CIEL_HERO_PX = """\
+...............nnbbbbbbnn...............
+.............nbbbbbbbbbbbbn.............
+............nbbbbbbbbbbbbbbb............
+...........bbbbbbbbppbbbpbbbb...nn......
+..........bbbbpbbbbppbbbbbbpppnnnbpn....
+.........nbbbppbbbbwwbbbbpppppb..bpn....
+........nbbbbbbbbbpwwpbbbbbbbbbn.pn.....
+........bbbbbbbbpwwwwwwpbbbbbbbbpn......
+.......nbbbbbbbbbbpwwpbbbbbbbbbwb.......
+.......bbbbbbpbbbbbwwbbbbbbbbppbn.......
+.......bbbbppbbbbbbppbbbpbbbppbbb.......
+......npbbpwbbbbpbbppbbbbbppbbbbpn......
+......nbppwwbbbbpbbbbbbbppbbpwppbn......
+.....nbbbnbpwwpbbbbbbbppbbpwpbnbbbn.....
+.....bwwwwpbbpwwbbbpppbbpwpbbpwwwwb.....
+....nwwwwwwwwpbpwpbbbbbwpbpwwwwwwwwn....
+....npppppwwwwwppwbbbbwppwwwwwpppppb....
+...nppbbbbbbbpwwwpwbbwpwwwpbbbbbbbbpn...
+...bnnnbbpppwppbwwwppwwwpbpwpppbbnnnb...
+..nnbpppbbbbbpwwppwwwwppwwpbbbbppppbnn..
+.nnbbnnnnnnnnnnnbpwwwwpbnnnnnnnnnnnnbnn.
+nnn...........nnnnnwwbnnnn...........nnn
+.................nnnnnn.................
+..................nnnn.................."""
+
+_HERO_INK = {
+    "n": ("#15346B", "#15346B"),   # cover
+    "b": ("#4A7FD4", "#4A7FD4"),   # dome
+    "p": ("#8CC0F0", "#8CC0F0"),   # starlight
+    "w": ("#F7F6F2", "#F7F6F2"),   # pages and stars
+}
+
+
+def _hero_markup(pixels: str = _CIEL_HERO_PX) -> str:
+    """One rich-markup line per two pixel rows; '.' leaves the terminal background alone."""
+    rows = pixels.splitlines()
+    out = []
+    for y in range(0, len(rows) - 1, 2):
+        top, bottom = rows[y], rows[y + 1]
+        runs: list[tuple[str, str, str]] = []
+        for x, (t, b) in enumerate(zip(top, bottom)):
+            if t == "." and b == ".":
+                key = ("", "", " ")
+            else:
+                fg = _HERO_INK.get(t, ("", ""))[0] or _HERO_INK.get(b, ("", ""))[0]
+                bg = _HERO_INK.get(b, ("", ""))[1]
+                key = (fg, bg, "▀")
+            if runs and runs[-1][:2] == key[:2]:
+                runs[-1] = (key[0], key[1], runs[-1][2] + key[2])
+            else:
+                runs.append(key)
+        while runs and runs[-1][2].strip() == "":
+            runs.pop()
+        out.append("".join(
+            f"[{fg} on {bg}]{text}[/]" if fg and bg else f"[{fg}]{text}[/]" if fg else text
+            for fg, bg, text in runs
+        ))
+    return "\n".join(out)
+
+
+CIEL_HERO = _hero_markup()
 
 # === Skills scanning ===
 
@@ -224,7 +269,7 @@ def format_banner_version_label() -> str:
 
     from ciel import __version__ as ciel_version
 
-    base = f"Ciel v{ciel_version} (engine {get_version_info().derived_version}, {RELEASE_DATE})"
+    base = f"Ciel v{ciel_version} · engine {get_version_info().derived_version}"
     from ciel_cli.config import load_config
     from ciel_cli.update_channel import resolve_update_channel
 
@@ -239,7 +284,7 @@ def format_banner_version_label() -> str:
     ahead = int(state.get("ahead") or 0)
     if ahead <= 0 or upstream == local:
         return f"{base} · upstream {upstream}"
-    return f"{base} · upstream {upstream} · local {local} (+{ahead} carried {_plural(ahead, 'commit')})"
+    return f"{base} · upstream {upstream} · local {local}"
 
 
 # === Non-blocking update check ===
@@ -698,7 +743,7 @@ def build_welcome_banner(
     text = _skin_color("banner_text", "#FFF8DC")
     # Use skin's custom caduceus art if provided
     _bskin = _quiet(_active_skin)
-    left_lines = ["", getattr(_bskin, "banner_hero", None) or CIEL_BRAILLE, ""]
+    left_lines = ["", getattr(_bskin, "banner_hero", None) or CIEL_HERO, ""]
     left_lines += _banner_left_lines(model, cwd, session_id, context_length, provider, accent=accent, dim=dim,
                                      context_pinned=context_pinned)
     right_lines = _banner_tool_lines(
@@ -759,7 +804,4 @@ def build_welcome_banner(
         layout_table, title=f"[bold {_skin_color('banner_title', '#FFD700')}]{version_label}[/]",
         border_style=_skin_color("banner_border", "#CD7F32"), padding=(0, 2))
     console.print()
-    if shutil.get_terminal_size().columns >= 95:
-        console.print(getattr(_bskin, "banner_logo", None) or CIEL_LOGO)
-        console.print()
     console.print(outer_panel)
