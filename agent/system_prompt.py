@@ -547,7 +547,12 @@ def _identity_parts(agent: Any, ctx_len: Optional[int]) -> tuple[list[str], bool
     Returns ``(parts, soul_loaded)``."""
     wants_soul = agent.load_soul_identity or not agent.skip_context_files
     _soul_content = _pb.load_soul_md(ctx_len, home_override=_agent_home(agent)) if wants_soul else None
-    return ([_soul_content], True) if _soul_content else ([DEFAULT_AGENT_IDENTITY], False)
+    if _soul_content:
+        return ([_soul_content], True)
+    # fork: host/binding facts ride beside the persona, so the identity block itself stays portable
+    from ciel.persona import CIEL_OPERATING_FACTS
+
+    return ([DEFAULT_AGENT_IDENTITY, CIEL_OPERATING_FACTS], False)
 
 
 def _guidance_parts(agent: Any) -> list[str]:
