@@ -98,6 +98,11 @@ Profiles use `~/.ciel/profiles/<name>/` with the same layout. When a profile is 
 | Secret redaction, PII, approval modes, "reset permissions" | `references/security-privacy.md` |
 | Delegation, cron, curator, kanban | `references/background-systems.md` |
 | MCP servers (add, catalog, `ciel mcp`) | `references/native-mcp.md` |
+| Installing / updating hub skills (catalog, name collisions) | `references/skills-hub.md` |
+| Measuring or cutting token spend; state.db audit | `references/token-usage-auditing.md` |
+| Relocating `$CIEL_HOME` (or just skills/memory) to another disk | `references/storage-and-relocation.md` |
+| Forking this repo downstream / carrying patches upstream | `references/downstream-fork.md` |
+| Maintaining the local Ciel fork (rename, `ciel-sync`, persona, banner art) | `references/local-fork-maintenance.md` |
 | Webhook routes and event-driven runs | `references/webhooks.md` |
 | A custom theme/skin ("synthwave theme", "change the gold ●") | `references/themes.md` + `templates/skin.yaml` |
 | A desktop app UI element (pane, widget, ⌘K command, page) | `references/desktop-plugins.md` + `templates/plugin.js` |
