@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import hermes_yaml as yaml
+from ciel.skills import CIEL_SKILL_POLICY  # fork: library governance rides in the tool schema
 
 from hermes_constants import get_hermes_home
 from utils import atomic_write_text, is_truthy_value
@@ -880,6 +881,7 @@ def _skill_manage_description() -> str:
         "imperative rule + why, no PR numbers/dates/incident narration, one "
         "rule per lesson, references/ named by topic (extend before adding). "
         "skill_view() shows format conventions."
+        + CIEL_SKILL_POLICY
     )
 
 
