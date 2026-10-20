@@ -281,7 +281,16 @@ def spill_overrides(profile: ModelProfile, spill_bytes: int | None = None) -> li
     """-ot placement for spilled configs: expert/FFN weights to host so attention + KV stay
     GPU-resident. MoE gets the expert pattern; hybrids push the FFNs of just enough recurrent
     blocks to cover ``spill_bytes`` (their n_head_kv==0 layers carry no KV worth protecting, and
-    full-attention FFNs stay on the GPU)."""
+    full-attention FFNs stay on the GPU).
+
+    LOCAL PATCH (Legion5 / GTX 1650 Ti 4 GiB): this host's estimator budget is unusable — the
+    card's usable VRAM prices as 2 GiB (_MARGIN_FLOOR = 2 GiB) while the fixed overhead alone
+    estimates 2.5-3.4 GiB, so EVERY model is judged spilled and its FFN weights get pinned to the
+    CPU. Measured reality: Huihui-2B runs fully resident at 64K in 2470 MiB, and llama.cpp's own
+    auto-fit (no -ngl, no -ot) places the 4B models at ~2700 MiB / 18 tok/s. Emit no placement and
+    let the engine fit itself. Re-apply after `hermes update`.
+    """
+    return []
     if profile.moe:
         return ["-ot", r"blk\.\d+\.ffn_.*_exps\.weight=CPU"]
     blocks = recurrent_spill_blocks(profile, spill_bytes)
