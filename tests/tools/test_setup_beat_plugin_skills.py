@@ -3,7 +3,7 @@
 A first task writes a plugin skill readably (``blender:blender``), but a portable plugin's skills
 register under a collision-resistant namespace (``agent-plugin-blender-<sha8>:blender``). In a live run
 the build beat sent the readable form, ``skill_view("blender:blender")`` missed, and the model rendered
-headless without the skill. Real plugin discovery against a temp ``HERMES_HOME``.
+headless without the skill. Real plugin discovery against a temp ``CIEL_HOME``.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ import json
 import pytest
 
 from agent import onboarding_flow as flow
-from hermes_cli import plugins as plugins_mod
+from ciel_cli import plugins as plugins_mod
 from tools.setup_beat_tool import _result
 
 PC = flow.Facts(os="windows", arch="amd64", machine_kind="PC", nvidia_platform="discrete")
@@ -21,12 +21,12 @@ PC = flow.Facts(os="windows", arch="amd64", machine_kind="PC", nvidia_platform="
 
 @pytest.fixture
 def home(tmp_path, monkeypatch):
-    home = tmp_path / ".hermes"
+    home = tmp_path / ".ciel"
     (home / "plugins").mkdir(parents=True)
     (home / "config.yaml").write_text(json.dumps({"plugins": {"enabled": ["blender"]}}))
     bundled = tmp_path / "bundled"
     bundled.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("CIEL_HOME", str(home))
     monkeypatch.setattr(plugins_mod, "get_bundled_plugins_dir", lambda: bundled)
     plugins_mod._reset_plugin_managers_for_tests()
     yield home
@@ -35,7 +35,7 @@ def home(tmp_path, monkeypatch):
 
 def _install_blender_from_catalog(home):
     """What a catalog install leaves: the portable plugin tree and the installer-owned record."""
-    from hermes_cli.agent_plugins import PLUGIN_SCHEMA_V1
+    from ciel_cli.agent_plugins import PLUGIN_SCHEMA_V1
 
     plugin = home / "plugins" / "blender"
     (plugin / "skills" / "blender").mkdir(parents=True)

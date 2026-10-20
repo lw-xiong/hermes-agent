@@ -103,15 +103,15 @@ def test_diagnostic_entrypoint_preserves_cli_arguments_and_failure(tmp_path):
         'def hdiutil(command, *args, **kwargs):\n'
         '    print("fixture native", command, *args, flush=True)\n'
         '    if command == "attach":\n'
-        '        return 0, {"system-entities": [{"dev-entry": "/dev/hermes-dmg-fixture-not-a-device"}]}\n'
+        '        return 0, {"system-entities": [{"dev-entry": "/dev/ciel-dmg-fixture-not-a-device"}]}\n'
         '    return (0, "cleanup") if "-force" in args else (16, "Resource busy")\n', encoding="utf-8")
     (package / "__main__.py").write_text(
         'import json, sys\nfrom . import core\n'
         'def main():\n'
         '    print(json.dumps(sys.argv[1:]), flush=True)\n'
-        '    core.hdiutil("attach", "-nobrowse", "/hermes-dmg-fixture-no-image.dmg")\n'
-        '    result = core.hdiutil("detach", "/dev/hermes-dmg-fixture-not-a-device", plist=False)\n'
-        '    core.hdiutil("detach", "-force", "/dev/hermes-dmg-fixture-not-a-device", plist=False)\n'
+        '    core.hdiutil("attach", "-nobrowse", "/ciel-dmg-fixture-no-image.dmg")\n'
+        '    result = core.hdiutil("detach", "/dev/ciel-dmg-fixture-not-a-device", plist=False)\n'
+        '    core.hdiutil("detach", "-force", "/dev/ciel-dmg-fixture-not-a-device", plist=False)\n'
         '    raise SystemExit(result[0])\n', encoding="utf-8")
     args = ["-s", "settings with spaces.json", "Install Ciel", "output.dmg"]
     result = subprocess.run([sys.executable, str(Path(diagnostics.__file__)), *args],
@@ -128,7 +128,7 @@ def test_native_busy_image_reports_the_process_holding_its_file(tmp_path):
     image, mount = tmp_path.resolve() / "held.dmg", tmp_path.resolve() / "mount"
     mount.mkdir()
     subprocess.run(["/usr/bin/hdiutil", "create", "-size", "16m", "-fs", "HFS+",
-                    "-volname", "Hermes diagnostic fixture", str(image)],
+                    "-volname", "Ciel diagnostic fixture", str(image)],
                    check=True, capture_output=True, timeout=60)
 
     def native(command, *args, plist=True):

@@ -11,12 +11,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def test_test_dependencies_are_group_only_in_manifest_and_lock():
     manifest = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     lock = tomllib.loads((REPO_ROOT / "uv.lock").read_text(encoding="utf-8"))
-    hermes = next(package for package in lock["package"] if package["name"] == manifest["project"]["name"])
+    ciel = next(package for package in lock["package"] if package["name"] == manifest["project"]["name"])
     assert manifest["tool"]["uv"]["default-groups"] == []
     assert "dev" in manifest["dependency-groups"]
     assert "dev" not in manifest["project"]["optional-dependencies"]
-    assert "dev" in hermes["dev-dependencies"]
-    assert "dev" not in hermes.get("optional-dependencies", {})
+    assert "dev" in ciel["dev-dependencies"]
+    assert "dev" not in ciel.get("optional-dependencies", {})
 
 
 def test_core_and_optional_speech_dependencies():
@@ -54,7 +54,7 @@ def test_starlette_server_pins_and_lock_exclude_cve_2026_48710():
 
 
 def test_every_dependency_is_held_to_one_three_day_release_age():
-    """Hermes's deps must be >= 3 days old when locked, exact pins included (Teknium ruling).
+    """Ciel's deps must be >= 3 days old when locked, exact pins included (Teknium ruling).
 
     A per-package exemption or date would quietly let a fresh release into the lock; the
     check runs at lock time only, so users never need a mirror that serves upload times.

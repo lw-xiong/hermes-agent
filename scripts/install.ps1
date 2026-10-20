@@ -1,6 +1,6 @@
-# Hermes Agent bootstrap: git checkout + venv + hermes command on PATH.
+# Ciel bootstrap: git checkout + venv + ciel command on PATH.
 # Heavy dependencies (tool binaries, browsers, node) are pm's job after
-# this: `hermes pm install`. Stage protocol kept for Hermes-Setup:
+# this: `ciel pm install`. Stage protocol kept for Ciel-Setup:
 #   -Manifest             print the stage list as JSON
 #   -Stage NAME [-Json]   run one stage
 #   -NonInteractive       skip stages that need input
@@ -9,19 +9,19 @@
 #   -ProtocolVersion      print the stage protocol version
 #   -SkipBrowser          do not install the browser tools (agent-browser +
 #                         Chromium); remembered by later
-#                         installs and `hermes update`, undone by
-#                         `hermes pm install agent-browser`
+#                         installs and `ciel update`, undone by
+#                         `ciel pm install agent-browser`
 #   -SkipComputerUse      do not install the computer-use driver (cua-driver);
 #                         remembered the same way, undone by
-#                         `hermes pm install cua-driver`
+#                         `ciel pm install cua-driver`
 #   -Verbose              stream every child command's output (the default
 #                         with redirected output and in CI)
 [CmdletBinding(PositionalBinding=$false)]
 param(
     [string]$Branch = "main",
     [string]$Commit = "",
-    [string]$HermesHome = $(if ($env:HERMES_HOME) { $env:HERMES_HOME } else { "$env:LOCALAPPDATA\hermes" }),
-    [string]$InstallDir = $(if ($env:HERMES_HOME) { "$env:HERMES_HOME\hermes-agent" } else { "$env:LOCALAPPDATA\hermes\hermes-agent" }),
+    [string]$CielHome = $(if ($env:CIEL_HOME) { $env:CIEL_HOME } else { "$env:LOCALAPPDATA\ciel" }),
+    [string]$InstallDir = $(if ($env:CIEL_HOME) { "$env:CIEL_HOME\ciel-agent" } else { "$env:LOCALAPPDATA\ciel\ciel-agent" }),
     [switch]$Manifest,
     [string]$Stage,
     [switch]$ProtocolVersion,
@@ -32,8 +32,8 @@ param(
     [switch]$Json,
     [switch]$IncludeDesktop,
     # Same opt-out as install.sh --skip-browser: PM records it, so later
-    # installs and `hermes update` keep the browser tools off until
-    # `hermes pm install agent-browser` opts back in.
+    # installs and `ciel update` keep the browser tools off until
+    # `ciel pm install agent-browser` opts back in.
     [switch]$SkipBrowser,
     [switch]$SkipComputerUse,
     # Print the paths this install would use, as JSON on stdout, and exit
@@ -71,7 +71,7 @@ $script:BoundParams = $PSBoundParameters
 # Under iex, script scope is the caller's session and outlives a run; start
 # each run without the previous run's answer (see Set-LauncherUserPath).
 $script:BinDirOnCallerPath = $null
-$RepoUrl = if ($env:HERMES_REPO_URL) { $env:HERMES_REPO_URL } else { "https://github.com/NousResearch/hermes-agent.git" }
+$RepoUrl = if ($env:CIEL_REPO_URL) { $env:CIEL_REPO_URL } else { "https://github.com/NousResearch/hermes-agent.git" }
 
 # --- BEGIN GENERATED: bootstrap pins (scripts/gen-bootstrap-pins.py) ---
 # Derived from pm/lock.json. DO NOT EDIT BY HAND:
@@ -80,12 +80,12 @@ $script:UvPinVersion = "0.12.3"
 $script:UvPinFiles = @{
     "win32-x64" = @{
         Url    = "https://github.com/astral-sh/uv/releases/download/0.12.3/uv-x86_64-pc-windows-msvc.zip"
-        MirrorUrl = "https://hermes-assets.nousresearch.com/upstream/sha256/b23350c79e8ad0192b8124af13a0f17e8d4e4549524785e1aef389ae5a06990e"
+        MirrorUrl = "https://ciel-assets.nousresearch.com/upstream/sha256/b23350c79e8ad0192b8124af13a0f17e8d4e4549524785e1aef389ae5a06990e"
         Sha256 = "b23350c79e8ad0192b8124af13a0f17e8d4e4549524785e1aef389ae5a06990e"
     }
     "win32-arm64" = @{
         Url    = "https://github.com/astral-sh/uv/releases/download/0.12.3/uv-aarch64-pc-windows-msvc.zip"
-        MirrorUrl = "https://hermes-assets.nousresearch.com/upstream/sha256/4343217d668727b8a8eb5cad92389a1d2eeead93c89940d1b955ba1bb15462eb"
+        MirrorUrl = "https://ciel-assets.nousresearch.com/upstream/sha256/4343217d668727b8a8eb5cad92389a1d2eeead93c89940d1b955ba1bb15462eb"
         Sha256 = "4343217d668727b8a8eb5cad92389a1d2eeead93c89940d1b955ba1bb15462eb"
     }
 }
@@ -94,12 +94,12 @@ $script:GitPinVersion = "2.53.0+3"
 $script:GitPinFiles = @{
     "win32-x64" = @{
         Url    = "https://github.com/git-for-windows/git/releases/download/v2.53.0.windows.3/PortableGit-2.53.0.3-64-bit.7z.exe"
-        MirrorUrl = "https://hermes-assets.nousresearch.com/upstream/sha256/b365da794b1d2225eb24d5f5e09ef7792cfd5fa26c3a3586210280c80dff3a2a"
+        MirrorUrl = "https://ciel-assets.nousresearch.com/upstream/sha256/b365da794b1d2225eb24d5f5e09ef7792cfd5fa26c3a3586210280c80dff3a2a"
         Sha256 = "b365da794b1d2225eb24d5f5e09ef7792cfd5fa26c3a3586210280c80dff3a2a"
     }
     "win32-arm64" = @{
         Url    = "https://github.com/git-for-windows/git/releases/download/v2.53.0.windows.3/PortableGit-2.53.0.3-arm64.7z.exe"
-        MirrorUrl = "https://hermes-assets.nousresearch.com/upstream/sha256/0db54010054c01f35501cf69e1e32d3710138ecb934d188bd77093afed24300e"
+        MirrorUrl = "https://ciel-assets.nousresearch.com/upstream/sha256/0db54010054c01f35501cf69e1e32d3710138ecb934d188bd77093afed24300e"
         Sha256 = "0db54010054c01f35501cf69e1e32d3710138ecb934d188bd77093afed24300e"
     }
 }
@@ -112,7 +112,7 @@ $script:GitPinFiles = @{
 # contains a space ("First Last" -> FIRST~1.LAS), a dot, or an accented
 # character. It can then expose %TEMP%, %TMP%, %LOCALAPPDATA%, %APPDATA% and
 # %USERPROFILE% -- plus everything derived from them, including the default
-# HERMES_HOME and InstallDir -- in that short form:
+# CIEL_HOME and InstallDir -- in that short form:
 #   C:\Users\FIRST~1.LAS\AppData\Local\Temp
 # PowerShell's FileSystem provider mishandles the aliased component once it
 # reaches a provider cmdlet (Tee-Object -FilePath, Out-File, New-Item,
@@ -146,7 +146,7 @@ function Write-PathDiag {
     # carries everything these lines say.
     param([string]$Message)
     if ($ShowResolvedPaths) { return }
-    [Console]::Error.WriteLine("[hermes] $Message")
+    [Console]::Error.WriteLine("[ciel] $Message")
 }
 
 function Get-LongProfileRoot {
@@ -232,17 +232,17 @@ function ConvertTo-LongPath {
     # 1. kernel32. Compiled on first use only, so a normal profile never pays
     #    the Add-Type cost (this file is re-entered once per install stage).
     try {
-        if (-not ([System.Management.Automation.PSTypeName]'HermesInstall.LongPath').Type) {
-            Add-Type -Namespace 'HermesInstall' -Name 'LongPath' -MemberDefinition @'
+        if (-not ([System.Management.Automation.PSTypeName]'CielInstall.LongPath').Type) {
+            Add-Type -Namespace 'CielInstall' -Name 'LongPath' -MemberDefinition @'
 [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
 public static extern int GetLongPathNameW(string lpszShortPath, System.Text.StringBuilder lpszLongPath, int cchBuffer);
 '@
         }
         $buffer = New-Object System.Text.StringBuilder 4096
-        $length = [HermesInstall.LongPath]::GetLongPathNameW($Path, $buffer, $buffer.Capacity)
+        $length = [CielInstall.LongPath]::GetLongPathNameW($Path, $buffer, $buffer.Capacity)
         if ($length -gt $buffer.Capacity) {
             $buffer = New-Object System.Text.StringBuilder $length
-            $length = [HermesInstall.LongPath]::GetLongPathNameW($Path, $buffer, $buffer.Capacity)
+            $length = [CielInstall.LongPath]::GetLongPathNameW($Path, $buffer, $buffer.Capacity)
         }
         if ($length -gt 0) {
             $expanded = $buffer.ToString()
@@ -313,49 +313,49 @@ function Initialize-ResolvedPaths {
     $script:NormalizedProfilePaths = Set-LongProfileEnvVars
 
     # Re-derive the install paths now that the env vars behind their defaults
-    # are long. An explicitly passed -HermesHome / -InstallDir is normalized
+    # are long. An explicitly passed -CielHome / -InstallDir is normalized
     # in place rather than replaced, so a caller's choice is never
     # overwritten by a default. The script's own $PSBoundParameters was
     # captured at script scope ($script:BoundParams) because a function body
     # sees its own binding, not the script's.
-    $resolvedHome = if ($script:BoundParams.ContainsKey('HermesHome')) {
-        ConvertTo-LongPath $HermesHome
+    $resolvedHome = if ($script:BoundParams.ContainsKey('CielHome')) {
+        ConvertTo-LongPath $CielHome
     } else {
         ConvertTo-LongPath $(
-            if ($env:HERMES_HOME) { $env:HERMES_HOME } else { "$env:LOCALAPPDATA\hermes" }
+            if ($env:CIEL_HOME) { $env:CIEL_HOME } else { "$env:LOCALAPPDATA\ciel" }
         )
     }
     $resolvedDir = if ($script:BoundParams.ContainsKey('InstallDir')) {
         ConvertTo-LongPath $InstallDir
     } else {
-        Join-Path $resolvedHome 'hermes-agent'
+        Join-Path $resolvedHome 'ciel-agent'
     }
-    # A HermesHome equal to or inside InstallDir puts the pm tool store
+    # A CielHome equal to or inside InstallDir puts the pm tool store
     # (<home>\tools) inside the checkout: the repository stage's
     # occupied-directory preflight then refuses every retry after the first
     # run populated it, and `git stash --include-untracked` would sweep the
     # toolchain into the stash. Refuse before anything downloads (#124526)
-    # unless HERMES_RUNTIME_DIR parks the store outside the checkout.
-    # The store lands in HERMES_RUNTIME_DIR when set (Get-PmStoreRoot), else under HermesHome.
-    $cmpStore = if ($env:HERMES_RUNTIME_DIR) { "$env:HERMES_RUNTIME_DIR" } else { "$resolvedHome" }
+    # unless CIEL_RUNTIME_DIR parks the store outside the checkout.
+    # The store lands in CIEL_RUNTIME_DIR when set (Get-PmStoreRoot), else under CielHome.
+    $cmpStore = if ($env:CIEL_RUNTIME_DIR) { "$env:CIEL_RUNTIME_DIR" } else { "$resolvedHome" }
     $cmpStore = $cmpStore.TrimEnd('\', '/')
     $cmpDir = "$resolvedDir".TrimEnd('\', '/')
     $dirPrefix = $cmpDir + [IO.Path]::DirectorySeparatorChar
     $storeInside = $cmpStore -eq $cmpDir -or
         $cmpStore.StartsWith($dirPrefix, [StringComparison]::OrdinalIgnoreCase)
     if ($storeInside) {
-        Fail "HermesHome ($resolvedHome) cannot be the install directory or live inside it ($resolvedDir): the tool store would land inside the checkout. Use a separate -HermesHome, or point HERMES_RUNTIME_DIR outside -InstallDir."
+        Fail "CielHome ($resolvedHome) cannot be the install directory or live inside it ($resolvedDir): the tool store would land inside the checkout. Use a separate -CielHome, or point CIEL_RUNTIME_DIR outside -InstallDir."
     }
     # The param() variables live in the CALLER's scope, which is the script
     # scope only under -File. Under the documented
     # `& ([scriptblock]::Create((irm ...)))` install they live in the
     # scriptblock's scope and `$script:` names the caller's session instead,
-    # so `$script:HermesHome` read '' and every stage's bare $HermesHome kept
+    # so `$script:CielHome` read '' and every stage's bare $CielHome kept
     # the un-normalized value. Scope 1 is where param() bound in every mode
     # (-File, scriptblock, dot-source).
-    Set-Variable -Scope 1 -Name HermesHome -Value $resolvedHome
+    Set-Variable -Scope 1 -Name CielHome -Value $resolvedHome
     Set-Variable -Scope 1 -Name InstallDir -Value $resolvedDir
-    $env:HERMES_HOME = $resolvedHome
+    $env:CIEL_HOME = $resolvedHome
 
     # Captured here, where the values are final. The report goes to STDOUT as
     # JSON under -ShowResolvedPaths: on Windows a child's stderr does not
@@ -367,16 +367,16 @@ function Initialize-ResolvedPaths {
         normalized        = $script:NormalizedPathRewrites
         resolver          = $script:LastResolver
         temp              = $env:TEMP
-        hermes_home       = $resolvedHome
+        ciel_home       = $resolvedHome
         install_dir       = $resolvedDir
     }
 }
 
 # Resolve the pm store root (same resolution as pm's store_root()):
-# $env:HERMES_RUNTIME_DIR wins, else <HermesHome>\tools.
+# $env:CIEL_RUNTIME_DIR wins, else <CielHome>\tools.
 function Get-PmStoreRoot {
-    if ($env:HERMES_RUNTIME_DIR) { return $env:HERMES_RUNTIME_DIR }
-    return (Join-Path $HermesHome "tools")
+    if ($env:CIEL_RUNTIME_DIR) { return $env:CIEL_RUNTIME_DIR }
+    return (Join-Path $CielHome "tools")
 }
 
 # The MACHINE's architecture (registry PROCESSOR_ARCHITECTURE), not the
@@ -512,12 +512,12 @@ function Invoke-DownloadWithProgress {
 # (<store>\uv-<version>-<target>\), sha256-verified, so pm adopts the same
 # bytes — no astral-latest, no irm|iex. Returns the uv.exe path.
 function Get-Uv {
-    # Always the pinned artifact, never a uv already on PATH: Hermes runs only
+    # Always the pinned artifact, never a uv already on PATH: Ciel runs only
     # its own packaged toolchain.
     $target = "win32-$(Get-WindowsArch)"
     $pin = $script:UvPinFiles[$target]
     if (-not $pin) {
-        Fail "no pinned uv artifact for $target; Hermes does not support this host" unsupported_platform
+        Fail "no pinned uv artifact for $target; Ciel does not support this host" unsupported_platform
     }
     $entry = Join-Path (Get-PmStoreRoot) "uv-$($script:UvPinVersion)-$target"
     $uvExe = Join-Path $entry "uv.exe"
@@ -527,7 +527,7 @@ function Get-Uv {
         Remove-Item -Path $uvExe -Force
     }
     Log "downloading uv $($script:UvPinVersion) ($target)"
-    $tmpDir = Join-Path ([IO.Path]::GetTempPath()) "hermes-uv-bootstrap-$PID"
+    $tmpDir = Join-Path ([IO.Path]::GetTempPath()) "ciel-uv-bootstrap-$PID"
     try {
         New-Item -ItemType Directory -Force -Path $tmpDir | Out-Null
         $zipPath = Join-Path $tmpDir "uv.zip"
@@ -560,7 +560,7 @@ function Get-PinnedGit {
     $gitExe = Join-Path $entry "cmd\git.exe"
     if (Test-Path $gitExe) { return $gitExe }
     Log "installing git $($script:GitPinVersion) ($target)"
-    $tmpDir = Join-Path ([IO.Path]::GetTempPath()) "hermes-git-bootstrap-$PID"
+    $tmpDir = Join-Path ([IO.Path]::GetTempPath()) "ciel-git-bootstrap-$PID"
     try {
         New-Item -ItemType Directory -Force -Path $tmpDir | Out-Null
         $sfxPath = Join-Path $tmpDir "portable-git.7z.exe"
@@ -616,7 +616,7 @@ function Write-Err([string]$msg) { Write-Host "[X] $msg" -ForegroundColor Red }
 function Write-Banner {
     Write-Host ""
     Write-Host "+---------------------------------------------------------+" -ForegroundColor Magenta
-    Write-Host "|             * Hermes Agent Installer                    |" -ForegroundColor Magenta
+    Write-Host "|             * Ciel Installer                    |" -ForegroundColor Magenta
     Write-Host "+---------------------------------------------------------+" -ForegroundColor Magenta
     Write-Host "|  An open source AI agent by Nous Research.              |" -ForegroundColor Magenta
     Write-Host "+---------------------------------------------------------+" -ForegroundColor Magenta
@@ -650,10 +650,10 @@ function Invoke-Native([scriptblock]$Command, [switch]$Utf8Output) {
 
 # Interactive runs collapse child-process output (git, uv, pm, the builds)
 # into one status line. CI, -Verbose and redirected output -- the
-# Hermes-Setup -Json driver, E2E transcripts -- keep the full stream those
+# Ciel-Setup -Json driver, E2E transcripts -- keep the full stream those
 # readers parse.
 function Test-QuietOutput {
-    if ($env:CI -or $env:GITHUB_ACTIONS -or $env:HERMES_INSTALL_VERBOSE) { return $false }
+    if ($env:CI -or $env:GITHUB_ACTIONS -or $env:CIEL_INSTALL_VERBOSE) { return $false }
     if ($VerbosePreference -ne 'SilentlyContinue') { return $false }
     try { return -not [Console]::IsOutputRedirected } catch { return $false }
 }
@@ -665,7 +665,7 @@ function Write-StatusLine([string]$Text, [int]$Width) {
 }
 
 # The error line of a failed command's output: the first fatal:/error: line (git's
-# cause; later ones are generic), else the last non-empty one. Fail reasons carry it, and Hermes-Setup shows the reason
+# cause; later ones are generic), else the last non-empty one. Fail reasons carry it, and Ciel-Setup shows the reason
 # as-is, so the screen names the cause (git's "fatal: ...") and not just the step.
 $script:NativeError = $null
 function Select-ErrorLine($Lines) {
@@ -698,7 +698,7 @@ function Invoke-Logged {
     $script:NativeError = $null
     $logWriter = $null
     if (Test-QuietOutput) {
-        $logPath = Join-Path (Join-Path $HermesHome 'logs') 'install.log'
+        $logPath = Join-Path (Join-Path $CielHome 'logs') 'install.log'
         try {
             New-Item -ItemType Directory -Force -Path (Split-Path -Parent $logPath) | Out-Null
             $logWriter = New-Object System.IO.StreamWriter($logPath, $true, (New-Object System.Text.UTF8Encoding($false)))
@@ -709,7 +709,7 @@ function Invoke-Logged {
     }
     if (-not $logWriter) {
         Log $StatusLabel
-        # stderr stays on stderr (Hermes-Setup logs it); the lines are kept so a
+        # stderr stays on stderr (Ciel-Setup logs it); the lines are kept so a
         # failure reason can name the cause.
         # Named -TypeName: a positional New-Object binds to callers' New-Object shims.
         $outputLines = New-Object -TypeName 'System.Collections.Generic.Queue[string]'
@@ -773,7 +773,7 @@ function Fail([string]$msg, [string]$Class = "other") {
 
 # One local receipt per full-ladder run, under the profile's shared-metrics dir.
 # Only closed tokens and two timestamps (never the error text, paths or URLs);
-# the installer never sends anything. Hermes reports it as hermes.install.run on
+# the installer never sends anything. Ciel reports it as ciel.install.run on
 # a later start only while shared metrics collection is on, and deletes it
 # unreported when collection is off. Best effort: never fails the install.
 function Write-InstallReceipt([string]$Outcome, [string]$FailedStage, [string]$Class) {
@@ -781,7 +781,7 @@ function Write-InstallReceipt([string]$Outcome, [string]$FailedStage, [string]$C
     $script:InstallReceiptWritten = $true
     $tmp = $null  # never a caller's $tmp (dynamic scope) in the catch below
     try {
-        $dir = Join-Path $HermesHome "telemetry\shared_metrics\pending_installs"
+        $dir = Join-Path $CielHome "telemetry\shared_metrics\pending_installs"
         New-Item -ItemType Directory -Force -Path $dir | Out-Null
         $id = [guid]::NewGuid().ToString("N")
         $json = '{{"id":"{0}","installer":"install_ps1","outcome":"{1}","failed_stage":"{2}","failure_class":"{3}","started_at":{4},"finished_at":{5}}}' -f `
@@ -815,11 +815,11 @@ function Emit-Frame([bool]$ok, [string]$name, [bool]$skipped, [string]$reason = 
 $ProductTitle = if ($IncludeDesktop) { "Install command and app + desktop" } else { "Install command and app" }
 $Stages = @(
     @{ name = "prerequisites"; title = "System prerequisites"; category = "runtime"; needs_user_input = $false },
-    @{ name = "repository"; title = "Download Hermes Agent"; category = "runtime"; needs_user_input = $false },
+    @{ name = "repository"; title = "Download Ciel"; category = "runtime"; needs_user_input = $false },
     @{ name = "venv"; title = "Create Python environment"; category = "runtime"; needs_user_input = $false },
     @{ name = "python-deps"; title = "Install Python dependencies"; category = "runtime"; needs_user_input = $false },
     @{ name = "config"; title = "Prepare config and skills"; category = "configuration"; needs_user_input = $false },
-    # The shared completion tail -- the same call `hermes update` makes -- so
+    # The shared completion tail -- the same call `ciel update` makes -- so
     # the manifest and the run cannot disagree. -IncludeDesktop selects the
     # desktop product inside this stage instead of adding a second build stage.
     @{ name = "products"; title = $ProductTitle; category = "runtime"; needs_user_input = $false },
@@ -836,7 +836,7 @@ function Stage-Prerequisites {
 
 # A treeless checkout must never write a commit-graph: over a graph with changed-path
 # data that lazy-fetches the trees of every unseen commit, in a loop (#127711).
-# gc.auto stays on: `hermes update` folds lazy-fetch packs with `gc --auto`.
+# gc.auto stays on: `ciel update` folds lazy-fetch packs with `gc --auto`.
 function Disable-TreelessGraphWrites([string]$Dir) {
     foreach ($key in 'maintenance.commit-graph.enabled', 'gc.writeCommitGraph', 'fetch.writeCommitGraph') {
         Invoke-Native { git -C $Dir config $key false } | Out-Null
@@ -844,7 +844,7 @@ function Disable-TreelessGraphWrites([string]$Dir) {
     }
 }
 
-# A YAML scalar as Hermes writes it: unquoted, or one pair of matching quotes; trailing comment dropped.
+# A YAML scalar as Ciel writes it: unquoted, or one pair of matching quotes; trailing comment dropped.
 function ConvertFrom-YamlScalar([string]$Text) {
     $s = ($Text -replace '\s+#.*$', '').Trim()
     if ($s.Length -gt 1 -and ($s[0] -eq '"' -or $s[0] -eq "'") -and $s[-1] -eq $s[0]) { $s = $s.Substring(1, $s.Length - 2) }
@@ -852,11 +852,11 @@ function ConvertFrom-YamlScalar([string]$Text) {
 }
 
 # The update channel this install chose (config.yaml update.installs.<id>.channel, id = sha16 of
-# the canonical install path, as hermes_cli.update_channel keys it; a record naming this path also
-# counts, since Windows paths can differ only in case). Pre-Python reader of the block YAML Hermes
+# the canonical install path, as ciel_cli.update_channel keys it; a record naming this path also
+# counts, since Windows paths can differ only in case). Pre-Python reader of the block YAML Ciel
 # writes; anything it cannot read returns '', which keeps the plain branch behaviour.
 function Get-ChosenChannel {
-    $config = Join-Path $HermesHome 'config.yaml'
+    $config = Join-Path $CielHome 'config.yaml'
     if (-not (Test-Path -LiteralPath $config)) { return '' }
     try {
         $root = (Get-Item -LiteralPath $InstallDir -Force).FullName.TrimEnd('\')
@@ -899,7 +899,7 @@ function Stage-Repository {
         $item = Get-Item -LiteralPath $InstallDir -Force
         $empty = $item.PSIsContainer -and -not $item.LinkType -and -not (Get-ChildItem -LiteralPath $InstallDir -Force | Select-Object -First 1)
         if (-not $empty) {
-            Fail "$InstallDir exists and is not a Hermes git checkout. Move it aside, or install elsewhere with -InstallDir <path>." dir_not_checkout
+            Fail "$InstallDir exists and is not a Ciel git checkout. Move it aside, or install elsewhere with -InstallDir <path>." dir_not_checkout
         }
     }
     if (-not (Ensure-Git)) { Fail "no pinned Git artifact for this Windows architecture" unsupported_platform }
@@ -916,7 +916,7 @@ function Stage-Repository {
         }
     }
     if (Test-Path (Join-Path $InstallDir ".git")) {
-        # A chosen channel (stable, a preview) owns where this checkout sits: `hermes update`
+        # A chosen channel (stable, a preview) owns where this checkout sits: `ciel update`
         # moves it. Switching it to the installer's branch would leave it on main while its
         # channel still says otherwise, and the next check would offer the release as an update.
         # Only an explicit -Commit pin outranks the choice.
@@ -925,9 +925,9 @@ function Stage-Repository {
         if ($channel) { Log "Repairing $InstallDir on the $channel update channel it chose" } else { Log "Updating $InstallDir ($Branch)" }
         # A checkout cloned before longpaths was set: a deep path past MAX_PATH fails checkout.
         Invoke-Native { git -C $InstallDir config core.longpaths true } | Out-Null
-        # An explicit HERMES_REPO_URL names the source for reruns too, not
+        # An explicit CIEL_REPO_URL names the source for reruns too, not
         # just the first clone.
-        if ($env:HERMES_REPO_URL) {
+        if ($env:CIEL_REPO_URL) {
             Invoke-Native { git -C $InstallDir remote set-url origin $RepoUrl }
             if ($LASTEXITCODE) { Fail "cannot point origin at $RepoUrl" git_fetch_failed }
         }
@@ -949,12 +949,12 @@ function Stage-Repository {
             Disable-TreelessGraphWrites $InstallDir
             # A treeless (tree:0) checkout from a late-September installer downloads whole
             # directory snapshots again on every history walk (#129514). Fetch its trees once; the
-            # new filter is recorded only after that succeeds, so `hermes update` retries otherwise.
+            # new filter is recorded only after that succeeds, so `ciel update` retries otherwise.
             $partialFilter = Invoke-Native { git -C $InstallDir config --get remote.origin.partialclonefilter }
             if ("$partialFilter".Trim() -eq 'tree:0') {
                 Invoke-Logged -MayFail "Fetching directory history once (treeless checkout)" { git -C $InstallDir -c gc.auto=0 -c maintenance.auto=false fetch --refetch --filter=blob:none origin "+refs/heads/${Branch}:refs/remotes/origin/${Branch}" }
                 if ($LASTEXITCODE) {
-                    Write-Warn "could not fetch the directory history; the next hermes update retries it"
+                    Write-Warn "could not fetch the directory history; the next ciel update retries it"
                 } else {
                     Invoke-Native { git -C $InstallDir config remote.origin.partialclonefilter blob:none }
                     if ($LASTEXITCODE) { Write-Warn "could not record the blobless filter in $InstallDir" }
@@ -962,7 +962,7 @@ function Stage-Repository {
             }
         }
         if ($channel) {
-            Log "Keeping its checkout: ``hermes update`` moves it (``hermes update --set-channel main`` follows main)"
+            Log "Keeping its checkout: ``ciel update`` moves it (``ciel update --set-channel main`` follows main)"
             return
         }
         Invoke-Logged "Fetching origin/$Branch" { git -C $InstallDir fetch origin "+refs/heads/${Branch}:refs/remotes/origin/${Branch}" }
@@ -981,9 +981,9 @@ function Stage-Repository {
                 Invoke-Native { git -C $InstallDir reset -q }
                 if ($LASTEXITCODE) { Fail "cannot clear the unmerged index in $InstallDir" local_changes_blocked }
             }
-            Invoke-Logged "Stashing local changes" { git -C $InstallDir stash push --include-untracked -m "hermes-install-autostash-$stamp" }
+            Invoke-Logged "Stashing local changes" { git -C $InstallDir stash push --include-untracked -m "ciel-install-autostash-$stamp" }
             if ($LASTEXITCODE) { Fail "could not stash local changes in $InstallDir; commit or move them aside, then rerun" local_changes_blocked }
-            Write-Warn "local changes stashed as hermes-install-autostash-$stamp"
+            Write-Warn "local changes stashed as ciel-install-autostash-$stamp"
         }
         # checkout's branch guess only sees remote refs the refspec maps, so a narrow checkout
         # (detached at its tag, no local branch) gets the branch created at the fetched tip.
@@ -995,7 +995,7 @@ function Stage-Repository {
         }
         if ($LASTEXITCODE) { Fail "git checkout failed$(Get-NativeDetail)" git_checkout_failed }
         # --no-stat: across a large gap (v2026.7.1 -> today is ~27k lines) the
-        # diffstat arrives as one burst. Hermes-Setup.exe forwards every line
+        # diffstat arrives as one burst. Ciel-Setup.exe forwards every line
         # to its window as a separate event; the burst overflows the Windows
         # posted-message queue (10k), events drop, and the installer's Launch
         # button can then hang on "Launching" forever.
@@ -1004,7 +1004,7 @@ function Stage-Repository {
             # A release cut off the main line, a force-pushed remote, or the
             # user's own commits cannot fast-forward. Every stage below reads
             # files only the new tree has (pm/), so an install left on the old
-            # tree cannot finish -- match the remote the way `hermes update`
+            # tree cannot finish -- match the remote the way `ciel update`
             # does, after parking the old tip. Mirrors scripts/install.sh.
             # Keep commits absent from origin in the updater's rescue namespace.
             $droppedText = (Invoke-Native { git -C $InstallDir rev-list --count "origin/$Branch..HEAD" 2>$null })
@@ -1016,7 +1016,7 @@ function Stage-Repository {
                 $rescueKind = if ($LASTEXITCODE -eq 0) { 'diverged' } else { 'orphan' }
                 $prior = (Invoke-Native { git -C $InstallDir rev-parse --short=12 HEAD 2>$null })
                 if ($LASTEXITCODE -or -not $prior) { Fail "cannot identify commits before reset" git_reset_failed }
-                $rescue = "refs/hermes-update-backups/$rescueKind-$Branch-$stamp-$prior"
+                $rescue = "refs/ciel-update-backups/$rescueKind-$Branch-$stamp-$prior"
                 Invoke-Native { git -C $InstallDir update-ref $rescue HEAD 2>$null }
                 if ($LASTEXITCODE) { Fail "cannot back up $dropped local commit(s); refusing to reset" git_reset_failed }
                 Write-Warn "$dropped commit(s) not on origin/$Branch backed up to $rescue"
@@ -1037,7 +1037,7 @@ function Stage-Repository {
         # Clone into a sibling staging dir and publish only a complete,
         # materialized checkout: a clone that dies half-way must not leave a
         # .git behind that the next rerun would try to update.
-        $staged = Join-Path $parent ".hermes-clone-$PID-$(Get-Random)"
+        $staged = Join-Path $parent ".ciel-clone-$PID-$(Get-Random)"
         $tree = Join-Path $staged "tree"
         New-Item -ItemType Directory -Force -Path $staged | Out-Null
         # Phase lines ("Receiving objects: 42%") feed the status line; git
@@ -1050,7 +1050,7 @@ function Stage-Repository {
         if ($Commit) { $checkout = @('--no-checkout') }
         # Staging dir + deepest tracked path (~160) pass MAX_PATH (260) once LOCALAPPDATA
         # is longer than ~55 characters (a ~33-character user name), and checkout dies with
-        # "Filename too long". --config lands before checkout and stays for `hermes update`.
+        # "Filename too long". --config lands before checkout and stays for `ciel update`.
         $longPaths = @('--config', 'core.longpaths=true')
         try {
             $cloned = $false
@@ -1102,7 +1102,7 @@ function Stage-Repository {
             }
             Move-Item -LiteralPath $tree -Destination $InstallDir
             Disable-TreelessGraphWrites $InstallDir
-            Write-Ok "Hermes Agent cloned"
+            Write-Ok "Ciel cloned"
         } finally {
             Remove-Item -LiteralPath $staged -Recurse -Force -ErrorAction SilentlyContinue
         }
@@ -1127,7 +1127,7 @@ function Stage-Venv {
 
 # Delegate the whole python+venv+tools install to pm: stage the pinned uv,
 # let uv locate Python and exit before PM starts. PM provisions the interpreter,
-# the venv (default extras = [all], matching `hermes update`), and the
+# the venv (default extras = [all], matching `ciel update`), and the
 # tool store — all hash-verified against pm/lock.json + uv.lock. install.ps1
 # no longer runs `uv sync` directly; pm is the single install authority
 # (the run_locked_uv_sync contract moved into pm/environment.py).
@@ -1185,17 +1185,17 @@ function Invoke-SourceCompletion([bool]$Desktop) {
     # arrive through pm as the build asks for them; the bootstrap interpreter
     # itself only re-enters the tree on PM's selected Python.
     $bootPy = Get-BootstrapPython
-    $completionArgs = @('-I', '-B', '-X', 'utf8', 'hermes_cli/source_completion.py', '--source', $InstallDir)
+    $completionArgs = @('-I', '-B', '-X', 'utf8', 'ciel_cli/source_completion.py', '--source', $InstallDir)
     if ($Desktop) { $completionArgs += '--desktop' }
     Push-Location $InstallDir
     try {
-        Invoke-Logged "Building the hermes command and apps" { & $bootPy @completionArgs }
+        Invoke-Logged "Building the ciel command and apps" { & $bootPy @completionArgs }
         $code = $LASTEXITCODE
     } finally {
         Pop-Location
     }
     if ($code) { Fail "app products or command publication failed (exit $code)" products_build_failed }
-    Write-Ok "app products and hermes command ready"
+    Write-Ok "app products and ciel command ready"
 }
 
 function Publish-UserCommand {
@@ -1203,18 +1203,18 @@ function Publish-UserCommand {
     # "windows-installer-owned" rather than creating the user-facing command,
     # so the install-scoped launchers the completion publishes are not the ones
     # the user's PATH points at.
-    $binDir = Join-Path $HermesHome "bin"
+    $binDir = Join-Path $CielHome "bin"
     $bootPy = Get-BootstrapPython
     Push-Location $InstallDir
     try {
-        Invoke-Logged "Publishing the hermes command" { & $bootPy -I -X utf8 hermes_cli/_launchers.py $binDir }
+        Invoke-Logged "Publishing the ciel command" { & $bootPy -I -X utf8 ciel_cli/_launchers.py $binDir }
         $code = $LASTEXITCODE
     } finally {
         Pop-Location
     }
     if ($code) { Fail "launcher staging failed" products_build_failed }
     Set-LauncherUserPath $binDir
-    Write-Ok "hermes command installed at $binDir"
+    Write-Ok "ciel command installed at $binDir"
 }
 
 function Test-DesktopProductPresent {
@@ -1247,7 +1247,7 @@ function Set-LauncherUserPath([string]$binDir) {
         Write-Ok "added $binDir to your user PATH (new shells pick it up)"
     }
     # The registry write only reaches shells started later. $env:Path is
-    # process-wide, so prepending it here makes `hermes` resolve in the
+    # process-wide, so prepending it here makes `ciel` resolve in the
     # caller's own window whenever this code runs in the caller's process
     # (`irm | iex`, `& .\install.ps1`); a -File child just discards it.
     # Recorded before the first prepend only (the -IncludeDesktop ladder
@@ -1262,27 +1262,27 @@ function Write-PathReloadHint {
     # A script file may be a separate powershell.exe (-File), whose $env:Path
     # dies with it; the parent keeps the PATH it started with until reloaded.
     # iex'd text always runs in the caller's process, where the prepend in
-    # Set-LauncherUserPath already made `hermes` resolvable.
+    # Set-LauncherUserPath already made `ciel` resolvable.
     if (-not $script:RunAsFile -or $script:BinDirOnCallerPath -ne $false) { return }
-    Log 'Restart your terminal to use hermes, or run: $env:Path = [Environment]::GetEnvironmentVariable(''Path'',''User'') + '';'' + [Environment]::GetEnvironmentVariable(''Path'',''Machine'')'
+    Log 'Restart your terminal to use ciel, or run: $env:Path = [Environment]::GetEnvironmentVariable(''Path'',''User'') + '';'' + [Environment]::GetEnvironmentVariable(''Path'',''Machine'')'
 }
 
 function Stage-Config {
     foreach ($d in @("cron","sessions","logs","pairing","hooks","image_cache","audio_cache","memories","skills")) {
-        New-Item -ItemType Directory -Force -Path (Join-Path $HermesHome $d) | Out-Null
+        New-Item -ItemType Directory -Force -Path (Join-Path $CielHome $d) | Out-Null
     }
-    $envFile = Join-Path $HermesHome ".env"
+    $envFile = Join-Path $CielHome ".env"
     if (-not (Test-Path $envFile)) {
         $example = Join-Path $InstallDir ".env.example"
         if (Test-Path $example) { Copy-Item $example $envFile } else { New-Item -ItemType File -Path $envFile | Out-Null }
     }
-    $cfg = Join-Path $HermesHome "config.yaml"
+    $cfg = Join-Path $CielHome "config.yaml"
     $cfgExample = Join-Path $InstallDir "cli-config.yaml.example"
     if (-not (Test-Path $cfg) -and (Test-Path $cfgExample)) { Copy-Item $cfgExample $cfg }
-    Write-Ok "config prepared in $HermesHome"
+    Write-Ok "config prepared in $CielHome"
 }
 
-function Invoke-InstalledHermes([string[]]$CommandArgs) {
+function Invoke-InstalledCiel([string[]]$CommandArgs) {
     # Load the helper from its text, not its path. Under `irm | iex` this
     # installer runs as a string that execution policy never checks, but
     # dot-sourcing a .ps1 from disk is a file load. The default Restricted
@@ -1291,23 +1291,23 @@ function Invoke-InstalledHermes([string[]]$CommandArgs) {
     . ([ScriptBlock]::Create([IO.File]::ReadAllText($runtimeHelper)))
     # Not `$command`: Invoke-Native's `$Command` parameter shadows it
     # (names are case-insensitive) and the block would invoke itself.
-    $runtimeCommand = @(Get-HermesRuntimeCommand -InstallRoot $InstallDir)
+    $runtimeCommand = @(Get-CielRuntimeCommand -InstallRoot $InstallDir)
     $runtimeArgs = @($runtimeCommand | Select-Object -Skip 1) + $CommandArgs
     Invoke-Native { & $runtimeCommand[0] @runtimeArgs }
     if ($LASTEXITCODE) {
-        Fail "hermes $($CommandArgs -join ' ') failed (exit $LASTEXITCODE)" $(if ($CommandArgs[0] -eq 'setup') { 'setup_failed' } else { 'gateway_failed' })
+        Fail "ciel $($CommandArgs -join ' ') failed (exit $LASTEXITCODE)" $(if ($CommandArgs[0] -eq 'setup') { 'setup_failed' } else { 'gateway_failed' })
     }
 }
 
 function Stage-Setup {
     if ($NonInteractive) { return }
-    Invoke-InstalledHermes @('setup')
+    Invoke-InstalledCiel @('setup')
 }
 
 function Stage-Gateway {
     if ($NonInteractive) { return }
     # Setup installs the service when it handles the gateway; ask only if it did not.
-    Invoke-InstalledHermes @('gateway', 'install', '--if-missing')
+    Invoke-InstalledCiel @('gateway', 'install', '--if-missing')
 }
 
 function Stage-Desktop {
@@ -1322,28 +1322,28 @@ function Stage-Desktop {
 
 function Confirm-DesktopArtifact {
     # Probe the packaged artifact the completion just built -- the same
-    # candidates hermes_cli/main_desktop._desktop_packaged_executable resolves.
+    # candidates ciel_cli/main_desktop._desktop_packaged_executable resolves.
     Push-Location $InstallDir
     try {
         $desktopDir = Join-Path $InstallDir "apps\desktop"
         $candidates = @(
-            (Join-Path $desktopDir "release\win-unpacked\Hermes.exe"),
-            (Join-Path $desktopDir "release\win-ia32-unpacked\Hermes.exe"),
-            (Join-Path $desktopDir "release\win-arm64-unpacked\Hermes.exe")
+            (Join-Path $desktopDir "release\win-unpacked\Ciel.exe"),
+            (Join-Path $desktopDir "release\win-ia32-unpacked\Ciel.exe"),
+            (Join-Path $desktopDir "release\win-arm64-unpacked\Ciel.exe")
         )
         $desktopExe = $null
         foreach ($cand in $candidates) {
             if (Test-Path $cand) { $desktopExe = $cand; break }
         }
         if (-not $desktopExe) {
-            Fail "desktop build produced no Hermes.exe under $desktopDir\release\*-unpacked" products_build_failed
+            Fail "desktop build produced no Ciel.exe under $desktopDir\release\*-unpacked" products_build_failed
         }
         Write-Ok "Desktop ready: $desktopExe"
 
         # Grant ALL APPLICATION PACKAGES (S-1-15-2-2) RX on the unpacked
         # app directory: Chromium's GPU/renderer sandboxes CHECK-fail with
         # 0x80000003 without this ACE beside orphan AppContainer SIDs under
-        # %LOCALAPPDATA% (electron/electron#51761, hermes-agent#38216).
+        # %LOCALAPPDATA% (electron/electron#51761, ciel-agent#38216).
         # Best-effort -- never fail an otherwise-good install over ACL.
         try {
             $appDir = Split-Path -Parent $desktopExe
@@ -1375,8 +1375,8 @@ function Stage-Complete {
             pinnedBranch = $Branch
             completedAt = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ")
         }
-        $marker | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $InstallDir ".hermes-bootstrap-complete") -Encoding UTF8
-        Write-Ok "Hermes Agent install complete (pinned $commit). Run: hermes"
+        $marker | ConvertTo-Json -Depth 4 | Set-Content (Join-Path $InstallDir ".ciel-bootstrap-complete") -Encoding UTF8
+        Write-Ok "Ciel install complete (pinned $commit). Run: ciel"
     }
 }
 
@@ -1403,8 +1403,8 @@ function New-DesktopShortcuts {
         }
 
         $targets = @(
-            (Join-Path ([Environment]::GetFolderPath('Programs')) 'Hermes.lnk'),
-            (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Hermes.lnk')
+            (Join-Path ([Environment]::GetFolderPath('Programs')) 'Ciel.lnk'),
+            (Join-Path ([Environment]::GetFolderPath('Desktop')) 'Ciel.lnk')
         )
 
         foreach ($lnkPath in $targets) {
@@ -1417,7 +1417,7 @@ function New-DesktopShortcuts {
                 $sc.TargetPath = $TargetExe
                 $sc.WorkingDirectory = $workDir
                 $sc.IconLocation = $iconLocation
-                $sc.Description = 'Hermes Agent'
+                $sc.Description = 'Ciel'
                 $sc.Save()
                 Write-Ok "Shortcut created: $lnkPath"
             } catch {
@@ -1428,7 +1428,7 @@ function New-DesktopShortcuts {
         # Bust the Windows shell icon cache so the desktop/Start-Menu shortcut
         # repaints with the (possibly newly-stamped) icon instead of a stale
         # cached bitmap. Critical on the --update path: the exe was re-stamped
-        # with the Hermes icon, but without this the shortcut can keep drawing
+        # with the Ciel icon, but without this the shortcut can keep drawing
         # the old Electron icon until the user manually refreshes / reboots.
         # Best-effort and silent -- never fail the install over a cosmetic cache.
         try {
@@ -1460,7 +1460,7 @@ function Invoke-StageByName([string]$name) {
 # --- Dot-source guard (part 2: stop before entry) ----------------------------
 # Every function definition above has loaded; now stop before any real work.
 if ($script:IsDotSourced) {
-    Write-Verbose "[hermes] install.ps1 was dot-sourced; definitions only, no execution"
+    Write-Verbose "[ciel] install.ps1 was dot-sourced; definitions only, no execution"
     return
 }
 
@@ -1473,7 +1473,7 @@ Initialize-ResolvedPaths
 $env:UV_NO_CONFIG = "1"
 # Children that collapse their own output (windows-build-deps.ps1 under pm,
 # when its stdout is still the console) stream too once -Verbose asked for it.
-if ($VerbosePreference -ne 'SilentlyContinue') { $env:HERMES_INSTALL_VERBOSE = "1" }
+if ($VerbosePreference -ne 'SilentlyContinue') { $env:CIEL_INSTALL_VERBOSE = "1" }
 
 if ($ProtocolVersion) { Write-Output 1; exit 0 }
 

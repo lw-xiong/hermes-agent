@@ -32,7 +32,7 @@ FAKE_KEY = "sk-fake-e2e-install-update"
 
 
 def real_uv() -> str | None:
-    cand = shutil.which("uv") or str(H.REAL_HOME / ".hermes" / "bin" / "uv")
+    cand = shutil.which("uv") or str(H.REAL_HOME / ".ciel" / "bin" / "uv")
     return cand if cand and Path(cand).exists() else None
 
 
@@ -45,9 +45,9 @@ def git(*args: str, cwd: Path, check: bool = True, env: dict | None = None) -> s
 
 
 def head_sha() -> str:
-    """The commit the sandbox installs: HEAD, or HERMES_E2E_INSTALL_REF (a patched commit object,
+    """The commit the sandbox installs: HEAD, or CIEL_E2E_INSTALL_REF (a patched commit object,
     used to prove a scenario red against a sabotaged install without moving the branch)."""
-    return git("rev-parse", os.environ.get("HERMES_E2E_INSTALL_REF") or "HEAD", cwd=H.WORKTREE)
+    return git("rev-parse", os.environ.get("CIEL_E2E_INSTALL_REF") or "HEAD", cwd=H.WORKTREE)
 
 
 def make_origin(root: Path, ref: str) -> Path:
@@ -96,24 +96,24 @@ class Sandbox:
         return Path(self.env["HOME"])
 
     @property
-    def hermes_home(self) -> Path:
-        return Path(self.env["HERMES_HOME"])
+    def ciel_home(self) -> Path:
+        return Path(self.env["CIEL_HOME"])
 
     @property
     def checkout(self) -> Path:
-        return self.hermes_home / "hermes-agent"
+        return self.ciel_home / "ciel-agent"
 
     @property
-    def hermes(self) -> str:
+    def ciel(self) -> str:
         """The command the installer put on PATH, as a user's shell resolves it."""
-        return str(self.home / ".local" / "bin" / "hermes")
+        return str(self.home / ".local" / "bin" / "ciel")
 
     @property
     def python(self) -> str:
         """The installed PM generation's selected interpreter, not a legacy checkout venv."""
         from pm.environments import install_key
 
-        facts = self.hermes_home / "installs" / install_key(self.checkout) / "facts.json"
+        facts = self.ciel_home / "installs" / install_key(self.checkout) / "facts.json"
         assert facts.is_file(), f"installer did not publish PM facts at {facts}"
         selected = json.loads(facts.read_text(encoding="utf-8"))["packages"]["venv"]["environment"]
         python = Path(selected) / "bin" / "python"
@@ -125,16 +125,16 @@ class Sandbox:
         return H.run(argv, env=self.env, cwd=cwd or self.root, writable=[self.root], timeout=timeout, input=input)
 
     def cli(self, *args: str, timeout: float = 600) -> subprocess.CompletedProcess:
-        return self.run([self.hermes, *args], timeout=timeout)
+        return self.run([self.ciel, *args], timeout=timeout)
 
 
 def new_sandbox(root: Path, origin: Path | None = None, *, pythonpath: Path | None = None) -> Sandbox:
-    """Empty fake HOME: no ``~/.hermes`` at all, only what a fresh machine with uv/git/node has."""
+    """Empty fake HOME: no ``~/.ciel`` at all, only what a fresh machine with uv/git/node has."""
     root.mkdir(parents=True, exist_ok=True)
     wrap = root / "wrap"
     env = H.isolated_env(root, extra_path=[wrap], pythonpath=pythonpath)
     home = Path(env["HOME"])
-    shutil.rmtree(home / ".hermes")
+    shutil.rmtree(home / ".ciel")
     (root / "tmp").mkdir(exist_ok=True)
     env["TMPDIR"] = str(root / "tmp")
     env["SHELL"] = "/bin/bash"
@@ -166,12 +166,12 @@ def run_installer(sb: Sandbox, *, timeout: float = 1800) -> subprocess.Completed
 
 
 def pin_main_channel(sb: Sandbox) -> None:
-    """Follow every commit on main, as `hermes update --set-channel main` records it.
+    """Follow every commit on main, as `ciel update --set-channel main` records it.
 
     An official-origin source checkout defaults to the stable channel (the latest published GitHub
     release). These sandboxes publish commits on main and no releases, and their subject is moving
     between commits; channel resolution has its own suites (test_release_channel_records,
-    tests/hermes_cli/test_source_release_channels.py)."""
+    tests/ciel_cli/test_source_release_channels.py)."""
     cp = sb.cli("update", "--set-channel", "main", timeout=120)
     assert cp.returncode == 0 and "Update channel for" in cp.stdout, "could not pin the main channel:\n" + describe(cp)
 
@@ -180,7 +180,7 @@ def provider_config(base_url: str, version: int | None, extra: str = "") -> str:
     """A hand-edited user config: comments, a key HEAD does not know, and the fake provider."""
     ver = f"_config_version: {version}\n" if version is not None else ""
     return (
-        "# My Hermes config. Hand-edited; comments must survive.\n"
+        "# My Ciel config. Hand-edited; comments must survive.\n"
         "model:\n"
         "  provider: custom\n"
         f"  base_url: {base_url}  # local fake provider\n"
@@ -188,7 +188,7 @@ def provider_config(base_url: str, version: int | None, extra: str = "") -> str:
         "  context_length: 128000\n"
         "agent:\n"
         "  api_max_retries: 1   # keep it snappy\n"
-        "# A key this Hermes version does not know about (from a plugin or a newer release).\n"
+        "# A key this Ciel version does not know about (from a plugin or a newer release).\n"
         "my_future_section:\n"
         "  nested_flag: true\n"
         "  words: \"unicode é 漢字 and a # that is not a comment\"\n"

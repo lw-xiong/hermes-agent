@@ -165,17 +165,17 @@ def test_lock_tolerance_never_outlives_the_committed_row_expiry(tmp_path, monkey
     row's committed expiry (a renewal that waited for the lock), and a renewal blocked near expiry
     gives up and stops the turn BEFORE the row becomes reclaimable, never after a successor could
     take it. Control: the lock clearing lets the delayed renewal succeed with no interrupt."""
-    import hermes_state
-    import hermes_state_compression
+    import ciel_state
+    import ciel_state_compression
     from agent import turn_facade_lease
 
     clock = _MovingClock(1000.0)
     fake_time = SimpleNamespace(time=clock.time, monotonic=time.monotonic, sleep=time.sleep)
     monkeypatch.setattr(turn_facade_lease, "time", fake_time)
-    monkeypatch.setattr(hermes_state_compression, "time", fake_time)
+    monkeypatch.setattr(ciel_state_compression, "time", fake_time)
 
     path = tmp_path / "state.db"
-    db = hermes_state.SessionDB(path)
+    db = ciel_state.SessionDB(path)
     db.create_session("s1", source="test")
     assert db.try_acquire_session_turn_lease("s1", "h")
     events = []

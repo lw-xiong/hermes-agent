@@ -80,7 +80,7 @@ describe('DiffusionCanvas scheduling', () => {
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
-    delete (window as unknown as { hermesDesktop?: unknown }).hermesDesktop
+    delete (window as unknown as { cielDesktop?: unknown }).cielDesktop
   })
 
   it('keeps animating while unfocused but cancels its loop while minimized', () => {

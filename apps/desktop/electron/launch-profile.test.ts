@@ -24,28 +24,28 @@ function withStoredProfile(profile: string, run: (target: string) => void) {
 }
 
 test('parses both --profile spellings and ignores a missing flag', () => {
-  assert.equal(parseLaunchProfile(['Hermes.exe', '--profile', 'desktop']), 'desktop')
-  assert.equal(parseLaunchProfile(['Hermes.exe', '--profile=desktop']), 'desktop')
-  assert.equal(parseLaunchProfile(['open', '-a', 'Hermes', '--args', '--profile', 'work']), 'work')
-  assert.equal(parseLaunchProfile(['Hermes.exe', '--local']), null)
-  assert.equal(parseLaunchProfile(['Hermes.exe']), null)
+  assert.equal(parseLaunchProfile(['Ciel.exe', '--profile', 'desktop']), 'desktop')
+  assert.equal(parseLaunchProfile(['Ciel.exe', '--profile=desktop']), 'desktop')
+  assert.equal(parseLaunchProfile(['open', '-a', 'Ciel', '--args', '--profile', 'work']), 'work')
+  assert.equal(parseLaunchProfile(['Ciel.exe', '--local']), null)
+  assert.equal(parseLaunchProfile(['Ciel.exe']), null)
 })
 
 test('normalizes a launch profile the same way the CLI does', () => {
-  assert.equal(parseLaunchProfile(['Hermes.exe', '--profile', '  Desktop  ']), 'desktop')
-  assert.equal(parseLaunchProfile(['Hermes.exe', '--profile=Work']), 'work')
-  assert.equal(parseLaunchProfile(['Hermes.exe', '--profile', 'default']), 'default')
-  assert.equal(parseLaunchProfile(['Hermes.exe', '--profile']), null)
-  assert.equal(parseLaunchProfile(['Hermes.exe', '--profile=']), null)
-  assert.equal(parseLaunchProfile(['Hermes.exe', '--profile', 'my profile']), null)
-  assert.equal(parseLaunchProfile(['Hermes.exe', '--profile', '-desktop']), null)
+  assert.equal(parseLaunchProfile(['Ciel.exe', '--profile', '  Desktop  ']), 'desktop')
+  assert.equal(parseLaunchProfile(['Ciel.exe', '--profile=Work']), 'work')
+  assert.equal(parseLaunchProfile(['Ciel.exe', '--profile', 'default']), 'default')
+  assert.equal(parseLaunchProfile(['Ciel.exe', '--profile']), null)
+  assert.equal(parseLaunchProfile(['Ciel.exe', '--profile=']), null)
+  assert.equal(parseLaunchProfile(['Ciel.exe', '--profile', 'my profile']), null)
+  assert.equal(parseLaunchProfile(['Ciel.exe', '--profile', '-desktop']), null)
 })
 
 test('a launch --profile is persisted before the backend reads active-profile.json', () => {
   withStoredProfile('stored', target => {
     const preferences = createDesktopProfilePreferences(target)
 
-    const launched = applyLaunchProfileOverride(['Hermes.exe', '--profile', 'desktop'], name => {
+    const launched = applyLaunchProfileOverride(['Ciel.exe', '--profile', 'desktop'], name => {
       preferences.remember(name)
     })
 
@@ -62,7 +62,7 @@ test('--profile=<name> persists the same profile the space spelling does', () =>
   withStoredProfile('stored', target => {
     const preferences = createDesktopProfilePreferences(target)
 
-    applyLaunchProfileOverride(['Hermes.exe', '--ozone-platform=wayland', '--profile=desktop'], name => {
+    applyLaunchProfileOverride(['Ciel.exe', '--ozone-platform=wayland', '--profile=desktop'], name => {
       preferences.remember(name)
     })
 
@@ -72,11 +72,11 @@ test('--profile=<name> persists the same profile the space spelling does', () =>
 
 test('a missing or invalid flag does not change the stored profile', () => {
   for (const argv of [
-    ['Hermes.exe'],
-    ['Hermes.exe', '--local'],
-    ['Hermes.exe', '--profile'],
-    ['Hermes.exe', '--profile', 'Not a name'],
-    ['Hermes.exe', '--profile=../desktop']
+    ['Ciel.exe'],
+    ['Ciel.exe', '--local'],
+    ['Ciel.exe', '--profile'],
+    ['Ciel.exe', '--profile', 'Not a name'],
+    ['Ciel.exe', '--profile=../desktop']
   ]) {
     withStoredProfile('stored', target => {
       const before = fs.readFileSync(target, 'utf8')

@@ -8,7 +8,7 @@ import subprocess
 
 import pm.environments
 import pytest
-from hermes_cli.worktree_ops import _prune_stale_worktrees
+from ciel_cli.worktree_ops import _prune_stale_worktrees
 from pm.filesystem import lock_fd
 from pm.install_states import collect_orphan_install_states, orphan_install_states
 
@@ -26,7 +26,7 @@ def test_startup_prune_reclaims_only_provably_deleted_checkouts(tmp_path, monkey
     repo = tmp_path / "repo"
     (repo / ".worktrees").mkdir(parents=True)
     subprocess.run(["git", "init", "-q", str(repo)], check=True)
-    live_root = tmp_path / "home" / "hermes-agent"
+    live_root = tmp_path / "home" / "ciel-agent"
     live_root.mkdir(parents=True)
     live = _state(installs, "aaaa", live_root)
     gone_scratch = _state(installs, "bbbb", tmp_path / "home" / "cache" / "scratch" / "clone")
@@ -36,8 +36,8 @@ def test_startup_prune_reclaims_only_provably_deleted_checkouts(tmp_path, monkey
     (unknown / "environments").mkdir(parents=True)
     # A data root shared across a mount boundary records checkouts this process cannot see:
     # a host install from inside a container, a container install from the host.
-    host_install = _state(installs, "eeee", tmp_path / "other-host-home" / ".hermes" / "hermes-agent")
-    container_install = _state(installs, "ffff", tmp_path / "opt-hermes")
+    host_install = _state(installs, "eeee", tmp_path / "other-host-home" / ".ciel" / "ciel-agent")
+    container_install = _state(installs, "ffff", tmp_path / "opt-ciel")
 
     assert orphan_install_states(installs) == [gone_scratch, gone_worktree]
     monkeypatch.setattr(pm.environments, "installs_root", lambda: installs)

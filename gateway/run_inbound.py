@@ -77,7 +77,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         Results: ``{"action": "skip"}`` → drop; ``{"action": "rewrite", "text"}`` → replace ``event.text``;
         ``allow``/None → normal dispatch. Runs BEFORE auth so plugins can handle unauthorized senders."""
         try:
-            from hermes_cli.lifecycle import ainvoke_hook as _ainvoke_hook
+            from ciel_cli.lifecycle import ainvoke_hook as _ainvoke_hook
             _hook_results = await _ainvoke_hook(
                 "pre_gateway_dispatch", event=event, gateway=self,
                 # getattr: bare-runner tests build GatewayRunner via object.__new__ without __init__.
@@ -152,10 +152,10 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
     async def _hm_report_ignored_dm(self, source: SessionSource) -> None:
         """Unauthorized DM under behaviour ``ignore``: nothing goes to the sender. The owner gets the
         sender's ID and the allowlist fix in the WARNING log and, once per sender, in the home channel."""
-        from hermes_constants import display_hermes_home
+        from ciel_constants import display_ciel_home
         platform_name = source.platform.value if source.platform else "unknown"
         hint = unauthorized_owner_hint(
-            platform_name, source.user_id, source.user_name or "", hermes_home=display_hermes_home(),
+            platform_name, source.user_id, source.user_name or "", ciel_home=display_ciel_home(),
         )
         logger.warning("Unauthorized user (ignored): %s", hint)
         notifier = getattr(self, "_unauthorized_owner_notifier", None)
@@ -175,7 +175,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         _config = getattr(self, "config", None)
 
         # 🔴 Cross-session leak guard: this per-message task was create_task()'d with a copy of the
-        # spawning context, which may carry ANOTHER message's HERMES_SESSION_* ContextVars; until
+        # spawning context, which may carry ANOTHER message's CIEL_SESSION_* ContextVars; until
         # _set_session_env binds ours a subprocess would read the foreign identity. Reset to _UNSET.
         try:
             from gateway.session_context import reset_session_vars
@@ -218,7 +218,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         if (
             getattr(self, "_startup_restore_in_progress", False)
             and not is_internal
-            and not getattr(event, "_hermes_startup_restore_replay", False)
+            and not getattr(event, "_ciel_startup_restore_replay", False)
         ):
             self._queue_startup_restore_event(event)
             return None
@@ -268,7 +268,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         with suppress(Exception):
             _estop_cmd = event.get_command()
             if _estop_cmd:
-                from hermes_cli.commands import resolve_command as _resolve_estop_cmd
+                from ciel_cli.commands import resolve_command as _resolve_estop_cmd
                 if _resolve_estop_cmd(_estop_cmd) is not None:
                     return True
         with suppress(Exception):
@@ -290,7 +290,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
     def _hm_estop_gate(
         self, event: MessageEvent, source: SessionSource, is_internal: bool
     ) -> Optional[str]:
-        """Global emergency-stop (`hermes pause`) notice when this turn must be blocked, else None.
+        """Global emergency-stop (`ciel pause`) notice when this turn must be blocked, else None.
         Placed after auth so unauthorized senders can't probe pause state. A synthetic heartbeat that
         slipped past the poller's pause check gets "" (blocked, nothing sent): nobody typed it, and
         settle_heartbeat_attempt leaves its tick due for after resume."""
@@ -316,13 +316,13 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
     @staticmethod
     def _hm_write_update_response(response_text: str) -> Optional[str]:
         """Atomically hand *response_text* to the detached update process; returns the OSError str."""
-        from gateway.run import _hermes_home
-        response_path = _hermes_home / ".update_response"
+        from gateway.run import _ciel_home
+        response_path = _ciel_home / ".update_response"
         try:
             tmp = response_path.with_suffix(".tmp")
             tmp.write_text(response_text, encoding="utf-8")
             tmp.replace(response_path)
-            (_hermes_home / ".update_prompt.json").unlink(missing_ok=True)
+            (_ciel_home / ".update_prompt.json").unlink(missing_ok=True)
         except OSError as e:
             return str(e)
         return None
@@ -344,7 +344,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         else:
             if cmd:
                 with suppress(Exception):
-                    from hermes_cli.commands import resolve_command as _resolve_update_cmd
+                    from ciel_cli.commands import resolve_command as _resolve_update_cmd
                     _cmd_def = _resolve_update_cmd(cmd)
                     _recognized_cmd = _cmd_def.name if _cmd_def else None
             response_text = "" if _recognized_cmd else (event.text or "").strip()
@@ -504,7 +504,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         wall-clock age. The pending sentinel is never evicted (no get_activity_summary() → idle
         reads inf and would race the async setup path)."""
         from gateway.run import _AGENT_PENDING_SENTINEL, _float_env
-        _raw_stale_timeout = _float_env("HERMES_AGENT_TIMEOUT", 1800)
+        _raw_stale_timeout = _float_env("CIEL_AGENT_TIMEOUT", 1800)
         _quick_state = self._peek_session_state(_quick_key)
         _stale_ts = _quick_state.turn.started_ts if _quick_state else 0
         if _quick_state is None or _quick_state.turn.agent is None or not _stale_ts:
@@ -594,7 +594,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
     ) -> tuple[bool, Optional[str]]:
         """Slash-command / photo-burst handling on the busy fast-path → ``(handled, result)``. Each
         command's mid-run behavior is declared on its CommandDef (busy_policy / busy_handler)."""
-        from hermes_cli.commands import resolve_command as _resolve_cmd_inner
+        from ciel_cli.commands import resolve_command as _resolve_cmd_inner
         _evt_cmd = event.get_command()
         _cmd_def_inner = _resolve_cmd_inner(_evt_cmd) if _evt_cmd else None
 
@@ -625,7 +625,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         self, event: MessageEvent, source: SessionSource, _quick_key: str, effective_busy_input_mode: str
     ) -> bool:
         """Queue a Telegram text follow-up that lands within the post-start grace window."""
-        _grace = float(os.getenv("HERMES_TELEGRAM_FOLLOWUP_GRACE_SECONDS", "3.0"))
+        _grace = float(os.getenv("CIEL_TELEGRAM_FOLLOWUP_GRACE_SECONDS", "3.0"))
         _grace_state = self._peek_session_state(_quick_key)
         _started_at = _grace_state.turn.started_ts if _grace_state else 0
         if not (
@@ -771,7 +771,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         raw_args = event.get_command_args().strip()
         platform = source.platform.value if source.platform else ""
         try:
-            from hermes_cli.plugins import fire_pre_command_hook
+            from ciel_cli.plugins import fire_pre_command_hook
             fire_pre_command_hook(
                 surface="gateway", command=str(canonical), alias_used=str(command),
                 args_raw=raw_args, session_key=_quick_key, platform=platform,
@@ -813,7 +813,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
     ) -> tuple[bool, Optional[str], Optional[str], Optional[str]]:
         """Resolve the slash command (aliases, access gate, hooks) → ``(handled, result, command,
         canonical)``; when ``handled`` the caller returns ``result`` as-is (may be None)."""
-        from hermes_cli.commands import is_gateway_known_command, resolve_command as _resolve_cmd
+        from ciel_cli.commands import is_gateway_known_command, resolve_command as _resolve_cmd
 
         def _canon(cmd):
             # Aliases resolve to the canonical name so dispatch and hook names don't depend on them.
@@ -874,7 +874,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         return True, ""
 
     async def _hm_cmd_egress(self, event, source, _quick_key):
-        from hermes_cli.proxy_cli import format_status_text
+        from ciel_cli.proxy_cli import format_status_text
         return True, format_status_text()
 
     async def _hm_rewrite_turn_to_prompt(self, event, source, name: str, ack: str, build) -> tuple[bool, Optional[str]]:
@@ -905,7 +905,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
 
     async def _hm_cmd_init(self, event, source, _quick_key):
         # /init builds the prompt first: the ack wording depends on whether AGENTS.md exists.
-        from hermes_cli.init_command import build_init_prompt_for_cwd
+        from ciel_cli.init_command import build_init_prompt_for_cwd
 
         try:
             # The SESSION's active directory, not this process's launch dir: the desktop app
@@ -976,8 +976,8 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         # /moa is one-shot sugar only: run a single prompt through the default MoA preset, then
         # restore the prior model. To *switch* to a MoA preset for the session, pick it from the
         # model picker (MoA presets surface as a virtual "Mixture of Agents" provider).
-        from hermes_cli.moa_config import moa_usage, normalize_moa_config
-        from hermes_cli.config import load_config
+        from ciel_cli.moa_config import moa_usage, normalize_moa_config
+        from ciel_cli.config import load_config
 
         moa_payload = event.get_command_args().strip()
         if not moa_payload:
@@ -1080,10 +1080,10 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         # underscored autocomplete form matches plugin commands registered with hyphens.
         if command:
             try:
-                from hermes_cli.plugins import get_plugin_command_handler
+                from ciel_cli.plugins import get_plugin_command_handler
                 plugin_handler = get_plugin_command_handler(command.replace("_", "-"))
                 if plugin_handler:
-                    # The agent-turn path binds HERMES_SESSION_* via _set_session_env; this dispatch
+                    # The agent-turn path binds CIEL_SESSION_* via _set_session_env; this dispatch
                     # sits before it, so a handler reading get_session_env() would see an empty or a
                     # foreign (cron agent's os.environ) session (#108698). No session_entry exists yet,
                     # so session_key is derived from source. Sync handlers run on the gateway pool
@@ -1138,7 +1138,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
     def _hm_unknown_slash_reply(command: str, source: SessionSource) -> Optional[str]:
         """Reply for a /command that is not built-in/plugin/skill; None when it is known."""
         from gateway.run import _check_unavailable_skill
-        from hermes_cli.commands import GATEWAY_KNOWN_COMMANDS
+        from ciel_cli.commands import GATEWAY_KNOWN_COMMANDS
         # Known commands never need an unavailable-skill hint (which can require a cold scan).
         if command.replace("_", "-") in GATEWAY_KNOWN_COMMANDS:
             return None
@@ -1291,7 +1291,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
             return None
         event, source, is_internal = _admitted
         if not is_internal:
-            from hermes_cli.observability.shared_metrics_events import record_gateway_slash_command
+            from ciel_cli.observability.shared_metrics_events import record_gateway_slash_command
             record_gateway_slash_command(event)
         # TERMINAL-DECLINE LATCH TEARDOWN. Deliberately placed AFTER admission,
         # not on the adapter's raw inbound: profile routing, the ignored-channel
@@ -1353,7 +1353,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         _claim_state.turn.agent = _AGENT_PENDING_SENTINEL
         _claim_state.turn.event = event
         _claim_state.turn.started_ts = time.time()
-        from hermes_cli.observability.shared_metrics_gateway import start_reply_clock
+        from ciel_cli.observability.shared_metrics_gateway import start_reply_clock
         start_reply_clock(source, internal=is_internal)
         self._persist_active_agents()
         _run_generation = self._begin_session_run_generation(_quick_key)
@@ -1634,7 +1634,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
                 if _msg_raw_ctx is not None:
                     _msg_config_ctx = int(_msg_raw_ctx)
             try:
-                from hermes_cli.config import get_compatible_custom_providers
+                from ciel_cli.config import get_compatible_custom_providers
 
                 _msg_custom_providers = get_compatible_custom_providers(_msg_cfg)
             except Exception:
@@ -1652,7 +1652,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
             _msg_config_ctx = None
         if _msg_config_ctx is not None:
             try:
-                from hermes_cli.route_identity import should_clear_context_pin_async
+                from ciel_cli.route_identity import should_clear_context_pin_async
 
                 if await should_clear_context_pin_async(
                     None, None,  # model match already checked above
@@ -1664,7 +1664,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
                 _msg_config_ctx = None
         if _msg_custom_providers and _msg_base_url:
             with suppress(Exception):
-                from hermes_cli.config import get_custom_provider_context_length
+                from ciel_cli.config import get_custom_provider_context_length
 
                 _msg_config_ctx = get_custom_provider_context_length(
                     model=_msg_model, base_url=_msg_base_url, custom_providers=_msg_custom_providers,
@@ -1820,7 +1820,7 @@ class GatewayInboundMixin(GatewayPluginInjectionMixin):
         try:
             from agent.image_routing import decide_image_input_mode
             from agent.auxiliary_client import _read_main_model, _read_main_provider
-            from hermes_cli.config import load_config
+            from ciel_cli.config import load_config
 
             cfg = user_config if isinstance(user_config, dict) else load_config()
             resolved_provider = (provider or "").strip()

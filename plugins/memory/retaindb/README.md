@@ -5,18 +5,18 @@ Cloud memory API with hybrid search (Vector + BM25 + Reranking) and 7 memory typ
 ## Requirements
 
 - RetainDB account ($20/month) from [retaindb.com](https://www.retaindb.com)
-- `requests` is part of Hermes's core dependencies; no separate SDK install is needed. For damaged dependencies, use `hermes pm repair` and restart Hermes.
+- `requests` is part of Ciel's core dependencies; no separate SDK install is needed. For damaged dependencies, use `ciel pm repair` and restart Ciel.
 
 ## Setup
 
 ```bash
-hermes memory setup    # select "retaindb"
+ciel memory setup    # select "retaindb"
 ```
 
 Or manually:
 ```bash
-hermes config set memory.provider retaindb
-echo "RETAINDB_API_KEY=your-key" >> ~/.hermes/.env
+ciel config set memory.provider retaindb
+echo "RETAINDB_API_KEY=your-key" >> ~/.ciel/.env
 ```
 
 ## Config

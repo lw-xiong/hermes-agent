@@ -1,24 +1,24 @@
 /**
  * remote-lifecycle.ts
  *
- * Pure, electron-free remote Hermes dashboard lifecycle over SSH for Desktop
+ * Pure, electron-free remote Ciel dashboard lifecycle over SSH for Desktop
  * SSH remote mode. Composes an SshConnection (injected) with HTTP probes
  * through the established tunnel (injected fetch) and the served-token adoption
  * step (injected). Knows how to:
  *
- *   - locate the Hermes install on the remote (login-shell probe),
+ *   - locate the Ciel install on the remote (login-shell probe),
  *   - gate the remote platform to Linux/macOS via `uname`,
  *   - reuse an existing desktop-dedicated dashboard via a lockfile + an
  *     AUTHENTICATED /api/status probe (pid liveness alone is insufficient),
  *   - spawn a fresh detached `--isolated --port 0` dashboard and scrape its
- *     `HERMES_DASHBOARD_READY port=<n>` readiness line,
+ *     `CIEL_DASHBOARD_READY port=<n>` readiness line,
  *   - adopt the token the dashboard actually serves (served-token adoption),
  *   - clean up a stale dashboard only when it is provably ours.
  *
  * No `import 'electron'` so it's unit-testable with `node --test`. main.ts wires
- * the real SshConnection, fetch, adoptServedDashboardToken, and waitForHermes in.
+ * the real SshConnection, fetch, adoptServedDashboardToken, and waitForCiel in.
  *
- * The minted HERMES_DASHBOARD_SESSION_TOKEN is the SPAWN credential. After
+ * The minted CIEL_DASHBOARD_SESSION_TOKEN is the SPAWN credential. After
  * readiness the caller runs served-token adoption against the tunneled baseUrl
  * and the SERVED token's fingerprint is what lands in the lockfile — so the
  * reuse probe checks the credential that actually authenticates /api/ws, not
@@ -39,10 +39,10 @@ const LOCKFILE_SCHEMA_VERSION = 2
 // args, served-token reconciliation). A mismatch forces a clean respawn.
 const PROTOCOL_VERSION = 1
 const READY_RE = READY_IN_MERGED_OUTPUT_RE // the remote log is `>> log 2>&1`: merged, not line-accurate
-const REMOTE_LOCK_DIR = '~/.hermes/desktop-ssh'
+const REMOTE_LOCK_DIR = '~/.ciel/desktop-ssh'
 const SUPPORTED_REMOTE_OS = new Set(['Linux', 'Darwin'])
 // On a busy remote host a healthy cold boot can take 60-150s before the
-// freshly spawned `hermes serve --isolated` prints its READY line (event-loop
+// freshly spawned `ciel serve --isolated` prints its READY line (event-loop
 // stalls of 5-27s each during spawn storms are routine). The historical 45s
 // budget gave up milliseconds before a healthy backend announced ready and
 // surfaced a timeout toast (issue #94642). A roomier default absorbs the
@@ -69,12 +69,12 @@ function classifySshReuseProof(proof, spawnNonce) {
 
 /**
  * Resolve the remote ready-port deadline. Honors the
- * HERMES_DESKTOP_REMOTE_READY_TIMEOUT_MS env override (for users on busy
+ * CIEL_DESKTOP_REMOTE_READY_TIMEOUT_MS env override (for users on busy
  * hosts whose cold boots routinely exceed the default), clamped to a sane
  * floor so a bad value can't make boot flakier than the default.
  */
 function resolveReadyTimeoutMs(env = process.env) {
-  const parsed = Number(env.HERMES_DESKTOP_REMOTE_READY_TIMEOUT_MS)
+  const parsed = Number(env.CIEL_DESKTOP_REMOTE_READY_TIMEOUT_MS)
 
   if (Number.isFinite(parsed) && parsed > 0) {
     return Math.max(MIN_READY_TIMEOUT_MS, Math.round(parsed))
@@ -191,18 +191,18 @@ function expandRemotePath(p) {
   return shq(p)
 }
 
-// Resolve the remote hermes executable. An EXPLICIT path is honored strictly
+// Resolve the remote ciel executable. An EXPLICIT path is honored strictly
 // (throws a path-naming error if not executable — never silently falls back to a
 // different install). A BLANK path auto-detects: login-shell `command -v` (a
 // non-login `ssh host cmd` PATH misses user installs), then known install paths.
-async function locateHermes(ssh, remoteHermesPath) {
+async function locateCiel(ssh, remoteCielPath) {
   const resolveLauncher = async (candidate: string) => {
-    // Return the candidate path directly. The hermes binary or wrapper script
+    // Return the candidate path directly. The ciel binary or wrapper script
     // is executable and handles argument forwarding (e.g. `exec <python> <script> "$@"`)
     // correctly on its own. Previously, this function followed `exec` wrappers and
     // returned only the python interpreter, which broke:
     //   - version checking: `<python> --version` printed "Python x.y.z" instead of
-    //     the Hermes version, and
+    //     the Ciel version, and
     //   - capability probing: `<python> serve --help` failed entirely.
     // See https://github.com/NousResearch/hermes-agent/issues/74411
     return candidate
@@ -219,25 +219,25 @@ async function locateHermes(ssh, remoteHermesPath) {
     }
   }
 
-  if (remoteHermesPath) {
-    if (await isExecutable(remoteHermesPath)) {
-      return resolveLauncher(remoteHermesPath)
+  if (remoteCielPath) {
+    if (await isExecutable(remoteCielPath)) {
+      return resolveLauncher(remoteCielPath)
     }
 
     const err: any = new Error(
-      `The Hermes path you set is not an executable on the remote host: "${remoteHermesPath}". ` +
-        'Check the path (it must be the full path to the `hermes` binary on the remote, e.g. ' +
-        '~/hermes-agent/.venv/bin/hermes), or clear it to auto-detect.'
+      `The Ciel path you set is not an executable on the remote host: "${remoteCielPath}". ` +
+        'Check the path (it must be the full path to the `ciel` binary on the remote, e.g. ' +
+        '~/ciel-agent/.venv/bin/ciel), or clear it to auto-detect.'
     )
 
-    err.kind = 'hermes-not-found'
+    err.kind = 'ciel-not-found'
     throw err
   }
 
   const candidates: string[] = []
 
   try {
-    const found = (await ssh.exec(`bash -lc ${shq('command -v hermes')}`)).trim()
+    const found = (await ssh.exec(`bash -lc ${shq('command -v ciel')}`)).trim()
 
     if (found) {
       candidates.push(found.split('\n').pop().trim())
@@ -248,9 +248,9 @@ async function locateHermes(ssh, remoteHermesPath) {
 
   // Fallback candidates when the login-shell probe misses: the installer's
   // command locations (scripts/install.sh) — per-user, root/FHS, legacy venv.
-  candidates.push('~/.local/bin/hermes')
-  candidates.push('/usr/local/bin/hermes')
-  candidates.push('~/.hermes/hermes-agent/venv/bin/hermes')
+  candidates.push('~/.local/bin/ciel')
+  candidates.push('/usr/local/bin/ciel')
+  candidates.push('~/.ciel/ciel-agent/venv/bin/ciel')
 
   for (const candidate of candidates) {
     if (!candidate) {
@@ -263,23 +263,23 @@ async function locateHermes(ssh, remoteHermesPath) {
   }
 
   const err: any = new Error(
-    'Hermes is not installed on the remote host (could not find a `hermes` executable). ' +
+    'Ciel is not installed on the remote host (could not find a `ciel` executable). ' +
       'Install it on the remote with:  curl -fsSL https://hermes-agent.nousresearch.com/install.sh | sh  ' +
-      '— or set the Hermes path explicitly in the SSH connection settings.'
+      '— or set the Ciel path explicitly in the SSH connection settings.'
   )
 
-  err.kind = 'hermes-not-found'
+  err.kind = 'ciel-not-found'
   throw err
 }
 
-// Probe the resolved binary's version string (first line of `<hermes> --version`,
-// e.g. "Hermes Agent v0.18.2 ..."), or '' on failure. Surfaces WHICH hermes a
+// Probe the resolved binary's version string (first line of `<ciel> --version`,
+// e.g. "Ciel v0.18.2 ..."), or '' on failure. Surfaces WHICH ciel a
 // connection uses, so a stale/unexpected install is visible.
-async function probeHermesVersion(ssh, hermesPath) {
+async function probeCielVersion(ssh, cielPath) {
   try {
     // Watchdogged: a hung remote CLI must die remotely instead of orphaning
     // when the local ssh child is SIGKILLed (#110478).
-    const out = (await ssh.exec(withRemoteTimeout(`${expandRemotePath(hermesPath)} --version 2>&1`))).trim()
+    const out = (await ssh.exec(withRemoteTimeout(`${expandRemotePath(cielPath)} --version 2>&1`))).trim()
 
     return (out.split('\n')[0] || '').trim()
   } catch {
@@ -294,7 +294,7 @@ async function probeRemotePlatform(ssh) {
 
   if (!SUPPORTED_REMOTE_OS.has(osName)) {
     const err: any = new Error(
-      `Unsupported remote platform "${osName || 'unknown'}". Hermes Desktop SSH mode supports Linux, macOS, and Windows remote hosts.`
+      `Unsupported remote platform "${osName || 'unknown'}". Ciel Desktop SSH mode supports Linux, macOS, and Windows remote hosts.`
     )
 
     err.kind = 'unsupported-platform'
@@ -304,16 +304,16 @@ async function probeRemotePlatform(ssh) {
   return { os: osName, arch }
 }
 
-// The HERMES_HOME the remote dashboard will use (explicit env wins, else
-// ~/.hermes). Recorded in the lockfile so a future reuse can tell it's the same
+// The CIEL_HOME the remote dashboard will use (explicit env wins, else
+// ~/.ciel). Recorded in the lockfile so a future reuse can tell it's the same
 // state store; best-effort.
-async function probeRemoteHermesHome(ssh) {
+async function probeRemoteCielHome(ssh) {
   try {
-    const out = (await ssh.exec('echo "${HERMES_HOME:-$HOME/.hermes}"')).trim().split('\n').pop()
+    const out = (await ssh.exec('echo "${CIEL_HOME:-$HOME/.ciel}"')).trim().split('\n').pop()
 
-    return out || '~/.hermes'
+    return out || '~/.ciel'
   } catch (cause) {
-    const error: any = new Error('Could not resolve the remote Hermes home.')
+    const error: any = new Error('Could not resolve the remote Ciel home.')
     error.kind = 'transient-transport-error'
     error.cause = cause
     throw error
@@ -327,7 +327,7 @@ async function probeRemoteHermesHome(ssh) {
  * (remote-update-marker-programs.ts); it never imports the changing checkout.
  * Absence or a confirmed-dead claim (owner and delegate) is clear, and a dead
  * claim is unlinked under `<marker>.lock` unless the checkout lock is still
- * held (HELD: a killed updater's child is still running). `hermesPath`, once
+ * held (HELD: a killed updater's child is still running). `cielPath`, once
  * located, adds its checkout to the probed ones. Every parse, read, lock, or
  * transport uncertainty fails closed so a Desktop relaunch cannot start
  * `serve` beside an updater that survived the old app process.
@@ -343,19 +343,19 @@ async function probeRemoteHermesHome(ssh) {
  * Python compiles the whole program before running it and the gate never reads
  * stdin, so argv stays a few dozen bytes however the judge grows.
  */
-async function assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath = '') {
-  const marker = expandRemotePath(`${remoteInstallRoot(hermesHome)}/.hermes-update-in-progress`)
-  const hermes = hermesPath ? ` '' ${expandRemotePath(hermesPath)}` : ''
+async function assertRemoteInstallUpdateClear(ssh, cielHome, cielPath = '') {
+  const marker = expandRemotePath(`${remoteInstallRoot(cielHome)}/.ciel-update-in-progress`)
+  const ciel = cielPath ? ` '' ${expandRemotePath(cielPath)}` : ''
   let observation = ''
 
   try {
     observation =
-      String(await ssh.exec(`python3 - ${marker}${hermes}`, { stdinData: REMOTE_MARKER_GATE_PY }))
+      String(await ssh.exec(`python3 - ${marker}${ciel}`, { stdinData: REMOTE_MARKER_GATE_PY }))
         .trim()
         .split(/\r?\n/)
         .pop() || ''
   } catch (cause) {
-    const error: any = new Error('Could not prove that the remote Hermes install is clear for SSH startup.')
+    const error: any = new Error('Could not prove that the remote Ciel install is clear for SSH startup.')
     error.kind = 'update-in-progress'
     error.cause = cause
     throw error
@@ -369,25 +369,25 @@ async function assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath = '') 
 
   const error: any = new Error(
     live
-      ? `Remote Hermes update process ${live[1]} is still running; SSH startup is paused.`
+      ? `Remote Ciel update process ${live[1]} is still running; SSH startup is paused.`
       : observation === 'HELD'
-        ? 'A process the remote Hermes update started still holds the install; SSH startup is paused.'
-        : 'The remote Hermes update marker is unreadable, malformed, or locked; refusing SSH startup.'
+        ? 'A process the remote Ciel update started still holds the install; SSH startup is paused.'
+        : 'The remote Ciel update marker is unreadable, malformed, or locked; refusing SSH startup.'
   )
 
   error.kind = 'update-in-progress'
   throw error
 }
 
-async function listRemoteHermesProfiles(ssh) {
-  const home = assertSafeRemoteHome(await probeRemoteHermesHome(ssh))
+async function listRemoteCielProfiles(ssh) {
+  const home = assertSafeRemoteHome(await probeRemoteCielHome(ssh))
   const dir = expandRemotePath(`${home}/profiles`)
   let listing = ''
 
   try {
     listing = await ssh.exec(`if [ -d ${dir} ]; then ls -1 ${dir}; fi`)
   } catch (cause) {
-    const error: any = new Error('Could not list remote Hermes profiles.')
+    const error: any = new Error('Could not list remote Ciel profiles.')
     error.kind = 'transient-transport-error'
     error.cause = cause
     throw error
@@ -397,19 +397,19 @@ async function listRemoteHermesProfiles(ssh) {
 }
 
 async function readRemoteInstallId(ssh) {
-  // The stable backend identity the roster collapses on (`hermes_cli/install_identity.py`:
+  // The stable backend identity the roster collapses on (`ciel_cli/install_identity.py`:
   // `<install root>/install_id`, opaque hex). Read from the INSTALL root, so an ssh connection
   // pinned to `<root>/profiles/<name>` reports the same id as one pointed at the root — they are
   // one backend. Read-only: a missing file is left missing (minting identity is the install's job,
   // never a visiting client's) and simply means "no id", exactly as an older backend reports.
-  const root = remoteInstallRoot(assertSafeRemoteHome(await probeRemoteHermesHome(ssh)))
+  const root = remoteInstallRoot(assertSafeRemoteHome(await probeRemoteCielHome(ssh)))
   const file = expandRemotePath(`${root}/install_id`)
   let out = ''
 
   try {
     out = await ssh.exec(`if [ -f ${file} ]; then cat ${file}; fi`)
   } catch (cause) {
-    const error: any = new Error('Could not read the remote Hermes install id.')
+    const error: any = new Error('Could not read the remote Ciel install id.')
     error.kind = 'transient-transport-error'
     error.cause = cause
     throw error
@@ -431,7 +431,7 @@ function assertSafeRemoteHome(home) {
   const value = String(home || '').trim()
 
   if (!/^(\/|~\/)[A-Za-z0-9._/+-]+$/.test(value) || value.includes('..')) {
-    const error: any = new Error('Unsafe remote Hermes home.')
+    const error: any = new Error('Unsafe remote Ciel home.')
     error.kind = 'unsafe-path'
     throw error
   }
@@ -516,7 +516,7 @@ async function readLockfile(ssh, ownershipId) {
     return lockfileSkew('log-path-mismatch')
   }
 
-  for (const field of ['profile', 'hermesPath', 'hermesHome', 'logPath', 'startedAt']) {
+  for (const field of ['profile', 'cielPath', 'cielHome', 'logPath', 'startedAt']) {
     if (typeof parsed[field] !== 'string' || parsed[field].length > 1024) {
       return lockfileSkew(`malformed-field ${field}`)
     }
@@ -653,27 +653,27 @@ async function pidIsOurDashboard(
   ssh,
   pid,
   spawnNonce,
-  hermesPath = '',
-  hermesHome = '',
+  cielPath = '',
+  cielHome = '',
   ownershipId = '',
   profile = ''
 ) {
-  if (!pid || !/^[0-9a-f]{16}$/.test(String(spawnNonce || '')) || !hermesPath) {
+  if (!pid || !/^[0-9a-f]{16}$/.test(String(spawnNonce || '')) || !cielPath) {
     return false
   }
 
   const script =
     'import os,shlex,subprocess,sys\n' +
     `pid=${Number(pid)}\n` +
-    `expected=os.path.expanduser(${shq(hermesPath)})\n` +
+    `expected=os.path.expanduser(${shq(cielPath)})\n` +
     // The installer-facing launcher is intentionally preserved for invocation
-    // (#74411), but it may `exec python <install-dir>/hermes`, leaving neither
-    // launcher nor HERMES_HOME-derived entrypoint in argv. The ownership-scoped
+    // (#74411), but it may `exec python <install-dir>/ciel`, leaving neither
+    // launcher nor CIEL_HOME-derived entrypoint in argv. The ownership-scoped
     // token path + random nonce + exact profile below are the alternative proof.
-    `hermes_home=os.path.expanduser(${shq(hermesHome)}) if ${shq(hermesHome)} else ""\n` +
+    `ciel_home=os.path.expanduser(${shq(cielHome)}) if ${shq(cielHome)} else ""\n` +
     'expected_entries={expected}\n' +
-    'if hermes_home:\n' +
-    ' expected_entries.add(os.path.join(hermes_home,"hermes-agent","venv","bin","hermes"))\n' +
+    'if ciel_home:\n' +
+    ' expected_entries.add(os.path.join(ciel_home,"ciel-agent","venv","bin","ciel"))\n' +
     `expected_token=os.path.expanduser(${shq(ownershipId ? spawnTokenPath(ownershipId, spawnNonce) : '')})\n` +
     `expected_profile=${shq(profile)}\n` +
     `nonce=${shq(spawnNonce)}\n` +
@@ -738,8 +738,8 @@ async function cleanupStale(ssh, ownershipId, lock, pidAlive = true) {
       ssh,
       lock.pid,
       lock.spawnNonce,
-      lock.hermesPath,
-      lock.hermesHome,
+      lock.cielPath,
+      lock.cielHome,
       ownershipId,
       lock.profile
     ))
@@ -818,14 +818,14 @@ function buildOwnedStaleTerminationCommand(lock, ownershipId) {
   // expandRemotePath() output is already a shell-quoted fragment; embed it
   // raw so $HOME expands at assignment. Double-quoting stores the quote
   // characters in the variable and every identity match below REFUSEs.
-  const expectedPath = expandRemotePath(lock.hermesPath)
-  const expectedHome = lock.hermesHome ? expandRemotePath(lock.hermesHome) : "''"
+  const expectedPath = expandRemotePath(lock.cielPath)
+  const expectedHome = lock.cielHome ? expandRemotePath(lock.cielHome) : "''"
   const expectedToken = expandRemotePath(spawnTokenPath(ownershipId, lock.spawnNonce))
   const nonce = shq(lock.spawnNonce)
   const profile = shq(lock.profile || '')
   const command = `$(ps -ww -o command= -p ${pid} 2>/dev/null || true)`
 
-  const executableMatch = lock.hermesHome
+  const executableMatch = lock.cielHome
     ? `case "$cmd" in *"$path"*|*"$home"*) ;; *) printf REFUSED; exit 0;; esac; `
     : `case "$cmd" in *"$path"*) ;; *) printf REFUSED; exit 0;; esac; `
 
@@ -858,8 +858,8 @@ function lockMatchesManagedUpdateScope(lock, expected) {
     lock.startedAt === expected.startedAt &&
     lock.creationTime === expected.creationTime &&
     lock.profile === expected.profile &&
-    lock.hermesPath === expected.hermesPath &&
-    lock.hermesHome === expected.hermesHome
+    lock.cielPath === expected.cielPath &&
+    lock.cielHome === expected.cielHome
   )
 }
 
@@ -872,9 +872,9 @@ function buildOwnedTerminationCommand(lock, ownershipId) {
 import os,select,shlex,signal,subprocess,sys,time
 pid=${pid}
 expected_creation=${py(lock.creationTime)}
-expected_path=os.path.expanduser(${py(lock.hermesPath)})
-hermes_home=os.path.expanduser(${py(lock.hermesHome)})
-expected_entries={expected_path,os.path.join(hermes_home,"hermes-agent","venv","bin","hermes")}
+expected_path=os.path.expanduser(${py(lock.cielPath)})
+ciel_home=os.path.expanduser(${py(lock.cielHome)})
+expected_entries={expected_path,os.path.join(ciel_home,"ciel-agent","venv","bin","ciel")}
 expected_token=os.path.expanduser(${py(expectedToken)})
 expected_profile=${py(lock.profile)}
 nonce=${py(lock.spawnNonce)}
@@ -976,16 +976,16 @@ finally:
 
 // Run `command` under the updaters' marker lock: REMOTE_MARKER_GATE_PY holds
 // `<marker>.lock` (the sidecar Python update_lock and marker.sh flock), clears a
-// dead claim while `hermes`'s checkout lock is free, and refuses (exit 75) a
+// dead claim while `ciel`'s checkout lock is free, and refuses (exit 75) a
 // live, unreadable, or checkout-held one, then keeps the
 // lock across the spawn and the initial lockfile publication. The descriptor
 // is close-on-exec and passed only to the outer shell; each detached child
-// closes it before execing Hermes. markerPath is expandRemotePath() output — a
+// closes it before execing Ciel. markerPath is expandRemotePath() output — a
 // complete shell word ("$HOME"'/…' or '/abs/…') embedded raw so $HOME expands
-// remotely; a second shq() would hand python the quote characters. `hermes`
+// remotely; a second shq() would hand python the quote characters. `ciel`
 // is the same kind of word (expandRemotePath of the located executable).
-function withRemoteUpdateMutex(command, markerPath, hermes) {
-  return `python3 -c ${shq(REMOTE_MARKER_GATE_PY)} ${markerPath} ${shq(command)} ${hermes}`
+function withRemoteUpdateMutex(command, markerPath, ciel) {
+  return `python3 -c ${shq(REMOTE_MARKER_GATE_PY)} ${markerPath} ${shq(command)} ${ciel}`
 }
 
 /**
@@ -1032,8 +1032,8 @@ async function terminateOwnedDashboardForUpdate(ssh, expected) {
       ssh,
       lock.pid,
       lock.spawnNonce,
-      lock.hermesPath,
-      lock.hermesHome,
+      lock.cielPath,
+      lock.cielHome,
       ownershipId,
       lock.profile
     ))
@@ -1059,8 +1059,8 @@ async function terminateOwnedDashboardForUpdate(ssh, expected) {
       ssh,
       lock.pid,
       lock.spawnNonce,
-      lock.hermesPath,
-      lock.hermesHome,
+      lock.cielPath,
+      lock.cielHome,
       ownershipId,
       lock.profile
     ))
@@ -1107,8 +1107,8 @@ async function terminateOwnedDashboardForUpdate(ssh, expected) {
 // Detach so the backend survives the SSH channel closing: setsid (Linux)
 // starts a new session; macOS has no setsid, so fall back to nohup (HUP-immune;
 // fd-detachment is already handled by </dev/null + redirect + &).
-function buildSpawnCommand(hermesPath, profile, opts: any = {}) {
-  const hermes = expandRemotePath(hermesPath)
+function buildSpawnCommand(cielPath, profile, opts: any = {}) {
+  const ciel = expandRemotePath(cielPath)
   // The roster/SSH bridge hands us the profile verbatim: a non-slug value must never
   // cross into the remote spawn argv, where the CLI used to str()-coerce it into a
   // phantom profiles/0/ directory (#88842).
@@ -1128,7 +1128,7 @@ function buildSpawnCommand(hermesPath, profile, opts: any = {}) {
   const tokenArg = tokenFilePath ? ` --ssh-session-token-file ${expandRemotePath(tokenFilePath)}` : ''
   const ownerArg = opts.spawnNonce ? ` --ssh-owner-nonce ${validateSpawnNonce(opts.spawnNonce)}` : ''
   const subCmd = `serve --isolated --host 127.0.0.1 --port 0${tokenArg}${ownerArg}`
-  const marker = expandRemotePath(`${remoteInstallRoot(opts.hermesHome || '~/.hermes')}/.hermes-update-in-progress`)
+  const marker = expandRemotePath(`${remoteInstallRoot(opts.cielHome || '~/.ciel')}/.ciel-update-in-progress`)
 
   // The marker judge, ownership reservation, process creation, and initial
   // lockfile publication are one remote command under the marker lock, so a
@@ -1141,12 +1141,12 @@ function buildSpawnCommand(hermesPath, profile, opts: any = {}) {
 
   const dashCmd =
     `ulimit -n ${REMOTE_NOFILE_SOFT_LIMIT} 2>/dev/null || true; ` +
-    `exec env HERMES_DESKTOP=1 ${hermes} ${profileArgs}${subCmd}`
+    `exec env CIEL_DESKTOP=1 ${ciel} ${profileArgs}${subCmd}`
 
   const detachedShell: string = `eval "exec $1>&-"; ${dashCmd} </dev/null >> ${logPath} 2>&1 & echo $!`
-  // The inner shell backgrounds Hermes and reports its PID; backgrounding the
+  // The inner shell backgrounds Ciel and reports its PID; backgrounding the
   // launcher too adds its unrelated PID to the value published in the lock.
-  const detachedSpawn: string = `child=$("$(command -v setsid || echo nohup)" sh -c ${shq(detachedShell)} hermes-update-child "$1")`
+  const detachedSpawn: string = `child=$("$(command -v setsid || echo nohup)" sh -c ${shq(detachedShell)} ciel-update-child "$1")`
 
   if (!opts.ownershipId || !opts.lockMetadata) {
     return withRemoteUpdateMutex(
@@ -1154,7 +1154,7 @@ function buildSpawnCommand(hermesPath, profile, opts: any = {}) {
         `${detachedSpawn}; ` +
         `${markerAbsent} || { kill "$child" 2>/dev/null || true; wait "$child" 2>/dev/null || true; exit 75; }; echo "$child"`,
       marker,
-      hermes
+      ciel
     )
   }
 
@@ -1196,18 +1196,18 @@ function buildSpawnCommand(hermesPath, profile, opts: any = {}) {
       `printf '%s' "$lock_json" > "$temporary_lock" && mv -f "$temporary_lock" "$lock" || { kill "$child" 2>/dev/null || true; wait "$child" 2>/dev/null || true; exit 76; }; ` +
       `echo "$child"`,
     marker,
-    hermes
+    ciel
   )
 }
 
-async function remoteSupportsSshOwnership(ssh, hermesPath) {
-  const hermes = expandRemotePath(hermesPath)
+async function remoteSupportsSshOwnership(ssh, cielPath) {
+  const ciel = expandRemotePath(cielPath)
 
   // The watchdog wraps the inner `serve --help` so the hung CLI is its direct
   // child and dies remotely instead of orphaning (#110478). The `$( (` space
   // is load-bearing: without it the shell parses `$((` as arithmetic expansion.
   const out = await ssh.exec(
-    `help="$( ${withRemoteTimeout(`${hermes} serve --help 2>&1`)} )"; ` +
+    `help="$( ${withRemoteTimeout(`${ciel} serve --help 2>&1`)} )"; ` +
       `printf '%s' "$help" | grep -q ssh-session-token-file && ` +
       `printf '%s' "$help" | grep -q ssh-owner-nonce && echo YES || echo NO`
   )
@@ -1230,7 +1230,7 @@ function remoteProfileMissingError(output) {
   const createCommand = match[2]?.trim()
 
   const err: any = new Error(
-    `The remote Hermes profile '${profile}' does not exist. ` +
+    `The remote Ciel profile '${profile}' does not exist. ` +
       `Select an existing remote profile${createCommand ? ` or create it with: ${createCommand}` : '.'}`
   )
 
@@ -1283,12 +1283,12 @@ async function scrapeReadyPort(ssh, logPath, { timeoutMs = resolveReadyTimeoutMs
 
 async function spawnRemoteDashboard(
   ssh,
-  { hermesPath, profile, token, ownershipId, hermesHome = '~/.hermes', assertInstallClear = async () => {} }
+  { cielPath, profile, token, ownershipId, cielHome = '~/.ciel', assertInstallClear = async () => {} }
 ) {
-  if (!(await remoteSupportsSshOwnership(ssh, hermesPath))) {
+  if (!(await remoteSupportsSshOwnership(ssh, cielPath))) {
     const err: any = new Error(
-      'The remote Hermes install does not support --ssh-session-token-file and --ssh-owner-nonce. ' +
-        'Update Hermes on the remote host to continue using Desktop SSH mode.'
+      'The remote Ciel install does not support --ssh-session-token-file and --ssh-owner-nonce. ' +
+        'Update Ciel on the remote host to continue using Desktop SSH mode.'
     )
 
     err.kind = 'update-required'
@@ -1348,11 +1348,11 @@ async function spawnRemoteDashboard(
     // process creation. The caller's probe imports no changing checkout code.
     await assertInstallClear()
     out = await ssh.exec(
-      buildSpawnCommand(hermesPath, profile, {
+      buildSpawnCommand(cielPath, profile, {
         spawnNonce,
         tokenFilePath,
         logPath,
-        hermesHome,
+        cielHome,
         ownershipId,
         reservationNonce: spawnNonce,
         lockMetadata: {
@@ -1360,8 +1360,8 @@ async function spawnRemoteDashboard(
           spawnNonce,
           port: 0,
           profile,
-          hermesPath,
-          hermesHome,
+          cielPath,
+          cielHome,
           logPath,
           tokenFingerprint: fingerprintToken(token),
           protocolVersion: PROTOCOL_VERSION,
@@ -1448,7 +1448,7 @@ async function openForward(deps, remotePort, attempts = 3) {
 
 /**
  * Establish (or reuse) a remote dashboard and a tunnel to it. `deps` injects the
- * opened SshConnection, forward/pickLocalPort/waitForHermes, a token-gated
+ * opened SshConnection, forward/pickLocalPort/waitForCiel, a token-gated
  * probeReuseProof, and adoptServedToken. Returns the connection descriptor
  * { baseUrl, token, tokenFingerprint, remotePort, localPort, pid, reused, platform }.
  */
@@ -1493,11 +1493,11 @@ async function connect(deps) {
   const {
     ssh,
     profile: requestedProfile = '',
-    remoteHermesPath = '',
+    remoteCielPath = '',
     ownershipId,
     forward,
     pickLocalPort,
-    waitForHermes,
+    waitForCiel,
     probeReuseProof,
     adoptServedToken,
     rememberLog = () => {},
@@ -1517,14 +1517,14 @@ async function connect(deps) {
   assertBootstrapNotSuperseded(signal)
   const platform = deps.platform ?? (await probeRemotePlatform(ssh))
   log(`remote platform ${platform.os}/${platform.arch}`)
-  const hermesHome = await probeRemoteHermesHome(ssh)
-  await assertRemoteInstallUpdateClear(ssh, hermesHome)
-  const hermesPath = await locateHermes(ssh, remoteHermesPath)
-  log(`located hermes at ${hermesPath}`)
-  const hermesVersion = await probeHermesVersion(ssh, hermesPath)
+  const cielHome = await probeRemoteCielHome(ssh)
+  await assertRemoteInstallUpdateClear(ssh, cielHome)
+  const cielPath = await locateCiel(ssh, remoteCielPath)
+  log(`located ciel at ${cielPath}`)
+  const cielVersion = await probeCielVersion(ssh, cielPath)
 
-  if (hermesVersion) {
-    log(`remote hermes version: ${hermesVersion}`)
+  if (cielVersion) {
+    log(`remote ciel version: ${cielVersion}`)
   }
 
   const reuseToken = deps.reuseToken || ''
@@ -1540,7 +1540,7 @@ async function connect(deps) {
     )
 
     const error: any = new Error(
-      `The remote ownership record ${lpath} does not match this Hermes Desktop build (${lock.reason}). ` +
+      `The remote ownership record ${lpath} does not match this Ciel Desktop build (${lock.reason}). ` +
         'It was probably written by a different or modified desktop build sharing this remote, or the file is corrupt. ' +
         'Refusing to reap or overwrite it — that could kill a live SSH backend owned by another build. ' +
         'If nothing else uses this remote, delete that file on the remote host and reconnect.'
@@ -1559,8 +1559,8 @@ async function connect(deps) {
         ssh,
         lock.pid,
         lock.spawnNonce,
-        lock.hermesPath,
-        lock.hermesHome,
+        lock.cielPath,
+        lock.cielHome,
         ownershipId,
         lock.profile
       ))
@@ -1572,8 +1572,8 @@ async function connect(deps) {
       lock.profile === profile &&
       Boolean(reuseToken) &&
       lock.tokenFingerprint === fingerprintToken(reuseToken) &&
-      lock.hermesPath === hermesPath &&
-      lock.hermesHome === hermesHome
+      lock.cielPath === cielPath &&
+      lock.cielHome === cielHome
 
     if (reusable) {
       const creationTime = lock.creationTime || (await remoteProcessCreationTime(ssh, lock.pid))
@@ -1584,7 +1584,7 @@ async function connect(deps) {
       }
 
       assertBootstrapNotSuperseded(signal)
-      await assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath)
+      await assertRemoteInstallUpdateClear(ssh, cielHome, cielPath)
       const localPort = await openForward(deps, lock.port)
 
       try {
@@ -1603,7 +1603,7 @@ async function connect(deps) {
         if (reuseClassification === 'authenticated-stale') {
           assertBootstrapNotSuperseded(signal)
           await cancelForwardSafe(deps, localPort, lock.port)
-          await assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath)
+          await assertRemoteInstallUpdateClear(ssh, cielHome, cielPath)
           await cleanupStale(ssh, ownershipId, lock)
         } else if (reuseClassification === 'authenticated-ok') {
           const token = await adoptOwnedServedToken(
@@ -1627,12 +1627,12 @@ async function connect(deps) {
             pid: lock.pid,
             reused: true,
             platform,
-            hermesPath,
-            hermesVersion,
+            cielPath,
+            cielVersion,
             ownershipId,
             spawnNonce: lock.spawnNonce,
             logPath: lock.logPath,
-            hermesHome,
+            cielHome,
             startedAt: lock.startedAt,
             creationTime: lock.creationTime || ''
           }
@@ -1647,22 +1647,22 @@ async function connect(deps) {
       }
     } else {
       assertBootstrapNotSuperseded(signal)
-      await assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath)
+      await assertRemoteInstallUpdateClear(ssh, cielHome, cielPath)
       await cleanupStale(ssh, ownershipId, lock, pidAlive)
     }
   }
 
   assertBootstrapNotSuperseded(signal)
-  await assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath)
+  await assertRemoteInstallUpdateClear(ssh, cielHome, cielPath)
   const spawnToken = mintToken()
 
   const spawned = await spawnRemoteDashboard(ssh, {
-    hermesPath,
+    cielPath,
     profile,
     token: spawnToken,
     ownershipId,
-    hermesHome,
-    assertInstallClear: () => assertRemoteInstallUpdateClear(ssh, hermesHome, hermesPath)
+    cielHome,
+    assertInstallClear: () => assertRemoteInstallUpdateClear(ssh, cielHome, cielPath)
   })
 
   if (spawned.existing) {
@@ -1694,8 +1694,8 @@ async function connect(deps) {
     pid,
     port: 0,
     profile,
-    hermesPath,
-    hermesHome,
+    cielPath,
+    cielHome,
     logPath,
     tokenFingerprint: fingerprintToken(spawnToken),
     protocolVersion: PROTOCOL_VERSION,
@@ -1728,7 +1728,7 @@ async function connect(deps) {
     localPort = await openForward(deps, remotePort)
     assertBootstrapNotSuperseded(signal)
     const baseUrl = `http://127.0.0.1:${localPort}`
-    await waitForHermes(baseUrl, spawnToken)
+    await waitForCiel(baseUrl, spawnToken)
     assertBootstrapNotSuperseded(signal)
 
     const token = await adoptOwnedServedToken(adoptServedToken, baseUrl, spawnToken, ssh, pid, 'remote dashboard')
@@ -1747,12 +1747,12 @@ async function connect(deps) {
       pid,
       reused: false,
       platform,
-      hermesPath,
-      hermesVersion,
+      cielPath,
+      cielVersion,
       ownershipId,
       spawnNonce,
       logPath,
-      hermesHome,
+      cielHome,
       startedAt: ownedSpawn.startedAt,
       creationTime: ownedSpawn.creationTime || ''
     }
@@ -1799,8 +1799,8 @@ export {
   fingerprintToken,
   isForwardBindCollision,
   isLockfileSkew,
-  listRemoteHermesProfiles,
-  locateHermes,
+  listRemoteCielProfiles,
+  locateCiel,
   LOCKFILE_SCHEMA_VERSION,
   lockfilePath,
   MIN_READY_TIMEOUT_MS,
@@ -1808,8 +1808,8 @@ export {
   openForward,
   ownershipDirectory,
   pidIsOurDashboard,
-  probeHermesVersion,
-  probeRemoteHermesHome,
+  probeCielVersion,
+  probeRemoteCielHome,
   probeRemotePlatform,
   PROTOCOL_VERSION,
   readLockfile,

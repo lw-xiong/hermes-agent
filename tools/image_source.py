@@ -159,8 +159,8 @@ _MEDIA_CACHE_SUBDIRS = (
 
 
 def _media_cache_roots() -> list:
-    from hermes_constants import get_hermes_home
-    home = get_hermes_home()
+    from ciel_constants import get_ciel_home
+    home = get_ciel_home()
     return [home / sub for sub in _MEDIA_CACHE_SUBDIRS]
 
 

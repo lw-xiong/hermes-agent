@@ -1,4 +1,4 @@
-"""A profile directory copied out of another HERMES_HOME must never read as running.
+"""A profile directory copied out of another CIEL_HOME must never read as running.
 
 Copying a profile directory wholesale (sandbox injection, restore-from-backup, cloning) carries
 that home's ``gateway_state.json`` along, and a copy with NO identity files at all still keeps
@@ -11,30 +11,30 @@ import json
 import pytest
 
 from gateway import status
-import hermes_constants
+import ciel_constants
 
 _LIVE_PID = 4242
 
 
 @pytest.fixture
 def fake_root(tmp_path, monkeypatch):
-    root = tmp_path / ".hermes"
+    root = tmp_path / ".ciel"
     root.mkdir()
-    monkeypatch.setattr(hermes_constants.Path, "home", lambda: tmp_path)
-    monkeypatch.setenv("HERMES_HOME", str(root))
-    monkeypatch.setattr(hermes_constants, "_default_hermes_root_memo", None, raising=False)
+    monkeypatch.setattr(ciel_constants.Path, "home", lambda: tmp_path)
+    monkeypatch.setenv("CIEL_HOME", str(root))
+    monkeypatch.setattr(ciel_constants, "_default_ciel_root_memo", None, raising=False)
     return root
 
 
-def _live_record(hermes_home):
+def _live_record(ciel_home):
     return {
-        "pid": _LIVE_PID, "kind": "hermes-gateway", "gateway_state": "running", "start_time": 1000,
-        "argv": ["python", "-m", "hermes_cli.main", "-p", "eagle", "gateway", "run"],
-        "hermes_home": str(hermes_home),
+        "pid": _LIVE_PID, "kind": "ciel-gateway", "gateway_state": "running", "start_time": 1000,
+        "argv": ["python", "-m", "ciel_cli.main", "-p", "eagle", "gateway", "run"],
+        "ciel_home": str(ciel_home),
     }
 
 
-def _alive(monkeypatch, cmdline="python -m hermes_cli.main -p eagle gateway run"):
+def _alive(monkeypatch, cmdline="python -m ciel_cli.main -p eagle gateway run"):
     monkeypatch.setattr(status, "_pid_exists", lambda pid: pid == _LIVE_PID)
     monkeypatch.setattr(status, "_get_process_start_time", lambda pid: 1000)
     monkeypatch.setattr(status, "_read_process_cmdline", lambda pid: cmdline)

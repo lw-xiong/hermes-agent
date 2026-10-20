@@ -8,7 +8,7 @@ host carried 402 such orphans (80 GB) after a fortnight of worktree campaigns.
 
 The state dir records the checkout it belongs to in ``inputs/.project-root`` (written by
 :func:`pm.environments.record_activation_inputs`). A missing path alone does not prove the
-checkout is gone: a data root shared with a container (``-v ~/.hermes:/opt/data``) or an
+checkout is gone: a data root shared with a container (``-v ~/.ciel:/opt/data``) or an
 unmounted volume records paths this process cannot see. So a dir is an orphan only when its
 checkout sat where this process can see that it was deleted -- under the data root that owns
 ``installs/`` (scratch clones, the runtime checkout) or directly in a ``.worktrees/`` dir that
@@ -55,7 +55,7 @@ def orphan_install_states(installs: Path) -> list[Path]:
 def _held(state: Path) -> bool:
     """True while a process may still be using this state dir: the install lock is taken or a
     generation lease is held. Any lock we cannot even open counts as held."""
-    from hermes_cli.runtime_state import leases_held
+    from ciel_cli.runtime_state import leases_held
     from pm.filesystem import lock_fd
 
     lock = state / ".install.lock"

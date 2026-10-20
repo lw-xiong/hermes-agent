@@ -7,7 +7,7 @@ import { everforestTheme, midnightTheme } from './presets'
 import type { DesktopTheme } from './types'
 import { installUserTheme } from './user-themes'
 
-// The live-authoring loop: Hermes writes/edits one skin file and every surface
+// The live-authoring loop: Ciel writes/edits one skin file and every surface
 // repaints. An in-place edit keeps the NAME — only the palette moves.
 const bloomberg = (foreground: string) => ({
   name: 'bloomberg',
@@ -16,7 +16,7 @@ const bloomberg = (foreground: string) => ({
 
 const cssVar = (name: string) => window.document.documentElement.style.getPropertyValue(name)
 
-const customStyleEl = () => window.document.getElementById('hermes-desktop-custom-css') as HTMLStyleElement | null
+const customStyleEl = () => window.document.getElementById('ciel-desktop-custom-css') as HTMLStyleElement | null
 
 describe('ThemeProvider ← backend skin sync', () => {
   beforeEach(() => {
@@ -78,7 +78,7 @@ describe('ThemeProvider ← backend skin sync', () => {
   // name, flattened it to the default, and the connect-time seed (apply: false,
   // by design) never repainted — so the theme "didn't stick" until `/skin`.
   it('paints a persisted backend skin once the connect-time seed makes it resolvable', () => {
-    window.localStorage.setItem('hermes-desktop-theme-v2', 'bloomberg')
+    window.localStorage.setItem('ciel-desktop-theme-v2', 'bloomberg')
 
     render(
       <ThemeProvider>
@@ -105,10 +105,10 @@ describe('ThemeProvider ← local bridge fallback', () => {
   })
 
   it('uses the local bridge skin when a remote gateway has not connected yet', async () => {
-    const previous = Object.getOwnPropertyDescriptor(window, 'hermesDesktop')
+    const previous = Object.getOwnPropertyDescriptor(window, 'cielDesktop')
 
     try {
-      Object.defineProperty(window, 'hermesDesktop', {
+      Object.defineProperty(window, 'cielDesktop', {
         configurable: true,
         value: { localSkin: { profile: 'research', skin: bloomberg('#ff9f0a') } }
       })
@@ -133,9 +133,9 @@ describe('ThemeProvider ← local bridge fallback', () => {
       window.localStorage.clear()
 
       if (previous) {
-        Object.defineProperty(window, 'hermesDesktop', previous)
+        Object.defineProperty(window, 'cielDesktop', previous)
       } else {
-        Reflect.deleteProperty(window, 'hermesDesktop')
+        Reflect.deleteProperty(window, 'cielDesktop')
       }
 
       vi.resetModules()
@@ -143,11 +143,11 @@ describe('ThemeProvider ← local bridge fallback', () => {
   })
 
   it('keeps a saved desktop appearance ahead of the local bridge fallback', async () => {
-    const previous = Object.getOwnPropertyDescriptor(window, 'hermesDesktop')
+    const previous = Object.getOwnPropertyDescriptor(window, 'cielDesktop')
 
     try {
-      window.localStorage.setItem('hermes-desktop-theme-v2', 'everforest')
-      Object.defineProperty(window, 'hermesDesktop', {
+      window.localStorage.setItem('ciel-desktop-theme-v2', 'everforest')
+      Object.defineProperty(window, 'cielDesktop', {
         configurable: true,
         value: { localSkin: { profile: 'research', skin: bloomberg('#ff9f0a') } }
       })
@@ -161,15 +161,15 @@ describe('ThemeProvider ← local bridge fallback', () => {
         </FreshThemeProvider>
       )
 
-      expect(window.document.documentElement.dataset.hermesTheme).toBe('everforest')
+      expect(window.document.documentElement.dataset.cielTheme).toBe('everforest')
     } finally {
       cleanup()
       window.localStorage.clear()
 
       if (previous) {
-        Object.defineProperty(window, 'hermesDesktop', previous)
+        Object.defineProperty(window, 'cielDesktop', previous)
       } else {
-        Reflect.deleteProperty(window, 'hermesDesktop')
+        Reflect.deleteProperty(window, 'cielDesktop')
       }
 
       vi.resetModules()

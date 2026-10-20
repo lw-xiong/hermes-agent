@@ -25,12 +25,12 @@ import pytest
 
 @pytest.fixture(autouse=True)
 def _isolate_env(tmp_path, monkeypatch):
-    hermes_home = tmp_path / ".hermes"
-    hermes_home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(hermes_home))
+    ciel_home = tmp_path / ".ciel"
+    ciel_home.mkdir()
+    monkeypatch.setenv("CIEL_HOME", str(ciel_home))
     monkeypatch.delenv("SECURITY_GUIDANCE_BLOCK", raising=False)
     monkeypatch.delenv("SECURITY_GUIDANCE_DISABLE", raising=False)
-    yield hermes_home
+    yield ciel_home
 
 # ---------------------------------------------------------------------------
 # Module loading
@@ -52,19 +52,19 @@ def _load_patterns():
 def _load_plugin_init():
     """Import the plugin __init__.py with patterns.py as a sibling."""
     plugin_dir = _repo_root() / "plugins" / "security-guidance"
-    if "hermes_plugins" not in sys.modules:
-        ns = types.ModuleType("hermes_plugins")
+    if "ciel_plugins" not in sys.modules:
+        ns = types.ModuleType("ciel_plugins")
         ns.__path__ = []
-        sys.modules["hermes_plugins"] = ns
+        sys.modules["ciel_plugins"] = ns
     spec = importlib.util.spec_from_file_location(
-        "hermes_plugins.security_guidance",
+        "ciel_plugins.security_guidance",
         plugin_dir / "__init__.py",
         submodule_search_locations=[str(plugin_dir)],
     )
     mod = importlib.util.module_from_spec(spec)
-    mod.__package__ = "hermes_plugins.security_guidance"
+    mod.__package__ = "ciel_plugins.security_guidance"
     mod.__path__ = [str(plugin_dir)]
-    sys.modules["hermes_plugins.security_guidance"] = mod
+    sys.modules["ciel_plugins.security_guidance"] = mod
     spec.loader.exec_module(mod)
     return mod
 
@@ -250,7 +250,7 @@ class TestPreToolCallHook:
 class TestPluginDiscovery:
     def test_manifest_declares_registered_hooks(self):
         """Manifest metadata must use the field consumed by plugin discovery."""
-        import hermes_yaml as yaml
+        import ciel_yaml as yaml
 
         plugin_dir = _repo_root() / "plugins" / "security-guidance"
         manifest = yaml.safe_load(

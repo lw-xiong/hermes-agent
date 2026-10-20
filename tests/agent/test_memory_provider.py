@@ -172,9 +172,9 @@ class TestMemoryManager:
 
     @staticmethod
     def _set_spill_config(monkeypatch, tmp_path, *, max_chars):
-        from hermes_cli.config import atomic_config_write
+        from ciel_cli.config import atomic_config_write
 
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("CIEL_HOME", str(tmp_path))
         atomic_config_write(tmp_path / "config.yaml", {
             "memory": {"prefetch_spill_enabled": True},
             "hooks": {"output_spill": {
@@ -217,10 +217,10 @@ class TestMemoryManager:
     ):
         """Provider-ranked recall stays intact unless both spill switches permit it (#130974)."""
         from agent.turn_context import _collect_pre_llm_call_context
-        from hermes_cli.config import atomic_config_write
+        from ciel_cli.config import atomic_config_write
         from tools.hook_output_spill import DEFAULT_MAX_CHARS
 
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("CIEL_HOME", str(tmp_path))
         atomic_config_write(tmp_path / "config.yaml", {
             "memory": memory,
             "hooks": {"output_spill": {} if hooks_enabled else {"enabled": False}},
@@ -235,7 +235,7 @@ class TestMemoryManager:
         assert not (tmp_path / "hook_outputs").exists()
 
         # Exercise the independent plugin-hook consumer, not just the spill helper.
-        monkeypatch.setattr("hermes_cli.lifecycle.invoke_hook", lambda *a, **kw: [{"context": text}])
+        monkeypatch.setattr("ciel_cli.lifecycle.invoke_hook", lambda *a, **kw: [{"context": text}])
         result = _collect_pre_llm_call_context(
             SimpleNamespace(session_id="hook", model="test"), effective_task_id="task",
             turn_id="turn", original_user_message="recall", messages=[], conversation_history=[],
@@ -257,9 +257,9 @@ class TestMemoryManager:
 
     def test_runaway_recall_still_spills_without_opt_in(self, tmp_path, monkeypatch):
         """Opt-out keeps normal recall whole but still caps a runaway provider at the ceiling."""
-        from hermes_cli.config import atomic_config_write
+        from ciel_cli.config import atomic_config_write
 
-        monkeypatch.setenv("HERMES_HOME", str(tmp_path))
+        monkeypatch.setenv("CIEL_HOME", str(tmp_path))
         atomic_config_write(tmp_path / "config.yaml", {"memory": {}})
         provider = FakeMemoryProvider("external")
         provider._prefetch_result = "x" * 100_001
@@ -276,13 +276,13 @@ class TestMemoryManager:
         from agent.secret_scope import (
             is_multiplex_active, reset_secret_scope, set_multiplex_active, set_secret_scope,
         )
-        from hermes_constants import reset_hermes_home_override, set_hermes_home_override
-        from hermes_cli.config import atomic_config_write
+        from ciel_constants import reset_ciel_home_override, set_ciel_home_override
+        from ciel_cli.config import atomic_config_write
 
         a, b = tmp_path / "a", tmp_path / "b"
         a.mkdir()
         b.mkdir()
-        monkeypatch.setenv("HERMES_HOME", str(a))  # Ambient launch home never follows B.
+        monkeypatch.setenv("CIEL_HOME", str(a))  # Ambient launch home never follows B.
         monkeypatch.setattr("pathlib.Path.home", lambda: tmp_path)
         shared = {"max_chars": 40, "preview_head": 12, "preview_tail": 7,
                   "directory": str(a / "recall")}
@@ -296,7 +296,7 @@ class TestMemoryManager:
         set_multiplex_active(True)
         try:
             for home in (a, b, a):
-                home_token = set_hermes_home_override(home)
+                home_token = set_ciel_home_override(home)
                 secret_token = set_secret_scope({}, profile_home=str(home))
                 try:
                     if home not in managers:
@@ -323,8 +323,8 @@ class TestMemoryManager:
                     })
                 finally:
                     reset_secret_scope(secret_token)
-                    reset_hermes_home_override(home_token)
-            home_token = set_hermes_home_override(a)
+                    reset_ciel_home_override(home_token)
+            home_token = set_ciel_home_override(a)
             secret_token = set_secret_scope({}, profile_home=str(a))
             try:
                 fresh = MemoryManager()
@@ -334,7 +334,7 @@ class TestMemoryManager:
                 assert not (a / "recall" / "fresh").exists()
             finally:
                 reset_secret_scope(secret_token)
-                reset_hermes_home_override(home_token)
+                reset_ciel_home_override(home_token)
         finally:
             set_multiplex_active(was_multiplex)
 
@@ -517,7 +517,7 @@ class TestPluginMemoryDiscovery:
 
 
 class TestUserInstalledProviderDiscovery:
-    """Memory providers installed to $HERMES_HOME/plugins/ should be found.
+    """Memory providers installed to $CIEL_HOME/plugins/ should be found.
 
     Regression test for issues #4956 and #9099: load_memory_provider() and
     discover_memory_providers() only scanned the bundled plugins/memory/
@@ -546,7 +546,7 @@ class TestUserInstalledProviderDiscovery:
 
 
     def test_load_user_plugin(self, tmp_path, monkeypatch):
-        """load_memory_provider() can load from $HERMES_HOME/plugins/."""
+        """load_memory_provider() can load from $CIEL_HOME/plugins/."""
         from plugins.memory import load_memory_provider
         self._make_user_memory_plugin(tmp_path, "myexternal")
         monkeypatch.setattr(
@@ -595,7 +595,7 @@ class TestUserInstalledProviderCli:
 
     Mirror of the relative-import regression above:
     discover_plugin_cli_commands() imports the active provider's cli.py as
-    ``_hermes_user_memory.<name>.cli`` without registering the parent
+    ``_ciel_user_memory.<name>.cli`` without registering the parent
     packages, so a cli.py with a relative import could never load.
     """
 
@@ -671,7 +671,7 @@ class TestEntryPointMemoryProviderDiscovery:
         def __init__(self, name, module, exposure="register"):
             self.name = name
             self.value = f"{module}:{exposure}"
-            self.group = "hermes_agent.memory_providers"
+            self.group = "ciel_agent.memory_providers"
             self._module = module
             self._exposure = exposure
 
@@ -799,7 +799,7 @@ class TestEntryPointMemoryProviderDiscovery:
     def test_inactive_entry_point_load_does_not_register_skill(
         self, tmp_path, monkeypatch
     ):
-        from hermes_cli.plugins import get_plugin_manager
+        from ciel_cli.plugins import get_plugin_manager
         from plugins.memory import load_memory_provider
         import plugins.memory as memory_plugins
 
@@ -831,7 +831,7 @@ class TestEntryPointMemoryProviderDiscovery:
     def test_switching_provider_prunes_registered_entry_point_skill(
         self, tmp_path, monkeypatch
     ):
-        from hermes_cli.plugins import get_plugin_manager
+        from ciel_cli.plugins import get_plugin_manager
         from tools.skills_tool import skill_view
         import plugins.memory as memory_plugins
 
@@ -1094,11 +1094,11 @@ class TestMemoryToolToolsetGate:
     def test_composite_toolset_with_memory_injects(self):
         """Composite toolsets that include memory should inject provider tools."""
         mgr = self._mgr_with_tools("hindsight_recall")
-        tools, names = self._run_memory_injection(["hermes-acp"], mgr)
+        tools, names = self._run_memory_injection(["ciel-acp"], mgr)
         assert "hindsight_recall" in names
         assert any(t["function"]["name"] == "hindsight_recall" for t in tools)
 
-    @pytest.mark.parametrize("enabled_toolsets", [None, ["memory"], ["all"], ["hermes-acp"]])
+    @pytest.mark.parametrize("enabled_toolsets", [None, ["memory"], ["all"], ["ciel-acp"]])
     def test_disabled_memory_toolset_blocks_injection(self, enabled_toolsets):
         """An explicit memory disable wins over default or composite enablement."""
         mgr = self._mgr_with_tools("hindsight_recall")

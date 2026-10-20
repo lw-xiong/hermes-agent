@@ -2,11 +2,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type * as HermesApi from '@/hermes'
+import type * as CielApi from '@/ciel'
 import { $freeTierStatus } from '@/store/free-tier'
 import { $freeTierSignIn, noteFreeTierTurnComplete, openFreeTierSignIn } from '@/store/free-tier-sign-in'
 import { markOnboardingDecided, setOnboardingSurfaceActive } from '@/store/onboarding-presence'
-import type { FreeTierStatus } from '@/types/hermes'
+import type { FreeTierStatus } from '@/types/ciel'
 
 const pollOAuthSession = vi.fn()
 // The two answers the dialog reads: `free_tier.status` and `free_tier.claim_nudge`.
@@ -17,8 +17,8 @@ const requestGateway = vi.fn(async (_method?: string): Promise<GatewayAnswer> =>
 // Only the two calls this flow makes are replaced; everything else keeps its
 // real implementation so the modules the dialog pulls in (the onboarding
 // DeviceCode cell, the model picker) still resolve their imports.
-vi.mock('@/hermes', async importOriginal => ({
-  ...(await importOriginal<typeof HermesApi>()),
+vi.mock('@/ciel', async importOriginal => ({
+  ...(await importOriginal<typeof CielApi>()),
   pollOAuthSession: (providerId: string, sessionId: string) => pollOAuthSession(providerId, sessionId),
   startOAuthLogin: async () => ({
     expires_in: 900,
@@ -54,7 +54,7 @@ describe('FreeTierSignInDialog', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     pollOAuthSession.mockResolvedValue({
       account_email: 'someone@example.com',
-      model: 'Hermes-4-405B',
+      model: 'Ciel-4-405B',
       reason: null,
       session_id: 'session-1',
       status: 'approved'
@@ -82,7 +82,7 @@ describe('FreeTierSignInDialog', () => {
     })
 
     await waitFor(() => expect(screen.getByText('Signed in as someone@example.com')).toBeTruthy())
-    expect(screen.getByText('Hermes-4-405B')).toBeTruthy()
+    expect(screen.getByText('Ciel-4-405B')).toBeTruthy()
   })
 
   describe('sign-in offer', () => {
@@ -120,7 +120,7 @@ describe('FreeTierSignInDialog', () => {
         setOnboardingSurfaceActive('onboarding', false)
       })
 
-      await waitFor(() => expect(screen.getByText('Keep going with Hermes')).toBeTruthy())
+      await waitFor(() => expect(screen.getByText('Keep going with Ciel')).toBeTruthy())
       expect(requestGateway).toHaveBeenCalledWith('free_tier.claim_nudge')
     })
 
@@ -136,7 +136,7 @@ describe('FreeTierSignInDialog', () => {
 
       await act(async () => noteFreeTierTurnComplete())
 
-      await waitFor(() => expect(screen.getByText('Keep going with Hermes')).toBeTruthy())
+      await waitFor(() => expect(screen.getByText('Keep going with Ciel')).toBeTruthy())
     })
 
     it('Sign in continues into the normal sign-in flow', async () => {
@@ -155,7 +155,7 @@ describe('FreeTierSignInDialog', () => {
       await act(async () => screen.getByRole('button', { name: 'Not now' }).click())
 
       expect($freeTierSignIn.get()).toEqual({ status: 'closed' })
-      expect(screen.queryByText('Keep going with Hermes')).toBeNull()
+      expect(screen.queryByText('Keep going with Ciel')).toBeNull()
     })
   })
 })

@@ -6,7 +6,7 @@ import path from 'node:path'
 import { z } from 'zod'
 
 import { parseSpawnLedger, SPAWN_LEDGER_FILENAME } from '../../apps/desktop/electron/backend-discovery.ts'
-import { resolveDesktopHermesHome } from '../../apps/desktop/electron/data-paths.mjs'
+import { resolveDesktopCielHome } from '../../apps/desktop/electron/data-paths.mjs'
 import { within } from '../../tests/install/e2e-assets/smoke-env.mjs'
 
 export interface NativeProcess {
@@ -48,7 +48,7 @@ export function readInstallationCommit(root: string, origin: 'source' | 'bundled
   // The install drivers export their real git: a fresh-machine leg takes every
   // git off PATH so the product must provision its own, which this observer
   // must not depend on.
-  const git: string = process.env.HERMES_E2E_REAL_GIT || 'git'
+  const git: string = process.env.CIEL_E2E_REAL_GIT || 'git'
 
   const commit = origin === 'source' ? nativeText(git, ['-C', root, 'rev-parse', 'HEAD'])
     : z.object({ payload: z.literal('bundled'), commit: z.string() }).parse(
@@ -61,7 +61,7 @@ export function readInstallationCommit(root: string, origin: 'source' | 'bundled
 const bundleEnvSchema = z.record(z.string(), z.string().nullable())
 
 /** The baked runtime defaults/clears of a bundled artifact, recorded in the
- * install stamp so the smoke driver can predict the app's resolved Hermes home
+ * install stamp so the smoke driver can predict the app's resolved Ciel home
  * without reimplementing the banner. Absent for artifacts built before the
  * stamp carried it, and for source checkpoints. */
 export function readBundledBundleEnv(root: string): Record<string, string | null> | undefined {
@@ -180,7 +180,7 @@ function processStartTime(pid: number): number | null {
 }
 
 /** Identify the actual listener, not a healthy helper or a command recorded before spawn. */
-export function localBackendProcess(port: number, electronPid: number, hermesHome?: string): BackendProcess {
+export function localBackendProcess(port: number, electronPid: number, cielHome?: string): BackendProcess {
   if (!Number.isInteger(port) || port <= 0 || port > 65535) {
     throw new Error('Invalid backend port')
   }
@@ -193,11 +193,11 @@ export function localBackendProcess(port: number, electronPid: number, hermesHom
   // caller's existing installed-tree checks must independently agree.
   let registered: number[] = []
 
-  if (hermesHome) {
+  if (cielHome) {
     // The product writes one machine-root ledger for every profile, and the app
-    // reads it at its own resolved root (`main.ts` -> `spawnLedgerPath(HERMES_HOME)`,
+    // reads it at its own resolved root (`main.ts` -> `spawnLedgerPath(CIEL_HOME)`,
     // where a `<root>/profiles/<name>` home resolves to `<root>`).
-    const ledgerRoot = resolveDesktopHermesHome({ home: os.homedir(), env: { HERMES_HOME: hermesHome } })
+    const ledgerRoot = resolveDesktopCielHome({ home: os.homedir(), env: { CIEL_HOME: cielHome } })
 
     try {
       registered = parseSpawnLedger(fs.readFileSync(path.join(ledgerRoot, SPAWN_LEDGER_FILENAME), 'utf8'))
@@ -244,13 +244,13 @@ export function localBackendProcess(port: number, electronPid: number, hermesHom
     backend.cwd = fs.readlinkSync(`/proc/${backend.pid}/cwd`)
     backend.command = fs.readFileSync(`/proc/${backend.pid}/cmdline`, 'utf8').split('\0').filter(Boolean).map((arg: string): string => JSON.stringify(arg)).join(' ')
     backend.sourceRoot = fs.readFileSync(`/proc/${backend.pid}/environ`, 'utf8').split('\0')
-      .find((entry: string): boolean => entry.startsWith('HERMES_PYTHON_SRC_ROOT='))?.slice('HERMES_PYTHON_SRC_ROOT='.length)
+      .find((entry: string): boolean => entry.startsWith('CIEL_PYTHON_SRC_ROOT='))?.slice('CIEL_PYTHON_SRC_ROOT='.length)
   } else if (process.platform === 'darwin') {
     backend.command = nativeText('ps', ['-p', String(backend.pid), '-o', 'args='])
     backend.cwd = nativeText('/usr/sbin/lsof', ['-a', '-p', String(backend.pid), '-d', 'cwd', '-Fn'])
       .split('\n').find((line: string): boolean => line.startsWith('n'))?.slice(1)
     const environment = nativeText('ps', ['eww', '-p', String(backend.pid), '-o', 'args='])
-    backend.sourceRoot = psEnvValue(environment, 'HERMES_PYTHON_SRC_ROOT')
+    backend.sourceRoot = psEnvValue(environment, 'CIEL_PYTHON_SRC_ROOT')
     backend.pythonPath = psEnvValue(environment, 'PYTHONPATH')
     backend.virtualEnv = psEnvValue(environment, 'VIRTUAL_ENV')
   }
@@ -309,7 +309,7 @@ export function assertBackendOrigin(backend: BackendProcess, root: string, origi
 
   // A Python -m entry has no source path in argv. Its live import root is
   // either the captured editable root (Nix) or the process's working directory.
-  const moduleLaunch = /(?:^|\s)"?-m"?\s+"?hermes_cli\.main"?(?:\s|$)/.test(command)
+  const moduleLaunch = /(?:^|\s)"?-m"?\s+"?ciel_cli\.main"?(?:\s|$)/.test(command)
     && /^python(?:w|\d+(?:\.\d+)*)?(?:\.exe)?$/i.test(path.basename(backend.executable))
 
   if (moduleLaunch) {
@@ -317,7 +317,7 @@ export function assertBackendOrigin(backend: BackendProcess, root: string, origi
     if (backend.sourceRoot !== undefined) {
       if (!sameTree(backend.sourceRoot)) {
         throw new Error('Source backend listener imports a different source tree'
-          + ` (HERMES_PYTHON_SRC_ROOT=${backend.sourceRoot}, expected=${root}, command=${backend.command})`)
+          + ` (CIEL_PYTHON_SRC_ROOT=${backend.sourceRoot}, expected=${root}, command=${backend.command})`)
       }
 
       return
@@ -327,10 +327,10 @@ export function assertBackendOrigin(backend: BackendProcess, root: string, origi
     // the app hands the backend ITS OWN directory (the smoke's home), so a
     // cwd-only inference calls a backend running the installation's own venv
     // interpreter "a different source tree". Accept the launcher cd'ing into the
-    // tree, or a command that names it (`<root>/venv/bin/python -m hermes_cli.main`).
+    // tree, or a command that names it (`<root>/venv/bin/python -m ciel_cli.main`).
     // The app binds the backend to the tree by environment as well as argv:
     // `main.ts` puts the installation root first on the backend's PYTHONPATH and
-    // VIRTUAL_ENV names its venv, which is how `import hermes_cli` resolves from
+    // VIRTUAL_ENV names its venv, which is how `import ciel_cli` resolves from
     // the installation. A platform that can read that environment needs no
     // spelling in argv (macOS resolves the venv symlink before spawning); a
     // platform that cannot (Windows) stays strict.
@@ -345,7 +345,7 @@ export function assertBackendOrigin(backend: BackendProcess, root: string, origi
 
     if (!sameTree(backend.cwd) && !namesInstallRoot && !usesInstallEnvironment && !appOwnsBackend) {
       throw new Error('Source backend listener imports a different source tree'
-        + ` (cwd=${backend.cwd ?? '(unreadable)'}, HERMES_PYTHON_SRC_ROOT=(unset),`
+        + ` (cwd=${backend.cwd ?? '(unreadable)'}, CIEL_PYTHON_SRC_ROOT=(unset),`
         + ` executable=${backend.executable}, expected=${root},`
         + ` appReportedRoot=${evidence.appReportedRoot ?? '(unreported)'}, command=${backend.command})`)
     }

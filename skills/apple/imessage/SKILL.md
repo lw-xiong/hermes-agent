@@ -6,7 +6,7 @@ author: Ciel
 license: MIT
 platforms: [macos]
 metadata:
-  hermes:
+  ciel:
     tags: [iMessage, SMS, messaging, macOS, Apple]
 prerequisites:
   commands: [imsg]

@@ -6,7 +6,7 @@ and copies .debs into pool/<first-char>/.
 
 Usage:
   python stage_apt_repo.py --pool POOL_DIR --out OUT_DIR \
-      --suite hermes-stable|hermes-canary [--gpg-key-file PATH]
+      --suite ciel-stable|ciel-canary [--gpg-key-file PATH]
 
 Exit codes:
   0 - success
@@ -300,7 +300,7 @@ def stage(
     # security information"). One paragraph, no blank lines.
     release_fields = [
         "Origin: Ciel",
-        "Label: hermes-agent",
+        "Label: ciel-agent",
         f"Suite: {suite}",
         f"Codename: {suite}",
         f"Architectures: {ARCH}",
@@ -518,13 +518,13 @@ def main(argv: list | None = None) -> int:
     ap = argparse.ArgumentParser(description="Stage a static APT repo layout.")
     ap.add_argument("--pool", required=True, type=Path)
     ap.add_argument("--out", required=True, type=Path)
-    # hermes-nightly is the suite actually published today
-    # (https://hermes-assets.nousresearch.com/releases/termux/nightly/,
-    # verified 2026-09-06); hermes-stable/hermes-canary are what CI stages
+    # ciel-nightly is the suite actually published today
+    # (https://ciel-assets.nousresearch.com/releases/termux/nightly/,
+    # verified 2026-09-06); ciel-stable/ciel-canary are what CI stages
     # for the stable/canary channels.
     ap.add_argument(
         "--suite", required=True,
-        choices=["hermes-stable", "hermes-canary", "hermes-nightly"],
+        choices=["ciel-stable", "ciel-canary", "ciel-nightly"],
     )
     ap.add_argument("--gpg-key-file", type=Path, default=None)
     ap.add_argument("--pool-subdir", default="")

@@ -26,8 +26,8 @@ const setModelAssignment = vi.fn()
 const getRecommendedDefaultModel = vi.fn()
 const saveMoaModels = vi.fn()
 const setEnvVar = vi.fn()
-const getHermesConfigRecord = vi.fn()
-const saveHermesConfig = vi.fn()
+const getCielConfigRecord = vi.fn()
+const saveCielConfig = vi.fn()
 const startManualLocalEndpoint = vi.fn()
 const startManualOnboarding = vi.fn()
 const startManualProviderOAuth = vi.fn()
@@ -35,7 +35,7 @@ let profileSwitchHandler: (() => void) | null = null
 
 // Keep the real read-origin helpers (WeakMap peek/bind) live: the shared
 // config hook reaches them through the barrel, and a bare mock would throw.
-vi.mock('@/hermes', async () => ({
+vi.mock('@/ciel', async () => ({
   ...(await vi.importActual<typeof ConfigApi>('@/api/config')),
   getGlobalModelInfo: (profile?: null | string) => getGlobalModelInfo(profile),
   getGlobalModelOptions: (opts?: unknown, profile?: null | string) => getGlobalModelOptions(opts, profile),
@@ -47,8 +47,8 @@ vi.mock('@/hermes', async () => ({
   getRecommendedDefaultModel: (slug: string) => getRecommendedDefaultModel(slug),
   saveMoaModels: (body: unknown) => saveMoaModels(body),
   setEnvVar: (key: string, value: string) => setEnvVar(key, value),
-  getHermesConfigRecord: () => getHermesConfigRecord(),
-  saveHermesConfig: (config: unknown) => saveHermesConfig(config),
+  getCielConfigRecord: () => getCielConfigRecord(),
+  saveCielConfig: (config: unknown) => saveCielConfig(config),
   setApiRequestProfile: () => {}
 }))
 
@@ -65,28 +65,28 @@ vi.mock('../hooks/use-on-profile-switch', () => ({
 }))
 
 beforeEach(() => {
-  getGlobalModelInfo.mockResolvedValue({ provider: 'nous', model: 'hermes-4' })
+  getGlobalModelInfo.mockResolvedValue({ provider: 'nous', model: 'ciel-4' })
   getGlobalModelOptions.mockResolvedValue({
     providers: [
       {
         name: 'Nous',
         slug: 'nous',
-        models: ['hermes-4', 'hermes-4-mini'],
+        models: ['ciel-4', 'ciel-4-mini'],
         authenticated: true,
-        capabilities: { 'hermes-4': { reasoning: true, fast: true } }
+        capabilities: { 'ciel-4': { reasoning: true, fast: true } }
       }
     ]
   })
   getAuxiliaryModels.mockResolvedValue({
-    main: { provider: 'nous', model: 'hermes-4' },
+    main: { provider: 'nous', model: 'ciel-4' },
     tasks: [{ task: 'vision', provider: 'auto', model: '', base_url: '' }]
   })
   getMoaModels.mockResolvedValue(null)
-  setModelAssignment.mockResolvedValue({ ok: true, provider: 'nous', model: 'hermes-4', gateway_tools: [] })
-  getRecommendedDefaultModel.mockResolvedValue({ provider: 'nous', model: 'hermes-4', free_tier: null })
+  setModelAssignment.mockResolvedValue({ ok: true, provider: 'nous', model: 'ciel-4', gateway_tools: [] })
+  getRecommendedDefaultModel.mockResolvedValue({ provider: 'nous', model: 'ciel-4', free_tier: null })
   setEnvVar.mockResolvedValue({ ok: true })
-  getHermesConfigRecord.mockResolvedValue({ agent: { reasoning_effort: 'medium', service_tier: 'normal' } })
-  saveHermesConfig.mockResolvedValue({ ok: true })
+  getCielConfigRecord.mockResolvedValue({ agent: { reasoning_effort: 'medium', service_tier: 'normal' } })
+  saveCielConfig.mockResolvedValue({ ok: true })
 })
 
 afterEach(() => {
@@ -200,7 +200,7 @@ describe('ModelSettings', () => {
   it('replaces the selected provider and model when the active profile changes', async () => {
     getGlobalModelInfo
       .mockResolvedValueOnce({ provider: 'custom', model: 'local-a' })
-      .mockResolvedValueOnce({ provider: 'nous', model: 'hermes-4' })
+      .mockResolvedValueOnce({ provider: 'nous', model: 'ciel-4' })
     getGlobalModelOptions
       .mockResolvedValueOnce({
         providers: [
@@ -217,9 +217,9 @@ describe('ModelSettings', () => {
           {
             name: 'Nous',
             slug: 'nous',
-            models: ['hermes-4'],
+            models: ['ciel-4'],
             authenticated: true,
-            capabilities: { 'hermes-4': { reasoning: true, fast: true } }
+            capabilities: { 'ciel-4': { reasoning: true, fast: true } }
           }
         ]
       })
@@ -242,7 +242,7 @@ describe('ModelSettings', () => {
         {
           name: 'Nous',
           slug: 'nous',
-          models: ['hermes-4'],
+          models: ['ciel-4'],
           authenticated: true
         },
         {
@@ -323,17 +323,17 @@ describe('ModelSettings', () => {
     // The cached record is a default-expanded snapshot; a CLI pin made after it
     // loaded is not in it. Echoing the whole record back would reset that
     // auxiliary slot to auto/'' (#95460) — only the edited key may be sent.
-    getHermesConfigRecord.mockResolvedValue({
+    getCielConfigRecord.mockResolvedValue({
       agent: { reasoning_effort: 'medium', service_tier: 'normal' },
       auxiliary: { curator: { provider: 'auto', model: '', reasoning_effort: 'high' } }
     })
     renderModelSettings()
-    await waitFor(() => expect(getHermesConfigRecord).toHaveBeenCalled())
+    await waitFor(() => expect(getCielConfigRecord).toHaveBeenCalled())
 
     const fastSwitch = await screen.findByRole('switch')
     fireEvent.click(fastSwitch)
 
-    await waitFor(() => expect(saveHermesConfig).toHaveBeenCalledWith({ agent: { service_tier: 'fast' } }))
+    await waitFor(() => expect(saveCielConfig).toHaveBeenCalledWith({ agent: { service_tier: 'fast' } }))
   })
 
   it('hides the reasoning/speed defaults when the main model reports no capabilities', async () => {
@@ -342,22 +342,22 @@ describe('ModelSettings', () => {
         {
           name: 'Nous',
           slug: 'nous',
-          models: ['hermes-4'],
+          models: ['ciel-4'],
           authenticated: true,
-          capabilities: { 'hermes-4': { reasoning: false, fast: false } }
+          capabilities: { 'ciel-4': { reasoning: false, fast: false } }
         }
       ]
     })
 
     renderModelSettings()
-    await waitFor(() => expect(getHermesConfigRecord).toHaveBeenCalled())
+    await waitFor(() => expect(getCielConfigRecord).toHaveBeenCalled())
 
     expect(screen.queryByRole('switch')).toBeNull()
   })
 
   it('renders plugin-registered auxiliary tasks after the built-ins with the server label (#40880)', async () => {
     getAuxiliaryModels.mockResolvedValueOnce({
-      main: { provider: 'nous', model: 'hermes-4' },
+      main: { provider: 'nous', model: 'ciel-4' },
       tasks: [
         { task: 'vision', provider: 'auto', model: '', base_url: '' },
         {
@@ -386,7 +386,7 @@ describe('ModelSettings', () => {
 
   it('shows an unpinned inheriting plugin task as following its base, and offers Follow once pinned', async () => {
     getAuxiliaryModels.mockResolvedValueOnce({
-      main: { provider: 'nous', model: 'hermes-4' },
+      main: { provider: 'nous', model: 'ciel-4' },
       tasks: [
         { task: 'compression', provider: 'openrouter', model: 'vendor/fast', base_url: '' },
         {
@@ -403,13 +403,13 @@ describe('ModelSettings', () => {
         {
           task: 'pinned_task',
           provider: 'nous',
-          model: 'hermes-4',
+          model: 'ciel-4',
           base_url: '',
           label: 'Pinned side',
           hint: 'pinned',
           plugin: 'side',
           inherit_from: 'compression',
-          effective: { provider: 'nous', model: 'hermes-4', base_url: '' }
+          effective: { provider: 'nous', model: 'ciel-4', base_url: '' }
         }
       ]
     })
@@ -435,8 +435,8 @@ describe('ModelSettings', () => {
 
   it('edits auxiliary reasoning effort and applies it with the assignment', async () => {
     getAuxiliaryModels.mockResolvedValueOnce({
-      main: { provider: 'nous', model: 'hermes-4' },
-      tasks: [{ task: 'vision', provider: 'nous', model: 'hermes-4', base_url: '', reasoning_effort: null }]
+      main: { provider: 'nous', model: 'ciel-4' },
+      tasks: [{ task: 'vision', provider: 'nous', model: 'ciel-4', base_url: '', reasoning_effort: null }]
     })
 
     renderModelSettings()
@@ -453,7 +453,7 @@ describe('ModelSettings', () => {
 
     await waitFor(() =>
       expect(setModelAssignment).toHaveBeenCalledWith({
-        model: 'hermes-4',
+        model: 'ciel-4',
         provider: 'nous',
         scope: 'auxiliary',
         task: 'vision',
@@ -471,7 +471,7 @@ describe('ModelSettings', () => {
 
     await waitFor(() =>
       expect(setModelAssignment).toHaveBeenCalledWith({
-        model: 'hermes-4',
+        model: 'ciel-4',
         provider: 'nous',
         scope: 'auxiliary',
         task: 'vision'
@@ -534,7 +534,7 @@ describe('ModelSettings', () => {
     setModelAssignment.mockResolvedValueOnce({
       ok: true,
       provider: 'nous',
-      model: 'hermes-4',
+      model: 'ciel-4',
       gateway_tools: [],
       stale_aux: []
     })
@@ -549,7 +549,7 @@ describe('ModelSettings', () => {
         expect.objectContaining({
           kind: 'success',
           title: 'Main model updated',
-          message: 'New sessions will use hermes-4.'
+          message: 'New sessions will use ciel-4.'
         })
       )
     )
@@ -561,7 +561,7 @@ describe('ModelSettings', () => {
       provider: 'openrouter',
       model: 'anthropic/claude-opus-4.7',
       gateway_tools: [],
-      stale_aux: [{ task: 'compression', provider: 'nous', model: 'hermes-4' }]
+      stale_aux: [{ task: 'compression', provider: 'nous', model: 'ciel-4' }]
     })
 
     renderModelSettings()
@@ -579,7 +579,7 @@ describe('ModelSettings', () => {
     'localizes stale auxiliary warnings in %s without resetting assignments',
     async locale => {
       getAuxiliaryModels.mockResolvedValueOnce({
-        main: { provider: 'nous', model: 'hermes-4' },
+        main: { provider: 'nous', model: 'ciel-4' },
         tasks: [{ task: 'curator', provider: 'openrouter', model: 'fixture-model', base_url: '' }]
       })
       const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -605,7 +605,7 @@ describe('ModelSettings', () => {
 
   it('shows a persistent banner when a loaded aux slot mismatches the main provider', async () => {
     getAuxiliaryModels.mockResolvedValueOnce({
-      main: { provider: 'nous', model: 'hermes-4' },
+      main: { provider: 'nous', model: 'ciel-4' },
       tasks: [{ task: 'curator', provider: 'openrouter', model: 'anthropic/claude-opus-4.7', base_url: '' }]
     })
 
@@ -617,7 +617,7 @@ describe('ModelSettings', () => {
 
   it('does not warn when an aux slot uses the main alias', async () => {
     getAuxiliaryModels.mockResolvedValueOnce({
-      main: { provider: 'nous', model: 'hermes-4' },
+      main: { provider: 'nous', model: 'ciel-4' },
       tasks: [{ task: 'vision', provider: 'main', model: 'kimi-k3', base_url: '' }]
     })
 
@@ -668,7 +668,7 @@ describe('ModelSettings provider switch', () => {
   it('clears the selected model when the user switches provider', async () => {
     getGlobalModelOptions.mockResolvedValue({
       providers: [
-        { name: 'Nous', slug: 'nous', models: ['hermes-4'], authenticated: true },
+        { name: 'Nous', slug: 'nous', models: ['ciel-4'], authenticated: true },
         {
           name: 'Custom endpoint',
           slug: 'custom:lab',
@@ -685,7 +685,7 @@ describe('ModelSettings provider switch', () => {
     await screen.findAllByRole('combobox')
 
     // The model select paints the current provider's model.
-    expect(await screen.findByText('hermes-4')).toBeTruthy()
+    expect(await screen.findByText('ciel-4')).toBeTruthy()
 
     // Switch provider through the main selector (first combobox opens the
     // provider dropdown).
@@ -693,13 +693,13 @@ describe('ModelSettings provider switch', () => {
     fireEvent.click(await screen.findByRole('option', { name: /Custom endpoint/ }))
 
     // The previous provider's model must not carry over.
-    await waitFor(() => expect(screen.queryByText('hermes-4')).toBeNull())
+    await waitFor(() => expect(screen.queryByText('ciel-4')).toBeNull())
   })
 
   it('probes an empty custom provider with a refresh-scoped options fetch on switch', async () => {
     getGlobalModelOptions.mockResolvedValue({
       providers: [
-        { name: 'Nous', slug: 'nous', models: ['hermes-4'], authenticated: true },
+        { name: 'Nous', slug: 'nous', models: ['ciel-4'], authenticated: true },
         {
           name: 'Lab',
           slug: 'custom:lab',
@@ -718,7 +718,7 @@ describe('ModelSettings provider switch', () => {
     // The refresh-scoped fetch repopulates the empty provider's models.
     getGlobalModelOptions.mockResolvedValueOnce({
       providers: [
-        { name: 'Nous', slug: 'nous', models: ['hermes-4'], authenticated: true },
+        { name: 'Nous', slug: 'nous', models: ['ciel-4'], authenticated: true },
         {
           name: 'Lab',
           slug: 'custom:lab',
@@ -753,7 +753,7 @@ describe('ModelSettings MoA preset editor', () => {
     presets: {
       default: {
         reference_models: [
-          { provider: 'nous', model: 'hermes-4' },
+          { provider: 'nous', model: 'ciel-4' },
           { provider: 'openrouter', model: 'deepseek/deepseek-v4-pro' }
         ],
         aggregator: { provider: 'openrouter', model: 'anthropic/claude-opus-4.8' },
@@ -764,7 +764,7 @@ describe('ModelSettings MoA preset editor', () => {
       }
     },
     reference_models: [
-      { provider: 'nous', model: 'hermes-4' },
+      { provider: 'nous', model: 'ciel-4' },
       { provider: 'openrouter', model: 'deepseek/deepseek-v4-pro' }
     ],
     aggregator: { provider: 'openrouter', model: 'anthropic/claude-opus-4.8' },
@@ -780,9 +780,9 @@ describe('ModelSettings MoA preset editor', () => {
         {
           name: 'Nous',
           slug: 'nous',
-          models: ['hermes-4', 'hermes-4-mini'],
+          models: ['ciel-4', 'ciel-4-mini'],
           authenticated: true,
-          capabilities: { 'hermes-4': { reasoning: true, fast: true } }
+          capabilities: { 'ciel-4': { reasoning: true, fast: true } }
         },
         {
           name: 'OpenRouter',
@@ -828,7 +828,7 @@ describe('ModelSettings MoA preset editor', () => {
       expect(saved.default_preset).toBe('default')
       expect(saved.presets.default.reference_models[0]).toMatchObject({
         provider: 'nous',
-        model: 'hermes-4',
+        model: 'ciel-4',
         enabled: false
       })
     }
@@ -935,7 +935,7 @@ describe('ModelSettings MoA preset editor', () => {
           presets: expect.objectContaining({
             default: expect.objectContaining({
               reference_models: [
-                expect.objectContaining({ provider: 'nous', model: 'hermes-4', enabled: false }),
+                expect.objectContaining({ provider: 'nous', model: 'ciel-4', enabled: false }),
                 expect.objectContaining({ provider: 'openrouter', model: 'deepseek/deepseek-v4-pro' })
               ]
             })
@@ -958,7 +958,7 @@ describe('ModelSettings stale-aux banner dismissal', () => {
   })
 
   const staleAux = {
-    main: { provider: 'nous', model: 'hermes-4' },
+    main: { provider: 'nous', model: 'ciel-4' },
     tasks: [{ task: 'vision', provider: 'alibaba', model: 'qwen3.6-flash', base_url: '' }]
   }
 
@@ -981,7 +981,7 @@ describe('ModelSettings stale-aux banner dismissal', () => {
     // A main-provider switch re-arms the banner: the acknowledged
     // configuration no longer matches what is running.
     cleanup()
-    getGlobalModelInfo.mockResolvedValue({ provider: 'openrouter', model: 'hermes-4' })
+    getGlobalModelInfo.mockResolvedValue({ provider: 'openrouter', model: 'ciel-4' })
     renderModelSettings()
     expect(await screen.findByText(/still run on/)).toBeTruthy()
     // The dismiss affordance is offered again for the new configuration.
@@ -994,7 +994,7 @@ describe('ModelSettings stale-aux banner dismissal', () => {
       provider: 'openrouter',
       model: 'anthropic/claude-opus-4.7',
       gateway_tools: [],
-      stale_aux: [{ task: 'compression', provider: 'nous', model: 'hermes-4' }]
+      stale_aux: [{ task: 'compression', provider: 'nous', model: 'ciel-4' }]
     })
 
     renderModelSettings()
@@ -1009,11 +1009,11 @@ describe('ModelSettings stale-aux banner dismissal', () => {
 
 describe('ModelSettings code-skew 503', () => {
   const skewError = new Error(
-    'Error invoking remote method \'hermes:api\': Error: 503: {"detail":"Restart required: This process is running code from 08b4875f4a but the checkout on disk is now 48d2528066. The model picker would risk a stale-module crash — restart the Desktop-owned backend to load the new code (use Restart backend in Hermes Desktop, or quit and reopen the app)"}'
+    'Error invoking remote method \'ciel:api\': Error: 503: {"detail":"Restart required: This process is running code from 08b4875f4a but the checkout on disk is now 48d2528066. The model picker would risk a stale-module crash — restart the Desktop-owned backend to load the new code (use Restart backend in Ciel Desktop, or quit and reopen the app)"}'
   )
 
   afterEach(() => {
-    delete (window as unknown as { hermesDesktop?: unknown }).hermesDesktop
+    delete (window as unknown as { cielDesktop?: unknown }).cielDesktop
   })
 
   it('unwraps the stale-backend 503 instead of dumping IPC JSON', async () => {
@@ -1025,14 +1025,14 @@ describe('ModelSettings code-skew 503', () => {
       expect(screen.getByText(/running old code after an update/i)).toBeTruthy()
     })
     expect(screen.getByRole('button', { name: 'Restart backend' })).toBeTruthy()
-    expect(screen.queryByText(/hermes:api/)).toBeNull()
+    expect(screen.queryByText(/ciel:api/)).toBeNull()
     expect(screen.queryByText(/systemctl/)).toBeNull()
   })
 
   it('recycles the Desktop-owned backend and reloads the catalog', async () => {
     const recycleBackend = vi.fn().mockResolvedValue({ ok: true })
 
-    ;(window as unknown as { hermesDesktop: { recycleBackend: typeof recycleBackend } }).hermesDesktop = {
+    ;(window as unknown as { cielDesktop: { recycleBackend: typeof recycleBackend } }).cielDesktop = {
       recycleBackend
     }
 

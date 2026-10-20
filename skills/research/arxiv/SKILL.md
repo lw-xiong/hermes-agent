@@ -6,7 +6,7 @@ author: Ciel
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  ciel:
     tags: [Research, Arxiv, Papers, Academic, Science, API]
     related_skills: [pdf]
 ---

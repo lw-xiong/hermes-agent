@@ -370,7 +370,7 @@ class WebhookAdapter(BasePlatformAdapter):
 
     def toolsets_for_source(self, source) -> Optional[list[str]]:
         """Per-route ``toolsets`` override (config.yaml or a manual key in webhook_subscriptions.json —
-        deliberately NOT settable via `hermes webhook subscribe`, so an agent-created subscription
+        deliberately NOT settable via `ciel webhook subscribe`, so an agent-created subscription
         cannot self-grant tools). Keyed on ``user_id`` (exactly ``webhook:{route}`` as authenticated), not
         ``chat_id``, whose caller-supplied delivery id and ``:``-bearing route names make any split ambiguous
         (GHSA-2fmg-cjqm-hhrj)."""
@@ -416,8 +416,8 @@ class WebhookAdapter(BasePlatformAdapter):
         Runs on every POST before auth, so it never takes the CLI writer lock: writers publish via
         atomic rename, which also gives the file a new inode, so a restored mtime cannot hide a change.
         """
-        from hermes_constants import get_hermes_home
-        subs_path = get_hermes_home() / _DYNAMIC_ROUTES_FILENAME
+        from ciel_constants import get_ciel_home
+        subs_path = get_ciel_home() / _DYNAMIC_ROUTES_FILENAME
         try:
             st = subs_path.stat()
         except FileNotFoundError:
@@ -474,12 +474,12 @@ class WebhookAdapter(BasePlatformAdapter):
             # Only a self-referential prefix may fall through to the bare route; anything else fails
             # closed (silently ignoring the prefix served the owner's routes under another profile's URL).
             with suppress(Exception):
-                from hermes_cli.profiles import profile_matches_home
+                from ciel_cli.profiles import profile_matches_home
                 if profile_matches_home(profile):
                     return None
             return _PROFILE_REJECTED
         try:
-            from hermes_cli.profiles import profiles_to_serve
+            from ciel_cli.profiles import profiles_to_serve
             served = {name for name, _ in profiles_to_serve(multiplex=True)}
         except Exception:
             return _PROFILE_REJECTED
@@ -499,7 +499,7 @@ class WebhookAdapter(BasePlatformAdapter):
         if not profile or not isinstance(profile, str):
             return nullcontext()
         from gateway.run import _profile_runtime_scope
-        from hermes_cli.profiles import get_profile_dir
+        from ciel_cli.profiles import get_profile_dir
         return _profile_runtime_scope(get_profile_dir(profile))
 
     async def _read_authenticated_body(self, request: web.Request, route_name: str,

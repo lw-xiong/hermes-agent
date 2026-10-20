@@ -49,10 +49,10 @@ _PHOTON_ENV = (
 
 
 @pytest.fixture
-def tmp_hermes_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    home = tmp_path / "hermes"
+def tmp_ciel_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    home = tmp_path / "ciel"
     home.mkdir()
-    monkeypatch.setenv("HERMES_HOME", str(home))
+    monkeypatch.setenv("CIEL_HOME", str(home))
     for key in _PHOTON_ENV:
         monkeypatch.delenv(key, raising=False)
     yield home
@@ -64,24 +64,24 @@ def tmp_hermes_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 # ---------------------------------------------------------------------------
 # Credential storage
 
-def test_store_and_load_photon_token(tmp_hermes_home: Path) -> None:
+def test_store_and_load_photon_token(tmp_ciel_home: Path) -> None:
     photon_auth.store_photon_token("abc123def456")
     assert photon_auth.load_photon_token() == "abc123def456"
 
-    auth_json = json.loads((tmp_hermes_home / "auth.json").read_text())
+    auth_json = json.loads((tmp_ciel_home / "auth.json").read_text())
     assert auth_json["credential_pool"]["photon"][0]["access_token"] == "abc123def456"
 
 
 @pytest.mark.platforms("posix")  # POSIX mode bits only
-def test_save_auth_never_world_readable(tmp_hermes_home: Path) -> None:
+def test_save_auth_never_world_readable(tmp_ciel_home: Path) -> None:
     """auth.json must be created 0o600 — no window at process umask."""
     photon_auth.store_photon_token("secret-token")
-    mode = (tmp_hermes_home / "auth.json").stat().st_mode & 0o777
+    mode = (tmp_ciel_home / "auth.json").stat().st_mode & 0o777
     assert mode == 0o600
 
 
 def test_store_project_credentials_round_trip(
-    tmp_hermes_home: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_ciel_home: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     # Don't touch .env / os.environ here — exercise the auth.json path.
     monkeypatch.setattr(photon_auth, "_persist_runtime_env", lambda *a, **k: None)
@@ -104,9 +104,9 @@ def test_store_project_credentials_round_trip(
 
 
 def test_load_user_numbers_falls_back_to_home_channel(
-    tmp_hermes_home: Path,
+    tmp_ciel_home: Path,
 ) -> None:
-    from hermes_cli.config import save_env_value
+    from ciel_cli.config import save_env_value
 
     save_env_value("PHOTON_HOME_CHANNEL", "+15551234567")
 
@@ -116,7 +116,7 @@ def test_load_user_numbers_falls_back_to_home_channel(
 
 
 def test_refresh_user_numbers_reads_existing_assignment(
-    tmp_hermes_home: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_ciel_home: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     photon_auth.store_user_numbers(phone_number="+15551234567")
 
@@ -140,7 +140,7 @@ def test_refresh_user_numbers_reads_existing_assignment(
 
 
 def test_load_project_credentials_env_override(
-    tmp_hermes_home: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_ciel_home: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(photon_auth, "_persist_runtime_env", lambda *a, **k: None)
     photon_auth.store_project_credentials(
@@ -155,12 +155,12 @@ def test_load_project_credentials_env_override(
 
 # ---------------------------------------------------------------------------
 # Cross-process auth.json lock (issue: photon wrote auth.json without the
-# cross-process lock hermes_cli/auth.py's ~15 other writers all use, so a
+# cross-process lock ciel_cli/auth.py's ~15 other writers all use, so a
 # concurrent refresh from elsewhere could silently lose photon's update or
 # vice versa).
 
 def _hold_auth_lock_then_release(hold_event: threading.Event, release_event: threading.Event) -> None:
-    from hermes_cli.auth import _auth_store_lock
+    from ciel_cli.auth import _auth_store_lock
 
     with _auth_store_lock():
         hold_event.set()
@@ -328,7 +328,7 @@ def test_get_imessage_line_returns_existing(monkeypatch: pytest.MonkeyPatch) -> 
 # Credential summary (no secret leakage)
 
 def test_credential_summary_no_secret_leak(
-    tmp_hermes_home: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_ciel_home: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(photon_auth, "_persist_runtime_env", lambda *a, **k: None)
     photon_auth.store_photon_token("token-aaaaaaaaaaaaaaaa")
@@ -380,7 +380,7 @@ def test_validate_photon_token_rejects_unrecognized_session(
 
 
 def test_login_device_flow_validates_before_persisting(
-    tmp_hermes_home: Path, monkeypatch: pytest.MonkeyPatch,
+    tmp_ciel_home: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def fake_post(url: str, *, json: dict[str, Any], timeout: float) -> _FakeResponse:
         if url.endswith("/api/auth/device/code"):

@@ -48,7 +48,7 @@ def private_db_probe_cleanup(tmp_path):
     owns the inode cancels its POSIX locks. Opt-in tests must first register normal
     runner/store cleanup and use only databases underneath their private tmp_path.
     """
-    import hermes_state_dbfile as dbfile
+    import ciel_state_dbfile as dbfile
 
     with dbfile._HEADER_PROBE_LOCK:
         existing = set(dbfile._HEADER_PROBE_FDS)
@@ -91,7 +91,7 @@ def make_async_session_db(sync_mock=None):
     """Wrap a sync mock SessionDB in AsyncSessionDB so gateway code that awaits
     the facade works in tests. Returns (facade, sync_mock); configure return
     values and assert calls on sync_mock."""
-    from hermes_state import AsyncSessionDB
+    from ciel_state import AsyncSessionDB
     sync_mock = sync_mock if sync_mock is not None else MagicMock()
     return AsyncSessionDB(sync_mock), sync_mock
 

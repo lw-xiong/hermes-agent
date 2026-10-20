@@ -8,14 +8,14 @@ from typing import Any, Optional
 
 from gateway.session_context import get_session_env
 
-# Sources that label the human conversation an interactive UI transport hosts. A finite ``hermes chat -q`` /
-# one-shot child spawned from such a session inherits HERMES_SESSION_SOURCE (the terminal tool bridges the
+# Sources that label the human conversation an interactive UI transport hosts. A finite ``ciel chat -q`` /
+# one-shot child spawned from such a session inherits CIEL_SESSION_SOURCE (the terminal tool bridges the
 # session env into child processes) but is NOT that conversation: labelling it ``tui``/``desktop`` lists it
 # in the TUI/WebUI pickers as a resumable chat and lets ``ciel -c`` in the TUI continue it (#112550).
 # Automation sources (kanban, tool, cron, a2a, ...) are inherited on purpose.
 UI_TRANSPORT_SOURCES = frozenset({"tui", "desktop"})
 
-# Finite non-interactive CLI runs (``hermes chat -q``/``--oneshot``, ``hermes -z``) get their own source so human
+# Finite non-interactive CLI runs (``ciel chat -q``/``--oneshot``, ``ciel -z``) get their own source so human
 # pickers hide them without title/cwd heuristics; ``ciel -c`` still treats them as CLI history.
 ONESHOT_SOURCE = "oneshot"
 CLI_FAMILY_SOURCES = frozenset({"cli", ONESHOT_SOURCE})
@@ -25,9 +25,9 @@ ATTENDED_SOURCES = UI_TRANSPORT_SOURCES | {"cli", "acp"}
 
 
 def session_source_for(platform: Optional[str]) -> str:
-    source = str(get_session_env("HERMES_SESSION_SOURCE", "") or "").strip()
-    single_query = get_session_env("HERMES_SINGLE_QUERY_SESSION", "") == "1"
-    explicit = get_session_env("HERMES_SESSION_SOURCE_EXPLICIT", "") == "1"
+    source = str(get_session_env("CIEL_SESSION_SOURCE", "") or "").strip()
+    single_query = get_session_env("CIEL_SINGLE_QUERY_SESSION", "") == "1"
+    explicit = get_session_env("CIEL_SESSION_SOURCE_EXPLICIT", "") == "1"
     if single_query and not explicit and source in UI_TRANSPORT_SOURCES:
         source = ""
     if single_query and not source and (platform or "cli") == "cli":

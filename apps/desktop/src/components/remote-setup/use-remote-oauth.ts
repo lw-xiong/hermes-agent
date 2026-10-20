@@ -94,8 +94,8 @@ export function useRemoteOAuth(options: RemoteOAuthOptions): RemoteOAuth {
       const identity = oauthLoginIdentity?.()
 
       const result = identity
-        ? await window.hermesDesktop.oauthLoginConnectionConfig(url, identity)
-        : await window.hermesDesktop.oauthLoginConnectionConfig(url)
+        ? await window.cielDesktop.oauthLoginConnectionConfig(url, identity)
+        : await window.cielDesktop.oauthLoginConnectionConfig(url)
 
       if (!current()) {
         return
@@ -142,7 +142,7 @@ export function useRemoteOAuth(options: RemoteOAuthOptions): RemoteOAuth {
     setSigningIn(true)
 
     try {
-      await window.hermesDesktop.oauthLogoutConnectionConfig(url)
+      await window.cielDesktop.oauthLogoutConnectionConfig(url)
 
       if (current()) {
         setOAuthConnected(false)

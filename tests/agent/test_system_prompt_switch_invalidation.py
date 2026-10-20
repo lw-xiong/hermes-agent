@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from hermes_state import SessionDB
+from ciel_state import SessionDB
 
 SESSION_ID = "switch-session"
 
@@ -22,8 +22,8 @@ def _stored_prompt(model: str, provider: str) -> str:
 
 @pytest.fixture()
 def db(tmp_path, monkeypatch):
-    """Real SessionDB on a temp state.db, isolated from the live HERMES_HOME."""
-    monkeypatch.setenv("HERMES_HOME", str(tmp_path / "hermes-home"))
+    """Real SessionDB on a temp state.db, isolated from the live CIEL_HOME."""
+    monkeypatch.setenv("CIEL_HOME", str(tmp_path / "ciel-home"))
     session_db = SessionDB(db_path=tmp_path / "state.db")
     yield session_db
     session_db.close()

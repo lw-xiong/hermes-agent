@@ -1,6 +1,6 @@
 """Checkpoint-enablement resolution for TUI-created agents (issue #79625).
 
-Desktop sessions (``hermes serve`` → TUI gateway) never set ``HERMES_TUI_CHECKPOINTS``
+Desktop sessions (``ciel serve`` → TUI gateway) never set ``CIEL_TUI_CHECKPOINTS``
 (that env var is only set by the ``ciel --tui --checkpoints`` CLI path), so agent
 creation previously gated filesystem checkpointing on the env var alone and silently
 ignored ``checkpoints.enabled`` in config.yaml. These helpers resolve enablement the
@@ -25,19 +25,19 @@ def _load_checkpoints_enabled(cfg: dict | None = None) -> bool:
         cp_cfg = {"enabled": cp_cfg}
     elif not isinstance(cp_cfg, dict):
         cp_cfg = {}
-    from hermes_cli.config import DEFAULT_CONFIG
+    from ciel_cli.config import DEFAULT_CONFIG
     return bool(cp_cfg.get("enabled", DEFAULT_CONFIG["checkpoints"]["enabled"]))
 
 
 def resolve_checkpoints_enabled(cfg: dict | None = None) -> bool:
     """Resolve checkpoint enablement with the env-var override first.
 
-    ``HERMES_TUI_CHECKPOINTS`` (set by ``ciel --tui --checkpoints``) is the
+    ``CIEL_TUI_CHECKPOINTS`` (set by ``ciel --tui --checkpoints``) is the
     explicit opt-in and wins when present; otherwise fall back to the
     ``checkpoints`` config section (issue #79625 — the desktop backend never
     sets the env var, so config was being silently ignored).
     """
-    env_val = os.environ.get("HERMES_TUI_CHECKPOINTS")
+    env_val = os.environ.get("CIEL_TUI_CHECKPOINTS")
     if env_val is not None:
         return is_truthy_value(env_val)
     return _load_checkpoints_enabled(cfg)

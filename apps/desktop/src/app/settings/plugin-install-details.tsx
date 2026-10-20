@@ -8,7 +8,7 @@ import { resolvePluginSourceLinks } from '@/lib/plugin-source-urls'
 import { cn } from '@/lib/utils'
 import type { PluginInstallRequest } from '@/store/plugin-install-request'
 import { normalizeProfileKey, profileLabel } from '@/store/profile'
-import type { ProfileInfo } from '@/types/hermes'
+import type { ProfileInfo } from '@/types/ciel'
 
 import {
   desktopHalfFromPackage,
@@ -119,7 +119,7 @@ function ContentsRow({
     ? copy.agentTargetRemote(profile.label)
     : copy.agentTargetLocal(
         profile.label,
-        profile.value === 'default' ? '~/.hermes/plugins/' : `~/.hermes/profiles/${profile.value}/plugins/`
+        profile.value === 'default' ? '~/.ciel/plugins/' : `~/.ciel/profiles/${profile.value}/plugins/`
       )
 
   const lines = [

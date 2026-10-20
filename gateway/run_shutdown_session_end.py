@@ -38,14 +38,14 @@ class GatewaySessionEndMixin:
     async def _finalize_session_off_loop(
         self, *, session_id: Any, platform: str, reason: str, session_key: Optional[str] = None, **extra: Any,
     ) -> list[str]:
-        """Run hermes_cli.lifecycle.finalize_session off-loop, bounded; on timeout the worker is left alone.
+        """Run ciel_cli.lifecycle.finalize_session off-loop, bounded; on timeout the worker is left alone.
         ``session_key`` lets an unscoped caller (shutdown) enter the owning profile's scope: plugin
         ``on_session_finalize`` observers and the Relay coordinator (``current_profile_key``) resolve
         profile state at call time. Returns the plugins' user-facing messages (empty on timeout/error)."""
         messages: list[str] = []
 
         def _call() -> None:
-            from hermes_cli.lifecycle import finalize_session, session_end_messages
+            from ciel_cli.lifecycle import finalize_session, session_end_messages
             messages.extend(session_end_messages(
                 finalize_session(session_id=session_id, platform=platform, reason=reason, **extra)))
 

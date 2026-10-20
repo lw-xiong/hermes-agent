@@ -54,10 +54,10 @@ def _job(**overrides):
 
 
 class _AuthErrorFactory:
-    """Raise a real AuthError from hermes_cli.auth."""
+    """Raise a real AuthError from ciel_cli.auth."""
 
     def __call__(self, **kwargs):
-        from hermes_cli.auth import AuthError
+        from ciel_cli.auth import AuthError
 
         raise AuthError("No API key configured for provider 'openrouter'")
 
@@ -69,24 +69,24 @@ def _run_job_patched(job, tmp_path, *, resolve=None, skill_view=None):
     """
     fake_db = MagicMock()
     patches = [
-        patch("cron.scheduler._hermes_home", tmp_path),
+        patch("cron.scheduler._ciel_home", tmp_path),
         patch("cron.scheduler_delivery._resolve_origin", return_value=None),
-        patch("hermes_cli.env_loader.load_hermes_dotenv"),
-        patch("hermes_cli.env_loader.reset_secret_source_cache"),
-        patch("hermes_state_registry.acquire", return_value=fake_db),
+        patch("ciel_cli.env_loader.load_ciel_dotenv"),
+        patch("ciel_cli.env_loader.reset_secret_source_cache"),
+        patch("ciel_state_registry.acquire", return_value=fake_db),
         patch("tools.mcp_tool_discovery.discover_mcp_tools", return_value=[]),
     ]
     if resolve is None:
         patches.append(
             patch(
-                "hermes_cli.runtime_provider.resolve_runtime_provider",
+                "ciel_cli.runtime_provider.resolve_runtime_provider",
                 return_value=dict(_RUNTIME),
             )
         )
     else:
         patches.append(
             patch(
-                "hermes_cli.runtime_provider.resolve_runtime_provider",
+                "ciel_cli.runtime_provider.resolve_runtime_provider",
                 side_effect=resolve,
             )
         )
@@ -137,13 +137,13 @@ class TestMissingProviderKeyBlocks:
             fake_db = MagicMock()
             for _tick in range(2):
                 fresh = next(j for j in cron_jobs.load_jobs() if j["id"] == job["id"])
-                with patch("cron.scheduler._hermes_home", tmp_path), \
+                with patch("cron.scheduler._ciel_home", tmp_path), \
                      patch("cron.scheduler_delivery._resolve_origin", return_value=None), \
-                     patch("hermes_cli.env_loader.load_hermes_dotenv"), \
-                     patch("hermes_cli.env_loader.reset_secret_source_cache"), \
-                     patch("hermes_state_registry.acquire", return_value=fake_db), \
+                     patch("ciel_cli.env_loader.load_ciel_dotenv"), \
+                     patch("ciel_cli.env_loader.reset_secret_source_cache"), \
+                     patch("ciel_state_registry.acquire", return_value=fake_db), \
                      patch("tools.mcp_tool_discovery.discover_mcp_tools", return_value=[]), \
-                     patch("hermes_cli.runtime_provider.resolve_runtime_provider",
+                     patch("ciel_cli.runtime_provider.resolve_runtime_provider",
                            side_effect=_AuthErrorFactory()), \
                      patch.object(sched, "_deliver_result", side_effect=fake_deliver), \
                      patch("run_agent.AIAgent") as mock_agent_cls:
@@ -173,7 +173,7 @@ class TestMissingProviderKeyBlocks:
         def resolve(**kwargs):
             calls.append(kwargs.get("requested"))
             if kwargs.get("requested") in (None, ""):
-                from hermes_cli.auth import AuthError
+                from ciel_cli.auth import AuthError
 
                 raise AuthError("no key")
             return {**_RUNTIME, "provider": "openrouter"}
@@ -202,7 +202,7 @@ class TestMissingProviderKeyBlocks:
         def resolve(**kwargs):
             calls.append(kwargs.get("requested"))
             if kwargs.get("requested") == "anthropic":
-                from hermes_cli.auth import AuthError
+                from ciel_cli.auth import AuthError
 
                 raise AuthError("no key")
             return {**_RUNTIME, "provider": kwargs.get("requested")}
@@ -269,13 +269,13 @@ class TestOptOut:
             fake_db = MagicMock()
             for _tick in range(2):
                 fresh = next(j for j in cron_jobs.load_jobs() if j["id"] == job["id"])
-                with patch("cron.scheduler._hermes_home", tmp_path), \
+                with patch("cron.scheduler._ciel_home", tmp_path), \
                      patch("cron.scheduler_delivery._resolve_origin", return_value=None), \
-                     patch("hermes_cli.env_loader.load_hermes_dotenv"), \
-                     patch("hermes_cli.env_loader.reset_secret_source_cache"), \
-                     patch("hermes_state_registry.acquire", return_value=fake_db), \
+                     patch("ciel_cli.env_loader.load_ciel_dotenv"), \
+                     patch("ciel_cli.env_loader.reset_secret_source_cache"), \
+                     patch("ciel_state_registry.acquire", return_value=fake_db), \
                      patch("tools.mcp_tool_discovery.discover_mcp_tools", return_value=[]), \
-                     patch("hermes_cli.runtime_provider.resolve_runtime_provider",
+                     patch("ciel_cli.runtime_provider.resolve_runtime_provider",
                            side_effect=_AuthErrorFactory()), \
                      patch.object(sched, "_deliver_result", side_effect=fake_deliver), \
                      patch("run_agent.AIAgent") as mock_agent_cls:

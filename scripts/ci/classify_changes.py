@@ -100,8 +100,8 @@ _PY_SKIP = ("docs/", "website/") + _FRONTEND
 # Python lane — otherwise dropping a redirect URI goes green here and breaks
 # every CIMD login on main.
 # website/docs/ and website/scripts/ are asserted about the same way. The docs
-# tree generates llms.txt — the index every LLM (Hermes included, via the
-# hermes-agent skill) reads to learn what Hermes can do — and
+# tree generates llms.txt — the index every LLM (Ciel included, via the
+# ciel-agent skill) reads to learn what Ciel can do — and
 # tests/website/test_generate_llms_txt.py holds every page to appearing in it.
 # Skipping Python on a docs-only PR is how the index drifted to 53% coverage.
 _PY_RELEVANT_SITE = (
@@ -117,7 +117,7 @@ _PY_RELEVANT_CONTRACT_FILES = {
     # tests/tui_gateway/contracts/test_generated.py (rendered from tui_gateway/contracts)
     "apps/shared/src/gateway-contract.generated.ts",
     "apps/shared/src/gateway-contract.openrpc.json",
-    # tests/hermes_cli/test_desktop_slash_registry.py
+    # tests/ciel_cli/test_desktop_slash_registry.py
     "apps/desktop/src/lib/desktop-slash-registry.json",
     # tests/tui_gateway/test_show_reasoning_display_gate.py (card-tool names vs the gateway lifecycle set)
     "apps/desktop/src/lib/tool-render-class.ts",
@@ -134,7 +134,7 @@ _SCAN_FILES = {"setup.cfg", "pyproject.toml"}
 # (the .rs/Cargo files are the ``rust`` lane's job). Changes here get the
 # bootstrap-installer.yml lane — a real sandboxed install + stamp check.
 _BOOTSTRAP_PATHS = ("apps/bootstrap-installer/",)
-_BOOTSTRAP_FILES = {"scripts/install.sh", "setup-hermes.sh"}
+_BOOTSTRAP_FILES = {"scripts/install.sh", "setup-ciel.sh"}
 # Windows desktop-update hand-off (scripts/desktop-update/windows.ps1 + the
 # Electron side that launches it) and the pytest files that spawn it.
 # tests/_fixtures/ holds the conftest's platform gating, so it re-arms the lane too.
@@ -153,8 +153,8 @@ _DESKTOP_UPDATER_FILES = {
     "apps/desktop/electron/remote-update-marker-programs.ts",
     "apps/desktop/electron/remote-update-marker-programs.test.ts",
     # Python the script runs: the post-update verify and the staged app swap.
-    "hermes_cli/desktop_update_verify.py",
-    "hermes_cli/main_desktop.py",
+    "ciel_cli/desktop_update_verify.py",
+    "ciel_cli/main_desktop.py",
     "tests/conftest.py",
     "pyproject.toml",
 }
@@ -168,7 +168,7 @@ _DESKTOP_UPDATER_FILES = {
 _SHARED_FIXTURE_CONSUMERS: dict[str, tuple[str, ...]] = {
     # A7 rule 7: the update-marker parse / judge / release corpus.
     "tests/fixtures/update_marker_corpus.json": (
-        "tests/hermes_cli/test_update_marker_corpus.py",  # Python: update_lock
+        "tests/ciel_cli/test_update_marker_corpus.py",  # Python: update_lock
         "apps/bootstrap-installer/src-tauri/src/marker_tests.rs",  # Rust: cargo test
         "apps/desktop/electron/update-marker-corpus.test.ts",  # Electron: vitest
         "tests/scripts/desktop_update/test_desktop_update_posix_marker_corpus.py",  # marker.sh
@@ -182,7 +182,7 @@ _SHARED_FIXTURE_CONSUMERS: dict[str, tuple[str, ...]] = {
 # electron/update-* starts the Desktop update E2E, which never reads the corpus).
 _FIXTURE_CONSUMER_LANES = ("python", "rust", "frontend", "desktop_updater")
 
-# Rust crates — currently just the Tauri bootstrap installer (Hermes-Setup).
+# Rust crates — currently just the Tauri bootstrap installer (Ciel-Setup).
 # These live under ``apps/``, so before this lane existed a ``.rs`` edit matched
 # ``frontend`` and nothing more: the TypeScript matrix built, cargo never ran,
 # and the crate's unit tests had never executed in CI at all.
@@ -233,41 +233,41 @@ _DESKTOP_E2E_SHARED = (
 # The Tauri updater (update.rs, its marker claim marker.rs, the paths.rs both resolve) is
 # compiled and tested by ``cargo test`` alone (the ``rust`` lane, via ``.rs``): no slow lane
 # builds the bootstrap installer, so none of the three starts one.
-# What `hermes update` runs outside the update_* module family: the steps of the
+# What `ciel update` runs outside the update_* module family: the steps of the
 # pipeline (entry, lock, early recovery, completion tail, launchers, fleet
 # restart/verify, Windows pause/resume) and the lock / marker / recovery state
 # the update_* modules import. Editing any of these changes what a real update
 # does, so the real-update suites (Linux e2e-upgrade and the Windows
 # install + update journey, including its crash cells) must run on the PR.
 _UPDATE_PIPELINE = (
-    "hermes_cli/main.py",  # cmd_update: lock, pre-update backup, receipt boundary
-    "hermes_cli/main_dashboard.py",  # hangup protection + update.log mirror
+    "ciel_cli/main.py",  # cmd_update: lock, pre-update backup, receipt boundary
+    "ciel_cli/main_dashboard.py",  # hangup protection + update.log mirror
     # Prefix: main_desktop.py (staged Desktop swap / rebuild in the tail) and the
     # main_desktop_* siblings it imports (macOS signing identity).
-    "hermes_cli/main_desktop",
+    "ciel_cli/main_desktop",
     # Prefix: _early_recovery.py and its _early_recovery_* siblings (ZIP swap journal).
-    "hermes_cli/_early_recovery",  # interrupted pull / shim restore at launch
-    "hermes_cli/venv_sync.py",  # completion obligation + launch-time tail
-    "hermes_cli/source_",  # source_completion/_build/_releases/_check/_stamp
-    "hermes_cli/_launchers.py",
-    "hermes_cli/release_channels.py",
-    "hermes_cli/gitlock.py",  # git self-heal + partial-clone fetch
-    "hermes_cli/process_identity.py",  # marker owner liveness
-    "hermes_cli/runtime_state.py",
-    "hermes_cli/relaunch.py",
-    "hermes_cli/managed_uv.py",
-    "hermes_cli/npm_engine.py",
-    "hermes_cli/_scan_venv_blockers.py",
-    "hermes_cli/dashboard_procs.py",
-    "hermes_cli/desktop_update",  # desktop_update_verify
-    "hermes_cli/gateway.py",  # fleet restart / verify
-    "hermes_cli/gateway_windows",  # Windows pause / resume
-    "hermes_cli/gateway_launchd.py",
-    "hermes_cli/gateway_migrate",
-    "hermes_cli/gateway_supervised_restart.py",
-    "hermes_cli/git_pack_tidy.py",  # partial-clone pack tidy: every update's pre-fetch runs it
-    "hermes_bootstrap.py",  # every launch's prepare_launch
-    "hermes_constants.py",  # root home = update marker location
+    "ciel_cli/_early_recovery",  # interrupted pull / shim restore at launch
+    "ciel_cli/venv_sync.py",  # completion obligation + launch-time tail
+    "ciel_cli/source_",  # source_completion/_build/_releases/_check/_stamp
+    "ciel_cli/_launchers.py",
+    "ciel_cli/release_channels.py",
+    "ciel_cli/gitlock.py",  # git self-heal + partial-clone fetch
+    "ciel_cli/process_identity.py",  # marker owner liveness
+    "ciel_cli/runtime_state.py",
+    "ciel_cli/relaunch.py",
+    "ciel_cli/managed_uv.py",
+    "ciel_cli/npm_engine.py",
+    "ciel_cli/_scan_venv_blockers.py",
+    "ciel_cli/dashboard_procs.py",
+    "ciel_cli/desktop_update",  # desktop_update_verify
+    "ciel_cli/gateway.py",  # fleet restart / verify
+    "ciel_cli/gateway_windows",  # Windows pause / resume
+    "ciel_cli/gateway_launchd.py",
+    "ciel_cli/gateway_migrate",
+    "ciel_cli/gateway_supervised_restart.py",
+    "ciel_cli/git_pack_tidy.py",  # partial-clone pack tidy: every update's pre-fetch runs it
+    "ciel_bootstrap.py",  # every launch's prepare_launch
+    "ciel_constants.py",  # root home = update marker location
     "gateway/status.py",  # code_sha stamp the fleet verify reads
     "gateway/status_inline_source.py",  # the Windows pause identifies inline-bootstrapped gateways
     "gateway/control_socket.py",  # pause-for-update verb
@@ -275,41 +275,41 @@ _UPDATE_PIPELINE = (
     "gateway/host_rendezvous.py",
     "gateway/shutdown_forensics.py",
     "gateway/restart.py",
-    "scripts/desktop-update/",  # the hand-off scripts run `hermes update`
+    "scripts/desktop-update/",  # the hand-off scripts run `ciel update`
 )
 # Selectors are owned by the import graph, not remembered. The update
-# transaction's own modules (what `hermes update` and the launch-time completion
+# transaction's own modules (what `ciel update` and the launch-time completion
 # run between the lock and the receipt) are the entry points;
 # tests/ci/test_update_ci_routing.py reads every repo module they import (AST,
 # module level and lazy) and every build script they run, and fails until each
 # one is routed to the suite below or is a _SHARED_HUBS entry.
 _UPDATE_ENTRY_POINTS = (
-    "hermes_cli/update_",
-    "hermes_cli/_update_",
-    "hermes_cli/source_",
-    "hermes_cli/old_updater",
-    "hermes_cli/_old_updater",
-    "hermes_cli/post_update",
-    "hermes_cli/venv_sync.py",
-    "hermes_cli/_early_recovery",
-    "hermes_cli/main_desktop.py",
-    "hermes_cli/desktop_update_verify.py",
-    "hermes_cli/desktop_build_lock.py",
-    "hermes_cli/subcommands/update",
+    "ciel_cli/update_",
+    "ciel_cli/_update_",
+    "ciel_cli/source_",
+    "ciel_cli/old_updater",
+    "ciel_cli/_old_updater",
+    "ciel_cli/post_update",
+    "ciel_cli/venv_sync.py",
+    "ciel_cli/_early_recovery",
+    "ciel_cli/main_desktop.py",
+    "ciel_cli/desktop_update_verify.py",
+    "ciel_cli/desktop_build_lock.py",
+    "ciel_cli/subcommands/update",
 )
 # The entry points that build or verify the Desktop app inside an update
-# (`hermes desktop --build-only`, the source build/completion that feeds it).
+# (`ciel desktop --build-only`, the source build/completion that feeds it).
 _DESKTOP_BUILD_ENTRY_POINTS = (
-    "hermes_cli/source_build.py",
-    "hermes_cli/source_completion.py",
-    "hermes_cli/main_desktop.py",
-    "hermes_cli/desktop_update_verify.py",
-    "hermes_cli/desktop_build_lock.py",
+    "ciel_cli/source_build.py",
+    "ciel_cli/source_completion.py",
+    "ciel_cli/main_desktop.py",
+    "ciel_cli/desktop_update_verify.py",
+    "ciel_cli/desktop_build_lock.py",
 )
 # What the entry points import, outside the update_* family and the pipeline above.
 _UPDATE_DEPENDENCIES = (
-    "hermes_cli/_subprocess_compat.py",  # update git env, process-tree kill, PM git exposure
-    "hermes_cli/local_runtime/processes.py",  # bounded probes' spawn_server/job custody
+    "ciel_cli/_subprocess_compat.py",  # update git env, process-tree kill, PM git exposure
+    "ciel_cli/local_runtime/processes.py",  # bounded probes' spawn_server/job custody
     "agent/deadline.py",  # bounded probes' process-tree timeout cleanup
     # migrate_all_homes' second-hop provider/profile decisions, run on every update. Its
     # plugin-install branch (plugins_cmd, plugins_cmd_install) runs only for a home whose
@@ -318,39 +318,39 @@ _UPDATE_DEPENDENCIES = (
     "agent/memory_provider.py",
     "pm/plugins_state.py",
     "pm/install.py",  # also sealed()/lazy_installs_allowed(): every update's default-tool install
-    "hermes_cli/desktop_build_lock.py",
-    "hermes_cli/memory_provider_migration.py",
-    "hermes_cli/left_core_migration.py",  # source_build migrates plugins that left core
-    "hermes_cli/web_build_limits.py",  # source_build caps the dashboard Node build
-    "hermes_cli/desktop_console.py",
-    "hermes_cli/bundled_app.py",
-    "hermes_cli/gui_uninstall.py",
-    "hermes_cli/linux_desktop_entry.py",
-    "hermes_cli/github_api.py",  # source_check's release lookup
-    "hermes_cli/build_info.py",
-    "hermes_cli/image_provenance.py",
-    "hermes_cli/backup.py",  # pre-update backup
-    "hermes_cli/backup_restore.py",
-    "hermes_cli/relay_plugin_migrate.py",
-    "hermes_cli/macos_tcc_anchor.py",
-    "hermes_cli/model_catalog.py",
-    "hermes_cli/sqlite_runtime.py",
-    "hermes_cli/sqlite_safe_read.py",
-    "hermes_cli/sizefmt.py",
-    "hermes_cli/tools_config_cua.py",
-    "hermes_cli/_startup_fast.py",
-    "hermes_cli/_parser.py",
-    "hermes_cli/gateway_multiplex_mode.py",
-    "hermes_cli/plugin_catalog.py",
-    "hermes_cli/steward.py",
-    "hermes_cli/observability/shared_metrics_update.py",
-    "hermes_cli/main_install_repair.py",
-    "hermes_logging.py",
-    "hermes_platform/host/__init__.py",
-    "hermes_platform/host/facts.py",
-    "hermes_platform/resolver/__init__.py",  # update_cmd_commit's interpreter lookup
-    "hermes_platform/resolver/base.py",
-    "hermes_platform/resolver/core.py",
+    "ciel_cli/desktop_build_lock.py",
+    "ciel_cli/memory_provider_migration.py",
+    "ciel_cli/left_core_migration.py",  # source_build migrates plugins that left core
+    "ciel_cli/web_build_limits.py",  # source_build caps the dashboard Node build
+    "ciel_cli/desktop_console.py",
+    "ciel_cli/bundled_app.py",
+    "ciel_cli/gui_uninstall.py",
+    "ciel_cli/linux_desktop_entry.py",
+    "ciel_cli/github_api.py",  # source_check's release lookup
+    "ciel_cli/build_info.py",
+    "ciel_cli/image_provenance.py",
+    "ciel_cli/backup.py",  # pre-update backup
+    "ciel_cli/backup_restore.py",
+    "ciel_cli/relay_plugin_migrate.py",
+    "ciel_cli/macos_tcc_anchor.py",
+    "ciel_cli/model_catalog.py",
+    "ciel_cli/sqlite_runtime.py",
+    "ciel_cli/sqlite_safe_read.py",
+    "ciel_cli/sizefmt.py",
+    "ciel_cli/tools_config_cua.py",
+    "ciel_cli/_startup_fast.py",
+    "ciel_cli/_parser.py",
+    "ciel_cli/gateway_multiplex_mode.py",
+    "ciel_cli/plugin_catalog.py",
+    "ciel_cli/steward.py",
+    "ciel_cli/observability/shared_metrics_update.py",
+    "ciel_cli/main_install_repair.py",
+    "ciel_logging.py",
+    "ciel_platform/host/__init__.py",
+    "ciel_platform/host/facts.py",
+    "ciel_platform/resolver/__init__.py",  # update_cmd_commit's interpreter lookup
+    "ciel_platform/resolver/base.py",
+    "ciel_platform/resolver/core.py",
     "agent/curator.py",
     "plugins/memory/__init__.py",
     "tools/checkpoint_maintenance.py",
@@ -368,17 +368,17 @@ _UPDATE_DEPENDENCIES = (
 # them run on most PRs. Never an update-specific module: own those above.
 HUB_MIN_IMPORTERS = 25
 _SHARED_HUBS = frozenset({
-    "hermes_cli/__init__.py",
-    "hermes_cli/config.py",
-    "hermes_cli/profiles.py",
-    "hermes_cli/version_info.py",
+    "ciel_cli/__init__.py",
+    "ciel_cli/config.py",
+    "ciel_cli/profiles.py",
+    "ciel_cli/version_info.py",
     "utils.py",
-    "hermes_state.py",
+    "ciel_state.py",
     "agent/__init__.py",
     "cron/jobs.py",
     "tools/environments/local.py",
     # Desktop lane only (the upgrade lane owns these outright):
-    "hermes_constants.py",
+    "ciel_constants.py",
     "gateway/status.py",
     "pm/__init__.py",
     "pm/paths.py",
@@ -390,7 +390,7 @@ _E2E_LANES: dict[str, tuple[str, ...]] = {
         "tests/e2e/",
         # The state.db torture chamber and the compaction/exactly-once
         # suites are the only tests that run real concurrent writers.
-        "hermes_state",
+        "ciel_state",
     ),
     "e2e_upgrade": (
         *_PY_TEST_HARNESS,
@@ -400,17 +400,17 @@ _E2E_LANES: dict[str, tuple[str, ...]] = {
         "tests/compat/",
         "pm/",
         "scripts/install.",
-        "setup-hermes.sh",
-        "hermes_cli/update_",
-        "hermes_cli/_update_",
-        "hermes_cli/old_updater",
-        "hermes_cli/_old_updater",
-        "hermes_cli/post_update",
-        "hermes_cli/config_migrations",
-        "hermes_cli/subcommands/update",
-        "hermes_cli/install_",
-        "hermes_cli/_install_",
-        "hermes_cli/main_install",
+        "setup-ciel.sh",
+        "ciel_cli/update_",
+        "ciel_cli/_update_",
+        "ciel_cli/old_updater",
+        "ciel_cli/_old_updater",
+        "ciel_cli/post_update",
+        "ciel_cli/config_migrations",
+        "ciel_cli/subcommands/update",
+        "ciel_cli/install_",
+        "ciel_cli/_install_",
+        "ciel_cli/main_install",
         *_UPDATE_PIPELINE,
         *_UPDATE_ENTRY_POINTS,
         *_UPDATE_DEPENDENCIES,
@@ -452,22 +452,22 @@ _E2E_LANES: dict[str, tuple[str, ...]] = {
         "apps/desktop/electron/app-installer-file",
         "scripts/desktop-update/",
         "scripts/install.sh",
-        "hermes_cli/update_",
-        "hermes_cli/main_desktop",  # the entry point and the main_desktop_* siblings it imports
+        "ciel_cli/update_",
+        "ciel_cli/main_desktop",  # the entry point and the main_desktop_* siblings it imports
         *_DESKTOP_BUILD_ENTRY_POINTS,
         *_UPDATE_DEPENDENCIES,
         # Pipeline modules the Desktop build entry points import directly.
-        "hermes_cli/main.py",  # `hermes desktop --build-only`
-        "hermes_cli/venv_sync.py",
-        "hermes_cli/source_stamp.py",
+        "ciel_cli/main.py",  # `ciel desktop --build-only`
+        "ciel_cli/venv_sync.py",
+        "ciel_cli/source_stamp.py",
         # Imported by the Desktop build's scripts (scripts/build/desktop.mjs closure).
         "apps/desktop/product-identity.cjs",
         "scripts/msix-shared.mjs",
         # The launchers the Desktop relaunches through reach the launch-time repair first.
-        "hermes_cli/_launchers.py",
+        "ciel_cli/_launchers.py",
         # The backend's /api/health `commit`, which host-backend-attach compares to the
         # checkout before attaching to a running backend after an update.
-        "hermes_cli/web_routers/status.py",
+        "ciel_cli/web_routers/status.py",
     ),
 }
 
@@ -523,7 +523,7 @@ def _py_irrelevant(p: str) -> bool:
 def _py_test_only(p: str) -> bool:
     """Is ``p`` inside the test suite (never shipped / imported by the product)?
 
-    Product jobs (Desktop E2E's ``hermes serve`` backend, the Docker image)
+    Product jobs (Desktop E2E's ``ciel serve`` backend, the Docker image)
     run installed code — nothing under ``tests/`` is packaged or importable
     there. scripts/run_tests.sh and scripts/run_tests_parallel.py are deliberately
     NOT test-only: they are runner infrastructure, and a bad edit there can

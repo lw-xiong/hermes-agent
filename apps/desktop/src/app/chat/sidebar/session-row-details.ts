@@ -1,5 +1,5 @@
 import type { SessionListDensity } from '@/store/session-list-density'
-import type { SessionInfo } from '@/types/hermes'
+import type { SessionInfo } from '@/types/ciel'
 
 export interface SessionRowDetails {
   metadata: string

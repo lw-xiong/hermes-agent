@@ -79,5 +79,5 @@ def test_copilot_reasoning_and_function_signature_reach_only_copilot():
             base_url=base_url)[0]
         assert not {"reasoning_opaque", "reasoning_text", "extra_content"} & other.keys()
         assert "thought_signature" not in other["tool_calls"][0]["function"]
-        assert all(d.get("type") != "hermes.native_assistant" for d in other.get("reasoning_details") or ())
+        assert all(d.get("type") != "ciel.native_assistant" for d in other.get("reasoning_details") or ())
     assert stored == snapshot

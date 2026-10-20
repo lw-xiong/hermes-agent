@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from gateway.platforms._shared import coerce_port as _coerce_int
-from hermes_constants import get_hermes_home
+from ciel_constants import get_ciel_home
 
 PROTOCOL_VERSION = "1.0"
 
@@ -84,7 +84,7 @@ def skills_from_toolsets(toolsets: list[str] | dict[str, list[str]] | None) -> l
     become tags, max 10)."""
     if not isinstance(toolsets, dict):
         toolsets = {ts: [] for ts in set(toolsets or [])}
-    skills = [{"id": f"toolset.{name}", "name": name, "description": f"Hermes '{name}' capabilities",
+    skills = [{"id": f"toolset.{name}", "name": name, "description": f"Ciel '{name}' capabilities",
                "tags": [name] + [str(t) for t in (toolsets[name] or [])][:10]} for name in sorted(toolsets)]
     return skills or [{"id": "general", "name": "general", "description": "General-purpose conversational agent", "tags": ["general"]}]
 
@@ -432,7 +432,7 @@ class TaskStore:
 
 def _conv_path(context_id: str) -> Path:
     safe = "".join(c for c in (context_id or "default") if c.isalnum() or c in "-_") or "default"
-    return get_hermes_home() / "a2a_conversations" / f"{safe}.jsonl"
+    return get_ciel_home() / "a2a_conversations" / f"{safe}.jsonl"
 
 
 def persist_message(context_id: str, role: str, text: str, task_id: str = "") -> None:
@@ -466,4 +466,4 @@ def load_conversation(context_id: str, limit: int = 50) -> list[dict]:
 
 def list_conversations() -> list[str]:
     """Context-ids that have persisted conversations."""
-    return sorted(p.stem for p in (get_hermes_home() / "a2a_conversations").glob("*.jsonl"))
+    return sorted(p.stem for p in (get_ciel_home() / "a2a_conversations").glob("*.jsonl"))

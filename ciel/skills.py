@@ -19,5 +19,5 @@ CIEL_SKILL_POLICY = (
     "5) Scope first: repo trees (skills/, optional-skills/) and plugins are overwritten by updates — only "
     "the user-local tree is yours to shape. Never merge skills with disjoint platforms:; never build "
     "router or hub skills. A delete is irreversible in the personal tree — copy to "
-    "~/.hermes/cache/scratch/skill-backup-<name>/ when unsure."
+    "~/.ciel/cache/scratch/skill-backup-<name>/ when unsure."
 )

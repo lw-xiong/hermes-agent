@@ -1,4 +1,4 @@
-#!/usr/bin/env -S bash -c 'exec "$BASH" "$(dirname "$0")/run-in-hermes-env" python3 "$0" "$@"'
+#!/usr/bin/env -S bash -c 'exec "$BASH" "$(dirname "$0")/run-in-ciel-env" python3 "$0" "$@"'
 """Ciel release entrypoint.
 
 Stable releases use the ``release``, ``publish``, and ``abandon`` subcommands.
@@ -18,11 +18,11 @@ from datetime import datetime, timedelta, timezone, UTC
 from pathlib import Path
 
 # Bootstrap the repo root onto sys.path so this script can import the
-# canary-tag authority from hermes_cli.update_channel (hermes_cli/__init__.py
+# canary-tag authority from ciel_cli.update_channel (ciel_cli/__init__.py
 # is import-light: only os/sys + version constants).
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from hermes_cli.update_channel import (
+from ciel_cli.update_channel import (
     _CANARY_TAG_RE, STABLE_TAG_RE, canary_tag_for_date, canary_timestamp,
     is_canary_tag,
 )
@@ -160,7 +160,7 @@ def remote_github_repo(remote: str) -> str | None:
 
 
 # Stable tags are matched with STABLE_TAG_RE and canary tags
-# with _CANARY_TAG_RE, both imported from hermes_cli.update_channel — the
+# with _CANARY_TAG_RE, both imported from ciel_cli.update_channel — the
 # single authority for both tag shapes (the stable major is capped at three
 # digits so historical CalVer tags like v2026.7.20 never match; the canary
 # identity is the exact stable core plus full UTC build metadata.
@@ -231,7 +231,7 @@ def parse_coauthors(body: str) -> list:
         return []
     # AI/bot emails to ignore in co-author trailers
     _ignored_emails = {"noreply@anthropic.com", "noreply@github.com",
-                       "cursoragent@cursor.com", "hermes@nousresearch.com"}
+                       "cursoragent@cursor.com", "ciel@nousresearch.com"}
     _ignored_names = re.compile(r"^(Claude|Copilot|Cursor Agent|GitHub Actions?|dependabot|renovate)", re.IGNORECASE)
     pattern = re.compile(r"Co-authored-by:\s*(.+?)\s*<([^>]+)>", re.IGNORECASE)
     results = []
@@ -324,7 +324,7 @@ def generate_changelog(commits, tag_name, semver, repo_url="https://github.com/N
     # ones; the release body links point at the R2 public URL). A release
     # whose matrix never finishes keeps the link — visibly unfinished,
     # and it points at the run that stopped.
-    lines.append("<!-- HERMES_BUILDS_TABLE -->")
+    lines.append("<!-- CIEL_BUILDS_TABLE -->")
     lines.append("")
 
     if first_release:

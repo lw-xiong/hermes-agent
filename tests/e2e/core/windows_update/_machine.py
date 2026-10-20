@@ -1,16 +1,16 @@
-"""A fresh Windows machine for the PR-time install.ps1 -> ``hermes update`` suite.
+"""A fresh Windows machine for the PR-time install.ps1 -> ``ciel update`` suite.
 
 Every file here drives the REAL user entry points on a real Windows runner:
 
 * ``scripts/install.ps1 -NonInteractive`` (this checkout's script, run as a file from a
   directory that is not a project, like a user who downloaded it);
-* the ``hermes.exe`` it publishes in ``%LOCALAPPDATA%\\hermes\\bin`` for every later
+* the ``ciel.exe`` it publishes in ``%LOCALAPPDATA%\\ciel\\bin`` for every later
   command (``--version``, one-shot turns, ``gateway run/status/stop``, ``update``);
-* ``hermes update --yes`` from HEAD to NEXT, a synthetic child of HEAD.
+* ``ciel update --yes`` from HEAD to NEXT, a synthetic child of HEAD.
 
 Only external edges are replaced (tests/install/README.md, "The isolation trick"):
 
-* git: a bare clone of this checkout (``serve.git``) answers every canonical Hermes URL via
+* git: a bare clone of this checkout (``serve.git``) answers every canonical Ciel URL via
   ``url.<file>.insteadOf`` in a machine-owned ``GIT_CONFIG_GLOBAL``. ``serve.git`` allows
   filtered fetches, so the installer's ``--filter=blob:none`` clone is a real partial clone,
   as it is against GitHub. Every ``git.exe`` directory is removed from PATH, so the
@@ -21,9 +21,9 @@ Tool and dependency downloads (uv, the managed Python, wheels, Node) use the net
 exactly like the real installer.
 
 Each machine is a fake user profile: ``USERPROFILE``/``HOME``/``LOCALAPPDATA``/``APPDATA``
-point inside it and ``HERMES_HOME`` is NOT set, so the installer and every ``hermes``
-command resolve the default ``%LOCALAPPDATA%\\hermes`` the way a real user's do. CI
-puts the profiles in ``C:\\Users`` itself (``HERMES_E2E_PROFILES_ROOT``): the checkout
+point inside it and ``CIEL_HOME`` is NOT set, so the installer and every ``ciel``
+command resolve the default ``%LOCALAPPDATA%\\ciel`` the way a real user's do. CI
+puts the profiles in ``C:\\Users`` itself (``CIEL_E2E_PROFILES_ROOT``): the checkout
 carries 159-character paths, so a profile any deeper than a real one would hit MAX_PATH
 where no user does. The installer also prepends its bin dir to the user PATH in HKCU;
 the machine restores that value on teardown.
@@ -34,7 +34,7 @@ everything else stay parallel. One install's update sparing another's gateway (#
 its own journey (test_update_spares_other_installs.py).
 
 The suite mutates HKCU and downloads a toolchain per machine, so it only runs where
-``HERMES_E2E_WINDOWS_INSTALL=1`` (the CI job sets it).
+``CIEL_E2E_WINDOWS_INSTALL=1`` (the CI job sets it).
 """
 
 from __future__ import annotations
@@ -63,10 +63,10 @@ from tests.e2e.core.windows._helpers import (
     kill_tree,
     wait_until,
 )
-from tests.fakes.fake_llm_provider import write_hermes_home
+from tests.fakes.fake_llm_provider import write_ciel_home
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-OPT_IN_ENV = "HERMES_E2E_WINDOWS_INSTALL"
+OPT_IN_ENV = "CIEL_E2E_WINDOWS_INSTALL"
 INSTALL_TIMEOUT = 1500.0
 UPDATE_TIMEOUT = 1200.0
 CMD_TIMEOUT = 300.0
@@ -76,7 +76,7 @@ CANONICAL_URLS = (
     "https://github.com/NousResearch/hermes-agent",
     "git@github.com:NousResearch/hermes-agent.git",
 )
-NEXT_MARKER = ".hermes-e2e-next"
+NEXT_MARKER = ".ciel-e2e-next"
 # Captured before any machine strips PATH: harness plumbing (serve.git, rev-parse) only.
 REAL_GIT = shutil.which("git")
 
@@ -169,16 +169,16 @@ class Machine:
         return self.profile / "AppData" / "Local"
 
     @property
-    def hermes_home(self) -> Path:
-        return self.local / "hermes"
+    def ciel_home(self) -> Path:
+        return self.local / "ciel"
 
     @property
     def install_dir(self) -> Path:
-        return self.hermes_home / "hermes-agent"
+        return self.ciel_home / "ciel-agent"
 
     @property
-    def hermes_exe(self) -> Path:
-        return self.hermes_home / "bin" / "hermes.exe"
+    def ciel_exe(self) -> Path:
+        return self.ciel_home / "bin" / "ciel.exe"
 
     @property
     def serve(self) -> Path:
@@ -209,7 +209,7 @@ class Machine:
             "GIT_CONFIG_GLOBAL": str(self.root / "e2e-gitconfig"),
             "NO_COLOR": "1",
             # state.db lives under tmp; under a pytest ancestor the live-DB guard would refuse it.
-            "HERMES_STATE_DB_GUARD_BYPASS": "1",
+            "CIEL_STATE_DB_GUARD_BYPASS": "1",
         })
         env.update(extra or {})
         return env
@@ -231,12 +231,12 @@ class Machine:
         (self.root / "e2e-gitconfig").write_text(f'[url "{file_url}"]\n{rewrites}', encoding="utf-8")
         # What the user's config would hold after choosing a provider: the loopback mock.
         # install.ps1 keeps an existing config.yaml/.env.
-        write_hermes_home(self.hermes_home, self.base_url)
-        with (self.hermes_home / "config.yaml").open("a", encoding="utf-8") as fh:
+        write_ciel_home(self.ciel_home, self.base_url)
+        with (self.ciel_home / "config.yaml").open("a", encoding="utf-8") as fh:
             fh.write("display:\n  compact: true\n")
         # insteadOf rewrites `remote get-url origin` too, so the updater would see a fork and
         # ask to add the official upstream; this is the product's own headless opt-out.
-        (self.hermes_home / ".skip_upstream_prompt").write_text("", encoding="utf-8")
+        (self.ciel_home / ".skip_upstream_prompt").write_text("", encoding="utf-8")
         self._hkcu = _hkcu_path()
 
     def _mint_next(self) -> str:
@@ -247,8 +247,8 @@ class Machine:
         blob = harness_git("-C", str(self.serve), "hash-object", "-w", "--no-filters", str(blob_src))
         index = self.root / "next.index"
         env = {"GIT_INDEX_FILE": str(index),
-               "GIT_AUTHOR_NAME": "Hermes E2E", "GIT_AUTHOR_EMAIL": "e2e@hermes.invalid",
-               "GIT_COMMITTER_NAME": "Hermes E2E", "GIT_COMMITTER_EMAIL": "e2e@hermes.invalid"}
+               "GIT_AUTHOR_NAME": "Ciel E2E", "GIT_AUTHOR_EMAIL": "e2e@ciel.invalid",
+               "GIT_COMMITTER_NAME": "Ciel E2E", "GIT_COMMITTER_EMAIL": "e2e@ciel.invalid"}
         harness_git("-C", str(self.serve), "read-tree", self.head, env=env)
         for path in (NEXT_MARKER, f"tests/e2e/{NEXT_MARKER}"):
             harness_git("-C", str(self.serve), "update-index", "--add", "--cacheinfo",
@@ -263,7 +263,7 @@ class Machine:
         harness_git("-C", str(self.serve), "update-ref", "refs/heads/main", self.next)
 
     def mint(self, parent: str, tag: str, runtime_files: tuple[str, ...] = ()) -> str:
-        """A child of ``parent`` in serve.git adding ``.hermes-e2e-<tag>`` (unpublished).
+        """A child of ``parent`` in serve.git adding ``.ciel-e2e-<tag>`` (unpublished).
 
         ``runtime_files`` (repo paths of modules every launch imports) each gain one harmless
         statement naming ``tag``, so a checkout torn between ``parent`` and the child differs
@@ -273,11 +273,11 @@ class Machine:
         blob = harness_git("-C", str(self.serve), "hash-object", "-w", "--no-filters", str(blob_src))
         index = self.root / f"{tag}.index"
         env = {"GIT_INDEX_FILE": str(index),
-               "GIT_AUTHOR_NAME": "Hermes E2E", "GIT_AUTHOR_EMAIL": "e2e@hermes.invalid",
-               "GIT_COMMITTER_NAME": "Hermes E2E", "GIT_COMMITTER_EMAIL": "e2e@hermes.invalid"}
+               "GIT_AUTHOR_NAME": "Ciel E2E", "GIT_AUTHOR_EMAIL": "e2e@ciel.invalid",
+               "GIT_COMMITTER_NAME": "Ciel E2E", "GIT_COMMITTER_EMAIL": "e2e@ciel.invalid"}
         harness_git("-C", str(self.serve), "read-tree", parent, env=env)
         harness_git("-C", str(self.serve), "update-index", "--add", "--cacheinfo",
-                    f"100644,{blob},.hermes-e2e-{tag}", env=env)
+                    f"100644,{blob},.ciel-e2e-{tag}", env=env)
         for n, rel in enumerate(runtime_files):
             mode = harness_git("-C", str(self.serve), "ls-tree", parent, "--", rel).split(" ", 1)[0]
             old = subprocess.run([REAL_GIT, "-C", str(self.serve), "cat-file", "blob", f"{parent}:{rel}"],
@@ -370,22 +370,22 @@ class Machine:
         run = self._run_logged(
             ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script), "-NonInteractive"],
             "install", timeout=INSTALL_TIMEOUT, cwd=cwd)
-        if run.returncode == 0 and self.hermes_exe.is_file():
+        if run.returncode == 0 and self.ciel_exe.is_file():
             # advance() lands NEXT on main and publishes no release: follow main, not the stable
             # default an official-origin checkout gets (channel resolution has its own suites).
-            pin = self.hermes("update", "--set-channel", "main", label="pin-main-channel")
+            pin = self.ciel("update", "--set-channel", "main", label="pin-main-channel")
             assert pin.returncode == 0, f"could not pin the main channel\n{self.evidence()}"
         return run
 
-    def hermes(self, *args: str, label: str | None = None, timeout: float = CMD_TIMEOUT,
+    def ciel(self, *args: str, label: str | None = None, timeout: float = CMD_TIMEOUT,
                env_extra: dict[str, str] | None = None) -> Run:
-        assert self.hermes_exe.is_file(), f"installer published no {self.hermes_exe}\n{self.evidence()}"
-        name = label or "hermes-" + "-".join(a.strip("-") for a in args[:2] if a)
-        return self._run_logged([str(self.hermes_exe), *args], name, timeout=timeout, env_extra=env_extra)
+        assert self.ciel_exe.is_file(), f"installer published no {self.ciel_exe}\n{self.evidence()}"
+        name = label or "ciel-" + "-".join(a.strip("-") for a in args[:2] if a)
+        return self._run_logged([str(self.ciel_exe), *args], name, timeout=timeout, env_extra=env_extra)
 
     def update(self, *extra: str, label: str = "update") -> Run:
         with self.gateway_phase():
-            return self.hermes("update", "--yes", *extra, label=label, timeout=UPDATE_TIMEOUT)
+            return self.ciel("update", "--yes", *extra, label=label, timeout=UPDATE_TIMEOUT)
 
     @contextlib.contextmanager
     def gateway_phase(self):
@@ -400,7 +400,7 @@ class Machine:
             return
         import msvcrt
 
-        lock_dir = Path(os.environ.get("HERMES_E2E_MACHINE_ROOT") or tempfile.gettempdir())
+        lock_dir = Path(os.environ.get("CIEL_E2E_MACHINE_ROOT") or tempfile.gettempdir())
         lock_dir.mkdir(parents=True, exist_ok=True)
         waited = time.monotonic()
         with (lock_dir / "gateway-phase.lock").open("a+b") as fh:
@@ -438,18 +438,18 @@ class Machine:
 
     def gateway_state(self) -> dict:
         try:
-            return json.loads((self.hermes_home / "gateway_state.json").read_text(encoding="utf-8-sig"))
+            return json.loads((self.ciel_home / "gateway_state.json").read_text(encoding="utf-8-sig"))
         except (OSError, ValueError):
             return {}
 
     def spawn_gateway(self, env_extra: dict[str, str] | None = None) -> subprocess.Popen:
-        """``hermes gateway run`` through the published launcher, windowless and detached from
+        """``ciel gateway run`` through the published launcher, windowless and detached from
         this console: the shape the Desktop / login item uses to host a gateway."""
         self._seq += 1
         log = self.logs / f"{self._seq:02d}-gateway-run.log"
         flags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
         with log.open("wb") as fh:
-            proc = subprocess.Popen([str(self.hermes_exe), "gateway", "run"], cwd=self.profile,
+            proc = subprocess.Popen([str(self.ciel_exe), "gateway", "run"], cwd=self.profile,
                                     env=self.env(env_extra), stdin=subprocess.DEVNULL, stdout=fh,
                                     stderr=subprocess.STDOUT, creationflags=flags)
         self._spawned.append(proc)
@@ -475,11 +475,11 @@ class Machine:
     # -- diagnostics ----------------------------------------------------------
 
     def owned_processes(self) -> list[Any]:
-        """Live processes of this machine: exe/cwd/argv under its root, or its HERMES_HOME."""
+        """Live processes of this machine: exe/cwd/argv under its root, or its CIEL_HOME."""
         import psutil
 
         roots = {os.path.normcase(os.path.normpath(str(p))) for p in (self.root, self.profile)}
-        home = os.path.normcase(os.path.normpath(str(self.hermes_home)))
+        home = os.path.normcase(os.path.normpath(str(self.ciel_home)))
         me = os.getpid()
         owned = []
         for proc in psutil.process_iter():
@@ -487,7 +487,7 @@ class Machine:
                 if proc.pid == me or proc.create_time() < self.started - 1.0:
                     continue
                 env = {k.upper(): v for k, v in proc.environ().items()}
-                hh = os.path.normcase(os.path.normpath(env.get("HERMES_HOME", "") or "-"))
+                hh = os.path.normcase(os.path.normpath(env.get("CIEL_HOME", "") or "-"))
                 blob = os.path.normcase(" ".join([proc.exe() or "", proc.cwd() or "", *proc.cmdline()]))
             except (psutil.Error, OSError):
                 continue
@@ -499,12 +499,12 @@ class Machine:
         """Receipts, logs and the process table: what a failure message must carry."""
         parts = [f"machine root: {self.root}", f"profile: {self.profile}", f"HEAD={self.head} NEXT={self.next}",
                  f"installed checkout: {self.installed_head()}", f"timings (s): {self.timings}"]
-        receipt = self.hermes_home / "logs" / "update_receipts" / "latest.json"
+        receipt = self.ciel_home / "logs" / "update_receipts" / "latest.json"
         if receipt.is_file():
             parts.append(self._tail(receipt, 4000))
         parts.append(f"gateway_state.json: {self.gateway_state()}")
-        parts.append(f"gateway.pid present: {(self.hermes_home / 'gateway.pid').exists()}")
-        logs = self.hermes_home / "logs"
+        parts.append(f"gateway.pid present: {(self.ciel_home / 'gateway.pid').exists()}")
+        logs = self.ciel_home / "logs"
         for name in ("gateway.log", "gateway-stdio.log", "errors.log", "agent.log", "update.log",
                      "desktop-update-handoff.log"):
             if (logs / name).is_file():
@@ -528,12 +528,12 @@ class Machine:
             _restore_hkcu_path(self._hkcu)
         except OSError:
             pass
-        artifacts = os.environ.get("HERMES_E2E_ARTIFACTS")
+        artifacts = os.environ.get("CIEL_E2E_ARTIFACTS")
         if artifacts:
             dest = Path(artifacts) / self.root.name
             shutil.copytree(self.logs, dest / "transcripts", dirs_exist_ok=True)
             for sub in ("logs",):
-                src = self.hermes_home / sub
+                src = self.ciel_home / sub
                 if src.is_dir():
                     shutil.copytree(src, dest / sub, dirs_exist_ok=True,
                                     ignore=shutil.ignore_patterns("*.db", "*.db-*"))
@@ -544,12 +544,12 @@ class Machine:
 def new_machine(tmp_root: Path, base_url: str, *, label: str, person: str = "",
                 system_git: bool = False) -> Machine:
     """A staged machine. Its work dir (serve.git, transcripts) lives under
-    ``HERMES_E2E_MACHINE_ROOT`` (else ``tmp_root``); its user profile under
-    ``HERMES_E2E_PROFILES_ROOT`` (CI: ``C:\\Users``), named ``[<person> ]hermes-e2e-<id>``."""
+    ``CIEL_E2E_MACHINE_ROOT`` (else ``tmp_root``); its user profile under
+    ``CIEL_E2E_PROFILES_ROOT`` (CI: ``C:\\Users``), named ``[<person> ]ciel-e2e-<id>``."""
     sfx = uuid.uuid4().hex[:4]
-    base = Path(os.environ.get("HERMES_E2E_MACHINE_ROOT") or tmp_root)
-    profiles = os.environ.get("HERMES_E2E_PROFILES_ROOT")
-    name = f"{person} hermes-e2e-{sfx}" if person else f"hermes-e2e-{sfx}"
+    base = Path(os.environ.get("CIEL_E2E_MACHINE_ROOT") or tmp_root)
+    profiles = os.environ.get("CIEL_E2E_PROFILES_ROOT")
+    name = f"{person} ciel-e2e-{sfx}" if person else f"ciel-e2e-{sfx}"
     machine = Machine(root=base / f"{label}-{sfx}", profile_name=name, base_url=base_url,
                       profiles_root=Path(profiles) if profiles else None, system_git=system_git)
     machine.stage()
@@ -592,7 +592,7 @@ class Journey:
 
 
 def failure_line(run: Run) -> str:
-    """The first line a ``hermes`` command printed as its failure (``✗ ...``), else ``""``."""
+    """The first line a ``ciel`` command printed as its failure (``✗ ...``), else ``""``."""
     for line in run.stdout.splitlines():
         if line.strip().startswith("✗"):
             return line.strip()
@@ -619,20 +619,20 @@ class Turn:
 
 
 def one_shot_turn(machine: Machine, srv: Any, label: str) -> Turn:
-    """``hermes chat -q ... -Q`` through the published launcher against the loopback provider."""
+    """``ciel chat -q ... -Q`` through the published launcher against the loopback provider."""
     from tests.e2e.core.windows._helpers import last_user
     from tests.fakes.fake_llm_provider import Text
 
     prompt_id, reply_id = f"PROMPT-{uuid.uuid4().hex[:8]}", f"REPLY-{uuid.uuid4().hex[:8]}"
     before = len(srv.main_requests())
     srv.push(Text(f"The answer is {reply_id}."))
-    res = machine.hermes("chat", "-q", f"Say the code {prompt_id}", "-Q", label=label)
+    res = machine.ciel("chat", "-q", f"Say the code {prompt_id}", "-Q", label=label)
     wired = any(prompt_id in last_user(body) for body in srv.main_requests()[before:])
     return Turn(res, reply_id, wired)
 
 
 # Printed only when a launch detours through source-update completion instead of running
-# the requested command (hermes_cli/venv_sync.py, hermes_cli/source_build.py, update_cmd).
+# the requested command (ciel_cli/venv_sync.py, ciel_cli/source_build.py, update_cmd).
 SOURCE_COMPLETION_MARKERS = ("completing source-update", "Preparing Node dependencies", "Update complete")
 
 

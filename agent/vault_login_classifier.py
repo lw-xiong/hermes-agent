@@ -221,7 +221,7 @@ def select_checkout_fills(classified: list[ClassifiedLoginControl], secret: dict
 # Inspection stamps every input with ``<nonce>:<index>`` under a per-inspection attribute; the fill
 # script resolves targets by the stamp of ITS OWN inspection instead of re-querying by position, so
 # neither a DOM reflow nor a second inspection in between can redirect the password into another field.
-INSPECTION_STAMP_ATTR = "data-hermes-vault-slot"
+INSPECTION_STAMP_ATTR = "data-ciel-vault-slot"
 
 
 def build_otp_fills(otp_controls: list[ClassifiedLoginControl], code: str) -> list[dict[str, Any]]:
@@ -248,7 +248,7 @@ _LOGIN_CONTROL_INSPECTION_JS_TEMPLATE = """(() => {
   const nonce = __NONCE__;
   const elements = Array.from(document.querySelectorAll("input, select"));
   const forms = Array.from(document.forms);
-  elements.forEach((element, index) => element.setAttribute("data-hermes-vault-slot", nonce + ":" + index));
+  elements.forEach((element, index) => element.setAttribute("data-ciel-vault-slot", nonce + ":" + index));
   const out = elements.flatMap((element, index) => {
     if (element.disabled || element.readOnly) return [];
     if (["hidden", "submit", "button", "reset", "file", "image", "checkbox", "radio"].includes(element.type)) return [];
@@ -309,7 +309,7 @@ _FILL_JS_TEMPLATE = """(() => {
   let filled = 0;
   const norm = (t) => String(t || "").trim().toLowerCase();
   for (const f of fills) {
-    const el = document.querySelector('[data-hermes-vault-slot="' + nonce + ':' + f.index + '"]');
+    const el = document.querySelector('[data-ciel-vault-slot="' + nonce + ':' + f.index + '"]');
     if (!el || (f.token === "current-password" && el.type !== "password")) continue;
     try {
       if (el.tagName === "SELECT") {
@@ -327,6 +327,6 @@ _FILL_JS_TEMPLATE = """(() => {
       if (el.value.length > 0) filled += 1;
     } catch (e) { /* skip */ }
   }
-  document.querySelectorAll("[data-hermes-vault-slot]").forEach((n) => n.removeAttribute("data-hermes-vault-slot"));
+  document.querySelectorAll("[data-ciel-vault-slot]").forEach((n) => n.removeAttribute("data-ciel-vault-slot"));
   return JSON.stringify({ filled });
 })()"""

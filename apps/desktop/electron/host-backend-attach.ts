@@ -1,4 +1,4 @@
-// Attach to the host's running Hermes backend (multiplex-only, Desktop half).
+// Attach to the host's running Ciel backend (multiplex-only, Desktop half).
 //
 // `backend-discovery.ts` owns the pure decision; this module performs the IO
 // ladder around it: read the machine-root ledger, validate a candidate at the
@@ -58,7 +58,7 @@ export interface HostBackendAttachDeps {
   isPidAlive?: (pid: number) => boolean
   /**
    * Commit this Desktop would spawn its own backend from (the checkout HEAD).
-   * A backend that booted from other code — a CLI/launchd `hermes serve` that
+   * A backend that booted from other code — a CLI/launchd `ciel serve` that
    * outlived an update — answers 503 "Restart required" forever, and Restart
    * would re-attach it, so it is skipped. Absent or null (packaged/non-git
    * install): the token-only handshake, as before.
@@ -109,8 +109,8 @@ export async function checkoutHeadIdentity(
   return head.code === 0 ? head.stdout.trim() || null : null
 }
 
-export function spawnLedgerPath(hermesHomeRoot: string, join: (...parts: string[]) => string): string {
-  return join(hermesHomeRoot, SPAWN_LEDGER_FILENAME)
+export function spawnLedgerPath(cielHomeRoot: string, join: (...parts: string[]) => string): string {
+  return join(cielHomeRoot, SPAWN_LEDGER_FILENAME)
 }
 
 function wsUrlFor(baseUrl: string, token: string): string {
@@ -239,7 +239,7 @@ async function findHostBackend(
 
   if (decision.action === 'spawn') {
     if (decision.reason === 'isolated') {
-      deps.log('[attach] HERMES_DESKTOP_ISOLATED_BACKEND is set; spawning a dedicated backend')
+      deps.log('[attach] CIEL_DESKTOP_ISOLATED_BACKEND is set; spawning a dedicated backend')
     }
 
     return null
@@ -264,7 +264,7 @@ async function findHostBackend(
       unconfirmed = true
     } else if (attached) {
       deps.log(
-        `[attach] attached to the running Hermes backend on ${attached.baseUrl} ` +
+        `[attach] attached to the running Ciel backend on ${attached.baseUrl} ` +
           `(pid ${attached.pid}, registered by profile "${record.profile || 'default'}"); spawning nothing`
       )
 

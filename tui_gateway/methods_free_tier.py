@@ -26,11 +26,11 @@ def _(rid, params: dict) -> dict:
     inference actually runs on it is a ROUTE question answered by ``setup.runtime_check.free_tier``.
     ``notice_pending`` is true until ``free_tier.ack_notice`` ran for this identity.
     ``nudge_due_in``: seconds until the sign-in offer after a finished task is due (install-wide,
-    ``hermes_cli.free_tier_offer``); absent when none is pending.
+    ``ciel_cli.free_tier_offer``); absent when none is pending.
 
     A pure read: an identity is never created as a side effect of polling this (NS-845 Q1.2)."""
     try:
-        from hermes_cli import anon_auth
+        from ciel_cli import anon_auth
         has_guest = anon_auth.has_guest()
         available = anon_auth.free_inference_active()
         enabled = available or _trial_claimable()
@@ -38,7 +38,7 @@ def _(rid, params: dict) -> dict:
             "has_guest": has_guest, "enabled": enabled, "available": available,
             "notice_pending": bool(available and anon_auth.guest_notice_pending()),
             "model": anon_auth.GUEST_MODEL, "label": anon_auth.FREE_TIER_LABEL}
-        from hermes_cli import free_tier_offer
+        from ciel_cli import free_tier_offer
         if (nudge_due_in := free_tier_offer.offer_due_in()) is not None:
             payload["nudge_due_in"] = nudge_due_in
         if enabled and not has_guest:
@@ -47,7 +47,7 @@ def _(rid, params: dict) -> dict:
             payload.update(anon_auth.last_mint_failure() or {})
         # A browser challenge the account service is waiting on (``anon_challenge``): the same
         # payload the ``free_tier.challenge`` event carried, for a client that connected after it.
-        from hermes_cli import anon_challenge
+        from ciel_cli import anon_challenge
         challenge = anon_challenge.pending_challenge()
         if challenge:
             payload["challenge"] = challenge
@@ -57,7 +57,7 @@ def _(rid, params: dict) -> dict:
 
 
 def _trial_claimable() -> bool:
-    from hermes_cli.welcome_trial import claim_blocker
+    from ciel_cli.welcome_trial import claim_blocker
     return claim_blocker() is None
 
 
@@ -68,8 +68,8 @@ def _(rid, params: dict) -> dict:
     (blocking, short timeout; the one attempt allowed inside the mint memo's cooldown). ``{has_guest,
     enabled}``, plus ``{error, error_code, retryable, retry_after}`` when the portal refused."""
     try:
-        from hermes_cli import anon_auth, free_tier_bootstrap, welcome_trial
-        from hermes_cli.auth_constants import AuthError
+        from ciel_cli import anon_auth, free_tier_bootstrap, welcome_trial
+        from ciel_cli.auth_constants import AuthError
         if _trial_claimable():
             try:
                 welcome_trial.claim_desktop_free_tier(force=True)
@@ -94,7 +94,7 @@ def _(rid, params: dict) -> dict:
     """Mark the availability notice shown on the free-tier identity. ``acked`` is false when there is
     no free-tier identity to mark (nothing to show again either)."""
     try:
-        from hermes_cli import anon_auth
+        from ciel_cli import anon_auth
         return _ok(rid, {"acked": bool(anon_auth.mark_guest_notice_shown())})
     except Exception as e:
         return _err(rid, 5091, str(e))
@@ -106,7 +106,7 @@ def _(rid, params: dict) -> dict:
     """Claim the due sign-in offer. Claim before showing, so two windows never both show it:
     ``claimed`` is true for exactly one caller each time an offer comes due."""
     try:
-        from hermes_cli import free_tier_offer
+        from ciel_cli import free_tier_offer
         return _ok(rid, {"claimed": bool(free_tier_offer.claim_offer())})
     except Exception as e:  # the RPC boundary: report it, never crash the dispatcher
         logger.warning("free_tier.claim_nudge failed", exc_info=True)
@@ -116,7 +116,7 @@ def _(rid, params: dict) -> dict:
 @method("free_tier.challenge_result")
 @_profile_scoped
 def _(rid, params: dict) -> dict:
-    from hermes_cli.anon_challenge import record_host_outcome
+    from ciel_cli.anon_challenge import record_host_outcome
     return _ok(rid, {"accepted": record_host_outcome(params["url"], params.get("attempt", 0), params["outcome"])})
 
 

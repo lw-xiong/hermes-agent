@@ -1,19 +1,19 @@
 name: langfuse
-repo: https://github.com/NousResearch/hermes-official-plugins
+repo: https://github.com/NousResearch/ciel-official-plugins
 sha: c2a95963c442f3f23e4bc6fe0da898e1dd1fb63d
 subdir: langfuse
-description: 'Langfuse observability for Hermes: one trace per turn, one generation per LLM call (usage
-  and cost from Hermes'' own pricing, cache and reasoning tokens included), one observation per tool
+description: 'Langfuse observability for Ciel: one trace per turn, one generation per LLM call (usage
+  and cost from Ciel'' own pricing, cache and reasoning tokens included), one observation per tool
   call and subagent. Content capture is sanitized by default (metadata-only and full are opt-in); sends
-  traces only to the Langfuse project whose keys you set. Formerly built into Hermes core as
+  traces only to the Langfuse project whose keys you set. Formerly built into Ciel core as
   observability/langfuse; existing users are migrated automatically.'
 maintainer: NousResearch
 tier: official
 category: general
-requires_hermes: ">=0.21.7"
+requires_ciel: ">=0.21.7"
 version: "2.0.0"
-image: https://raw.githubusercontent.com/NousResearch/hermes-official-plugins/c2a95963c442f3f23e4bc6fe0da898e1dd1fb63d/assets/langfuse.jpg
-docs_url: https://github.com/NousResearch/hermes-official-plugins/tree/main/langfuse
+image: https://raw.githubusercontent.com/NousResearch/ciel-official-plugins/c2a95963c442f3f23e4bc6fe0da898e1dd1fb63d/assets/langfuse.jpg
+docs_url: https://github.com/NousResearch/ciel-official-plugins/tree/main/langfuse
 platforms: []
 capabilities:
   provides_tools: []
@@ -31,5 +31,5 @@ capabilities:
     - subagent_stop
   provides_middleware: []
   requires_env:
-    - HERMES_LANGFUSE_PUBLIC_KEY
-    - HERMES_LANGFUSE_SECRET_KEY
+    - CIEL_LANGFUSE_PUBLIC_KEY
+    - CIEL_LANGFUSE_SECRET_KEY

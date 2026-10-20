@@ -2,39 +2,39 @@
 sidebar_position: 11
 sidebar_label: "Plugins"
 title: "Plugins"
-description: "Extend Hermes with custom tools, hooks, and integrations via the plugin system"
+description: "Extend Ciel with custom tools, hooks, and integrations via the plugin system"
 ---
 
 # Plugins
 
-Hermes has a plugin system for adding custom tools, hooks, and integrations without modifying core code.
+Ciel has a plugin system for adding custom tools, hooks, and integrations without modifying core code.
 
 If you want to create a custom tool for yourself, your team, or one project,
 this is usually the right path. The developer guide's
-[Adding Tools](../../developer-guide/adding-tools.md) page is for built-in Hermes
+[Adding Tools](../../developer-guide/adding-tools.md) page is for built-in Ciel
 core tools that live in `tools/` and `toolsets.py`.
 
-**→ [Build a Hermes Plugin](../../developer-guide/plugins/index.md)** — step-by-step guide with a complete working example.
+**→ [Build a Ciel Plugin](../../developer-guide/plugins/index.md)** — step-by-step guide with a complete working example.
 
 ## Quick overview
 
-Drop a directory into `~/.hermes/plugins/` with a `plugin.yaml` and Python code:
+Drop a directory into `~/.ciel/plugins/` with a `plugin.yaml` and Python code:
 
 ```
-~/.hermes/plugins/my-plugin/
+~/.ciel/plugins/my-plugin/
 ├── plugin.yaml      # manifest
 ├── __init__.py      # register() — wires schemas to handlers
 ├── schemas.py       # tool schemas (what the LLM sees)
 └── tools.py         # tool handlers (what runs when called)
 ```
 
-Start Hermes — your tools appear alongside built-in tools. The model can call them immediately.
+Start Ciel — your tools appear alongside built-in tools. The model can call them immediately.
 
 ### Minimal working example
 
 Here is a complete plugin that adds a `hello_world` tool and logs every tool call via a hook.
 
-**`~/.hermes/plugins/hello-world/plugin.yaml`**
+**`~/.ciel/plugins/hello-world/plugin.yaml`**
 
 ```yaml
 name: hello-world
@@ -42,10 +42,10 @@ version: "1.0"
 description: A minimal example plugin
 ```
 
-**`~/.hermes/plugins/hello-world/__init__.py`**
+**`~/.ciel/plugins/hello-world/__init__.py`**
 
 ```python
-"""Minimal Hermes plugin — registers a tool and a hook."""
+"""Minimal Ciel plugin — registers a tool and a hook."""
 
 import json
 
@@ -86,11 +86,11 @@ def register(ctx):
     ctx.register_hook("post_tool_call", on_tool_call)
 ```
 
-Drop both files into `~/.hermes/plugins/hello-world/`, restart Hermes, and the model can immediately call `hello_world`. The hook prints a log line after every tool invocation.
+Drop both files into `~/.ciel/plugins/hello-world/`, restart Ciel, and the model can immediately call `hello_world`. The hook prints a log line after every tool invocation.
 
-The model-facing tool description belongs in `schema["description"]`. The optional `ctx.register_tool(description=...)` value is separate `ToolEntry` registry metadata: when omitted, it defaults to the schema description, but Hermes does not copy it back into a schema that lacks `description`. Prefer defining the text once in the schema. If you provide both values, keep them synchronized; the model sees the schema value.
+The model-facing tool description belongs in `schema["description"]`. The optional `ctx.register_tool(description=...)` value is separate `ToolEntry` registry metadata: when omitted, it defaults to the schema description, but Ciel does not copy it back into a schema that lacks `description`. Prefer defining the text once in the schema. If you provide both values, keep them synchronized; the model sees the schema value.
 
-Project-local plugins under `./.hermes/plugins/` are disabled by default. Enable them only for trusted repositories by setting `HERMES_ENABLE_PROJECT_PLUGINS=true` before starting Hermes.
+Project-local plugins under `./.ciel/plugins/` are disabled by default. Enable them only for trusted repositories by setting `CIEL_ENABLE_PROJECT_PLUGINS=true` before starting Ciel.
 
 ## What plugins can do
 
@@ -102,12 +102,12 @@ Every `ctx.*` API below is available inside a plugin's `register(ctx)` function.
 | Add hooks | `ctx.register_hook("post_tool_call", callback)` |
 | Add slash commands | `ctx.register_command(name, handler, description)` — adds `/name` in CLI and gateway sessions |
 | Dispatch tools from commands | `ctx.dispatch_tool(name, args)` — invokes a registered tool with parent-agent context auto-wired |
-| Add CLI commands | `ctx.register_cli_command(name, help, setup_fn, handler_fn)` — adds `hermes <plugin> <subcommand>` |
+| Add CLI commands | `ctx.register_cli_command(name, help, setup_fn, handler_fn)` — adds `ciel <plugin> <subcommand>` |
 | Inject messages | `ctx.inject_message(content, role="user", session_key=... \| origin=...)` - see [Injecting Messages](#injecting-messages) |
 | Ship data files | `Path(__file__).parent / "data" / "file.yaml"` |
 | Bundle skills | `ctx.register_skill(name, path)` — namespaced as `plugin:skill`, loaded via `skill_view("plugin:skill")` |
-| Gate on env vars | `requires_env: [API_KEY]` in plugin.yaml — prompted during `hermes plugins install` |
-| Distribute via pip | `[project.entry-points."hermes_agent.plugins"]` |
+| Gate on env vars | `requires_env: [API_KEY]` in plugin.yaml — prompted during `ciel plugins install` |
+| Distribute via pip | `[project.entry-points."ciel_agent.plugins"]` |
 | Register a gateway platform (Discord, Telegram, IRC, …) | `ctx.register_platform(name, label, adapter_factory, check_fn, ...)` — see [Adding Platform Adapters](../../developer-guide/adding-platform-adapters.md) |
 | Register an image-generation backend | `ctx.register_image_gen_provider(provider)` — see [Image Generation Provider Plugins](../../developer-guide/image-gen-provider-plugin.md) |
 | Register a video-generation backend | `ctx.register_video_gen_provider(provider)` — see [Video Generation Provider Plugins](../../developer-guide/video-gen-provider-plugin.md) |
@@ -124,17 +124,17 @@ Every `ctx.*` API below is available inside a plugin's `register(ctx)` function.
 
 | Source | Path | Use case |
 |--------|------|----------|
-| Bundled | `<repo>/plugins/` | Ships with Hermes — see [Built-in Plugins](./built-in-plugins.md) |
-| User | `~/.hermes/plugins/` | Personal plugins |
-| Project | `.hermes/plugins/` | Project-specific plugins (requires `HERMES_ENABLE_PROJECT_PLUGINS=true`) |
-| pip | `hermes_agent.plugins` entry_points | Distributed packages |
-| Nix | `services.hermes-agent.extraPlugins` / `extraPythonPackages` | NixOS declarative installs — see [Nix Setup](../../getting-started/nix-setup.md#plugins) |
+| Bundled | `<repo>/plugins/` | Ships with Ciel — see [Built-in Plugins](./built-in-plugins.md) |
+| User | `~/.ciel/plugins/` | Personal plugins |
+| Project | `.ciel/plugins/` | Project-specific plugins (requires `CIEL_ENABLE_PROJECT_PLUGINS=true`) |
+| pip | `ciel_agent.plugins` entry_points | Distributed packages |
+| Nix | `services.ciel-agent.extraPlugins` / `extraPythonPackages` | NixOS declarative installs — see [Nix Setup](../../getting-started/nix-setup.md#plugins) |
 
 Later sources override earlier ones on name collision, so a user plugin with the same name as a bundled plugin replaces it.
 
 ### Plugin sub-categories
 
-Within each source, Hermes also recognizes sub-category directories that route plugins to specialized discovery systems:
+Within each source, Ciel also recognizes sub-category directories that route plugins to specialized discovery systems:
 
 | Sub-directory | What it holds | Discovery system |
 |---|---|---|
@@ -145,14 +145,14 @@ Within each source, Hermes also recognizes sub-category directories that route p
 | `plugins/context_engine/<name>/` | Context-compression engines (`ctx.register_context_engine()`) | **Own loader** in `plugins/context_engine/__init__.py` (one active at a time) |
 | `plugins/model-providers/<name>/` | LLM provider profiles (`register_provider(ProviderProfile(...))`) | **Own loader** in `providers/__init__.py` (lazily scanned on first `get_provider_profile()` call) |
 
-User plugins at `~/.hermes/plugins/model-providers/<name>/` override bundled model providers of the same name (last-writer-wins in `register_provider()`), so you can replace a built-in provider profile without any repo edits. Memory providers resolve the other way round: for `~/.hermes/plugins/memory/<name>/` the **bundled** provider wins on a name collision (bundled, then user, then project, then entry points; first seen wins), so a user memory provider needs its own unique name.
+User plugins at `~/.ciel/plugins/model-providers/<name>/` override bundled model providers of the same name (last-writer-wins in `register_provider()`), so you can replace a built-in provider profile without any repo edits. Memory providers resolve the other way round: for `~/.ciel/plugins/memory/<name>/` the **bundled** provider wins on a name collision (bundled, then user, then project, then entry points; first seen wins), so a user memory provider needs its own unique name.
 
 ## Plugins are opt-in (with a few exceptions)
 
-**General plugins and user-installed backends are disabled by default** — discovery finds them (so they show up in `hermes plugins` and `/plugins`), but nothing with hooks or tools loads until you add the plugin's name to `plugins.enabled` in `~/.hermes/config.yaml`. This stops third-party code from running without your explicit consent.
+**General plugins and user-installed backends are disabled by default** — discovery finds them (so they show up in `ciel plugins` and `/plugins`), but nothing with hooks or tools loads until you add the plugin's name to `plugins.enabled` in `~/.ciel/config.yaml`. This stops third-party code from running without your explicit consent.
 
 :::note `plugins.enabled` governs plugins only
-[Gateway event hooks](./hooks.md#gateway-event-hooks) under `~/.hermes/hooks/<name>/` are not plugins and are **not** gated by `plugins.enabled` or `plugins.disabled`. That directory is trusted by placement: any subdirectory holding a valid `HOOK.yaml` + `handler.py` is imported by the gateway at startup, and placing the files there is the opt-in. See the [gateway hook trust model](./hooks.md#gateway-hook-trust).
+[Gateway event hooks](./hooks.md#gateway-event-hooks) under `~/.ciel/hooks/<name>/` are not plugins and are **not** gated by `plugins.enabled` or `plugins.disabled`. That directory is trusted by placement: any subdirectory holding a valid `HOOK.yaml` + `handler.py` is imported by the gateway at startup, and placing the files there is the opt-in. See the [gateway hook trust model](./hooks.md#gateway-hook-trust).
 :::
 
 ```yaml
@@ -186,53 +186,53 @@ plugins:
 Three ways to flip state:
 
 ```bash
-hermes plugins                    # interactive toggle (space to check/uncheck)
-hermes plugins enable <name>      # add to allow-list
-hermes plugins disable <name>     # remove from allow-list + add to disabled
+ciel plugins                    # interactive toggle (space to check/uncheck)
+ciel plugins enable <name>      # add to allow-list
+ciel plugins disable <name>     # remove from allow-list + add to disabled
 ```
 
-If you saved a tool selection (`hermes tools`, so `platform_toolsets` lists toolsets explicitly), disabling a
+If you saved a tool selection (`ciel tools`, so `platform_toolsets` lists toolsets explicitly), disabling a
 plugin also takes its toolset out of those saved lists, and enabling it puts the toolset back. The CLI and the
 Desktop/TUI/dashboard switch behave the same. With no saved selection the lists are left alone: a plugin's
 toolset is on by default.
 
-After `hermes plugins install owner/repo`, you're asked `Enable 'name' now? [y/N]` — defaults to no. Skip the prompt for scripted installs with `--enable` or `--no-enable`. A memory provider (a plugin whose `__init__.py` registers a `MemoryProvider`) asks `Use 'name' as the memory provider now?` instead: yes (or `--enable`) sets `memory.provider`, which is the only switch that activates a provider; no leaves it for `hermes memory setup`.
+After `ciel plugins install owner/repo`, you're asked `Enable 'name' now? [y/N]` — defaults to no. Skip the prompt for scripted installs with `--enable` or `--no-enable`. A memory provider (a plugin whose `__init__.py` registers a `MemoryProvider`) asks `Use 'name' as the memory provider now?` instead: yes (or `--enable`) sets `memory.provider`, which is the only switch that activates a provider; no leaves it for `ciel memory setup`.
 
 For a reproducible install, pin a full immutable commit (tags, branches, and
 abbreviated SHAs are not accepted):
 
 ```bash
-hermes plugins install owner/repo --ref 0123456789abcdef0123456789abcdef01234567
+ciel plugins install owner/repo --ref 0123456789abcdef0123456789abcdef01234567
 ```
 
-Hermes checks out the commit detached, verifies that `HEAD` exactly matches the
+Ciel checks out the commit detached, verifies that `HEAD` exactly matches the
 requested SHA, and records the canonical source, installed revision, and pin
-status in the current profile. `hermes plugins update` refuses to move a pinned
+status in the current profile. `ciel plugins update` refuses to move a pinned
 plugin; choose a new exact commit explicitly with
-`hermes plugins install <source> --force --ref <new-commit>`. Like an
+`ciel plugins install <source> --force --ref <new-commit>`. Like an
 update, a forced reinstall from the source the plugin was installed from
 replaces its code but keeps your files: untracked and git-ignored files stay in
 place, and edits to tracked files are copied to
-`~/.hermes/plugins-backup/<name>-<sha>/`. A reinstall from a different source
-starts clean; to reset a plugin completely, `hermes plugins remove` it first. The
+`~/.ciel/plugins-backup/<name>-<sha>/`. A reinstall from a different source
+starts clean; to reset a plugin completely, `ciel plugins remove` it first. The
 profile-local install metadata contains no config values, environment values,
 secrets, or capability grants.
 
-The same pin is available in Hermes Desktop: **Skills → Plugins → Install from
+The same pin is available in Ciel Desktop: **Skills → Plugins → Install from
 Git** has a *Pin to commit* field that takes the full 40-character SHA, and the
 plugins list shows a `pinned @ <sha8>` badge on every pinned install so a team
-can confirm everyone is running the same commit. `hermes plugins list` prints
+can confirm everyone is running the same commit. `ciel plugins list` prints
 the pin in its Source column (`git pinned@<sha8>`). Pins work for private
 repositories too, through the same stored credentials described below.
 
 ### Installing from a private repository
 
-`hermes plugins install` clones non-interactively (it never prompts for a
-username or password), so a private repo needs a credential Hermes can find on
-its own. Every clone, pinned `--ref` fetch and `hermes plugins update` pull is
+`ciel plugins install` clones non-interactively (it never prompts for a
+username or password), so a private repo needs a credential Ciel can find on
+its own. Every clone, pinned `--ref` fetch and `ciel plugins update` pull is
 attempted anonymously first — public repos never see your credential, so a
 stale or revoked token cannot break a public install. Only when the remote
-refuses anonymous access does Hermes look for a credential. For an `https://`
+refuses anonymous access does Ciel look for a credential. For an `https://`
 source it tries, in order:
 
 1. `GITHUB_TOKEN` or `GH_TOKEN` from your `.env` (GitHub hosts only).
@@ -243,16 +243,16 @@ source it tries, in order:
 The credential is sent as a one-shot HTTP header for that install or update;
 it is never written into the plugin's `.git/config` or the install metadata.
 SSH sources (`git@host:owner/repo.git`) authenticate through your ssh-agent as
-before. The same resolution applies to `hermes plugins update`, catalog MCP
+before. The same resolution applies to `ciel plugins update`, catalog MCP
 installs from git, and profile distributions fetched from a git URL.
 
-`hermes doctor` sends a configured `GITHUB_TOKEN`/`GH_TOKEN` to `api.github.com`
+`ciel doctor` sends a configured `GITHUB_TOKEN`/`GH_TOKEN` to `api.github.com`
 (under **API Connectivity**) and, when GitHub rejects it, names the variable and the
 `.env` file that carries the expired token so you can remove or replace it.
 
 ### What the allow-list does NOT gate
 
-Several categories of plugin bypass `plugins.enabled` — they're part of Hermes' built-in surface and would break basic functionality if gated off by default:
+Several categories of plugin bypass `plugins.enabled` — they're part of Ciel' built-in surface and would break basic functionality if gated off by default:
 
 | Plugin kind | How it's activated instead |
 |---|---|
@@ -262,14 +262,14 @@ Several categories of plugin bypass `plugins.enabled` — they're part of Hermes
 | **Context engines** (`plugins/context_engine/`) | All discovered; one is active, chosen by `context.engine` in `config.yaml`. |
 | **Model providers** (`plugins/model-providers/`) | All bundled providers under `plugins/model-providers/` discover and register at the first `get_provider_profile()` call. The user picks one at a time via `--provider` or `config.yaml`. |
 | **Pip-installed `backend` plugins** | Opt-in via `plugins.enabled` (same as general plugins). |
-| **User-installed platforms** (under `~/.hermes/plugins/platforms/`) | Opt-in via `plugins.enabled` — third-party gateway adapters need explicit consent. |
+| **User-installed platforms** (under `~/.ciel/plugins/platforms/`) | Opt-in via `plugins.enabled` — third-party gateway adapters need explicit consent. |
 
-In short: **bundled "always-works" infrastructure loads automatically; third-party general plugins are opt-in.** The `plugins.enabled` allow-list is the gate specifically for arbitrary code a user drops into `~/.hermes/plugins/`.
+In short: **bundled "always-works" infrastructure loads automatically; third-party general plugins are opt-in.** The `plugins.enabled` allow-list is the gate specifically for arbitrary code a user drops into `~/.ciel/plugins/`.
 
 ### Approval transports
 
 An approval transport changes **where a human sees and answers** an existing
-Hermes tool-approval request. It does not decide whether a command needs
+Ciel tool-approval request. It does not decide whether a command needs
 approval and it is not an authorization-policy API.
 
 ```python
@@ -284,7 +284,7 @@ def register(ctx):
     ctx.register_approval_transport("my-ui", present)
 ```
 
-`present` may be synchronous or async. Hermes runs it on a bounded worker and
+`present` may be synchronous or async. Ciel runs it on a bounded worker and
 enforces the canonical `approvals.timeout` even if the plugin does not. The
 request is immutable and contains redacted display text, its host presentation
 class (`cli` or `gateway`), the host timeout, allowed choices, and an opaque
@@ -310,10 +310,10 @@ security:
 Transport exceptions, timeouts, unavailable registrations, invalid choices,
 and stale responses deny by default. To deliberately show the prompt on the
 ordinary CLI/TUI/gateway/ACP surface when the selected transport fails, set
-`transport_fallback: builtin`. Without that exact opt-in, Hermes never
+`transport_fallback: builtin`. Without that exact opt-in, Ciel never
 materializes the prompt on another surface.
 
-Hermes still owns hardline blocks, sudo-stdin protection, user deny rules,
+Ciel still owns hardline blocks, sudo-stdin protection, user deny rules,
 request binding, allowed scopes, persistence, hooks, and final authorization.
 Hardline commands are blocked before any transport callback. There is
 intentionally **no plugin approval policy, auto-allow callback, or required
@@ -323,11 +323,11 @@ grant it.
 
 ### Migration for existing users
 
-When you upgrade to a version of Hermes that has opt-in plugins (config schema v21+), any user plugins already installed under `~/.hermes/plugins/` that weren't already in `plugins.disabled` are **automatically grandfathered** into `plugins.enabled`. Your existing setup keeps working. Bundled standalone plugins are NOT grandfathered — even existing users have to opt in explicitly. (Bundled platform/backend plugins never needed grandfathering because they were never gated.)
+When you upgrade to a version of Ciel that has opt-in plugins (config schema v21+), any user plugins already installed under `~/.ciel/plugins/` that weren't already in `plugins.disabled` are **automatically grandfathered** into `plugins.enabled`. Your existing setup keeps working. Bundled standalone plugins are NOT grandfathered — even existing users have to opt in explicitly. (Bundled platform/backend plugins never needed grandfathering because they were never gated.)
 
 ## Available hooks
 
-Plugins can register the 27 lifecycle events currently accepted by `hermes_cli.plugins.VALID_HOOKS`. The **[Event Hooks catalog](./hooks.md#shipped-plugin-hook-catalog)** is canonical for exact timing, return handling, payload fields, and privacy notes.
+Plugins can register the 27 lifecycle events currently accepted by `ciel_cli.plugins.VALID_HOOKS`. The **[Event Hooks catalog](./hooks.md#shipped-plugin-hook-catalog)** is canonical for exact timing, return handling, payload fields, and privacy notes.
 
 | Descriptive category | Shipped hooks |
 |---|---|
@@ -338,11 +338,11 @@ Plugins can register the 27 lifecycle events currently accepted by `hermes_cli.p
 These categories describe current behavior rather than defining future naming rules. Plugin middleware remains a separate registry/surface.
 ## Plugin types
 
-Hermes has four kinds of plugins:
+Ciel has four kinds of plugins:
 
 | Type | What it does | Selection | Location |
 |------|-------------|-----------|----------|
-| **General plugins** | Add tools, hooks, slash commands, CLI commands | Multi-select (enable/disable) | `~/.hermes/plugins/` |
+| **General plugins** | Add tools, hooks, slash commands, CLI commands | Multi-select (enable/disable) | `~/.ciel/plugins/` |
 | **Memory providers** | Replace or augment built-in memory | Single-select (one active) | `plugins/memory/` |
 | **Context engines** | Replace the built-in context compressor | Single-select (one active) | `plugins/context_engine/` |
 | **Model providers** | Declare an inference backend (OpenRouter, Anthropic, …) | Multi-register, picked by `--provider` / `config.yaml` | `plugins/model-providers/` |
@@ -351,14 +351,14 @@ Memory providers and context engines are **provider plugins** — only one of ea
 
 ## Pluggable interfaces — where to go for each
 
-The table above shows the four plugin categories, but within "General plugins" the `PluginContext` exposes several distinct extension points — and Hermes also accepts extensions outside the Python plugin system (config-driven backends, shell-hooked commands, external servers, etc.). Use this table to find the right doc for what you want to build:
+The table above shows the four plugin categories, but within "General plugins" the `PluginContext` exposes several distinct extension points — and Ciel also accepts extensions outside the Python plugin system (config-driven backends, shell-hooked commands, external servers, etc.). Use this table to find the right doc for what you want to build:
 
 | Want to add… | How | Authoring guide |
 |---|---|---|
-| A **tool** the LLM can call | Python plugin — `ctx.register_tool()` | [Build a Hermes Plugin](../../developer-guide/plugins/index.md) · [Adding Tools](../../developer-guide/adding-tools.md) |
-| A **lifecycle hook** (pre/post LLM, session start/end, tool filter) | Python plugin — `ctx.register_hook()` | [Hooks reference](./hooks.md) · [Build a Hermes Plugin](../../developer-guide/plugins/index.md) |
-| A **slash command** for the CLI / gateway | Python plugin — `ctx.register_command()` | [Build a Hermes Plugin](../../developer-guide/plugins/index.md) · [Extending the CLI](../../developer-guide/extending-the-cli.md) |
-| A **subcommand** for `hermes <thing>` | Python plugin — `ctx.register_cli_command()` | [Extending the CLI](../../developer-guide/extending-the-cli.md) |
+| A **tool** the LLM can call | Python plugin — `ctx.register_tool()` | [Build a Ciel Plugin](../../developer-guide/plugins/index.md) · [Adding Tools](../../developer-guide/adding-tools.md) |
+| A **lifecycle hook** (pre/post LLM, session start/end, tool filter) | Python plugin — `ctx.register_hook()` | [Hooks reference](./hooks.md) · [Build a Ciel Plugin](../../developer-guide/plugins/index.md) |
+| A **slash command** for the CLI / gateway | Python plugin — `ctx.register_command()` | [Build a Ciel Plugin](../../developer-guide/plugins/index.md) · [Extending the CLI](../../developer-guide/extending-the-cli.md) |
+| A **subcommand** for `ciel <thing>` | Python plugin — `ctx.register_cli_command()` | [Extending the CLI](../../developer-guide/extending-the-cli.md) |
 | A bundled **skill** that your plugin ships | Python plugin — `ctx.register_skill()` | [Creating Skills](../../developer-guide/creating-skills.md) |
 | An **inference backend** (LLM provider: OpenAI-compat, Codex, Anthropic-Messages, Bedrock) | Provider plugin — `register_provider(ProviderProfile(...))` in `plugins/model-providers/<name>/` | **[Model Provider Plugins](../../developer-guide/model-provider-plugin.md)** · [Adding Providers](../../developer-guide/adding-providers.md) |
 | A **gateway channel** (Discord / Telegram / IRC / Teams / etc.) | Platform plugin — `ctx.register_platform()` in `plugins/platforms/<name>/` | [Adding Platform Adapters](../../developer-guide/adding-platform-adapters.md) |
@@ -368,10 +368,10 @@ The table above shows the four plugin categories, but within "General plugins" t
 | A **video-generation backend** (Veo, Kling, Pixverse, Grok-Imagine, Runway, …) | Backend plugin — `ctx.register_video_gen_provider()` | [Video Generation Provider Plugins](../../developer-guide/video-gen-provider-plugin.md) |
 | A **computer-use driver** (desktop control behind the `computer_use` tool) | Single-select provider plugin — `ctx.register_computer_use_provider()`, selected by `computer_use.backend` | [Computer-use backend plugins](../../developer-guide/plugins/index.md#computer-use-backend-plugins) |
 | A **TTS backend** (any CLI — Piper, VoxCPM, Kokoro, xtts, voice-cloning scripts, …) | Config-driven (recommended) — declare under `tts.providers.<name>` with `type: command` in `config.yaml`. OR Python backend plugin — `ctx.register_tts_provider()` for Python-SDK / streaming engines that need more than a shell template. | [TTS Setup](./tts.md#custom-command-providers) · [Python plugin guide](./tts.md#python-plugin-providers) |
-| An **STT backend** (any CLI — whisper.cpp, custom whisper binary, local ASR CLI) | Config-driven (recommended) — declare under `stt.providers.<name>` with `type: command` in `config.yaml`, or set `HERMES_LOCAL_STT_COMMAND` for the legacy single-command escape hatch. OR Python backend plugin — `ctx.register_transcription_provider()` for Python-SDK engines (OpenRouter, SenseAudio, Gemini-STT, etc.). | [STT Setup](./tts.md#stt-custom-command-providers) · [Python plugin guide](./tts.md#python-plugin-providers-stt) |
-| **External tools via MCP** (filesystem, GitHub, Linear, Notion, any MCP server) | Config-driven — declare `mcp_servers.<name>` with `command:` / `url:` in `config.yaml`. Hermes auto-discovers the server's tools and registers them alongside built-ins. | [MCP](./mcp.md) |
-| **Additional skill sources** (custom GitHub repos, private skill indexes) | CLI — `hermes skills tap add <repo>` | [Skills Hub](./skills.md#skills-hub) · [Publishing a custom tap](./skills.md#publishing-a-custom-skill-tap) |
-| **Gateway event hooks** (fire on `gateway:startup`, `session:start`, `agent:end`, `command:*`) | Drop `HOOK.yaml` + `handler.py` into `~/.hermes/hooks/<name>/` | [Event Hooks](./hooks.md#gateway-event-hooks) |
+| An **STT backend** (any CLI — whisper.cpp, custom whisper binary, local ASR CLI) | Config-driven (recommended) — declare under `stt.providers.<name>` with `type: command` in `config.yaml`, or set `CIEL_LOCAL_STT_COMMAND` for the legacy single-command escape hatch. OR Python backend plugin — `ctx.register_transcription_provider()` for Python-SDK engines (OpenRouter, SenseAudio, Gemini-STT, etc.). | [STT Setup](./tts.md#stt-custom-command-providers) · [Python plugin guide](./tts.md#python-plugin-providers-stt) |
+| **External tools via MCP** (filesystem, GitHub, Linear, Notion, any MCP server) | Config-driven — declare `mcp_servers.<name>` with `command:` / `url:` in `config.yaml`. Ciel auto-discovers the server's tools and registers them alongside built-ins. | [MCP](./mcp.md) |
+| **Additional skill sources** (custom GitHub repos, private skill indexes) | CLI — `ciel skills tap add <repo>` | [Skills Hub](./skills.md#skills-hub) · [Publishing a custom tap](./skills.md#publishing-a-custom-skill-tap) |
+| **Gateway event hooks** (fire on `gateway:startup`, `session:start`, `agent:end`, `command:*`) | Drop `HOOK.yaml` + `handler.py` into `~/.ciel/hooks/<name>/` | [Event Hooks](./hooks.md#gateway-event-hooks) |
 | **Shell hooks** (run a shell command on events — notifications, audit logs, desktop alerts) | Config-driven — declare under `hooks:` in `config.yaml` | [Shell Hooks](./hooks.md#shell-hooks) |
 
 :::note
@@ -380,14 +380,14 @@ Not everything is a Python plugin. Some extension surfaces intentionally use **c
 
 ## NixOS declarative plugins
 
-On NixOS, plugins can be installed declaratively via the module options — no `hermes plugins install` needed. See the **[Nix Setup guide](../../getting-started/nix-setup.md#plugins)** for full details.
+On NixOS, plugins can be installed declaratively via the module options — no `ciel plugins install` needed. See the **[Nix Setup guide](../../getting-started/nix-setup.md#plugins)** for full details.
 
 ```nix
-services.hermes-agent = {
+services.ciel-agent = {
   # Directory plugin (source tree with plugin.yaml)
   extraPlugins = [ (pkgs.fetchFromGitHub { ... }) ];
   # Entry-point plugin (pip package)
-  extraPythonPackages = [ (config.services.hermes-agent.package.python.pkgs.buildPythonPackage { ... }) ];
+  extraPythonPackages = [ (config.services.ciel-agent.package.python.pkgs.buildPythonPackage { ... }) ];
   # Enable in config
   settings.plugins.enabled = [ "my-plugin" ];
 };
@@ -398,49 +398,49 @@ Declarative plugins are symlinked with a `nix-managed-` prefix — they coexist 
 ## Managing plugins
 
 ```bash
-hermes plugins                               # unified interactive UI
-hermes plugins list                          # table: enabled / disabled / not enabled (bundled backends,
+ciel plugins                               # unified interactive UI
+ciel plugins list                          # table: enabled / disabled / not enabled (bundled backends,
                                              # platforms and the live memory.provider count as enabled)
-hermes plugins search <term>                 # search the Hermes plugin catalog
-hermes plugins install <name>                # install a catalog entry (repo @ reviewed pinned SHA)
-hermes plugins install user/repo             # install from Git, then prompt Enable? [y/N]
-hermes plugins install user/repo --enable    # request enable; dependency consent still applies
-hermes plugins install user/repo --no-enable # install but leave disabled (no prompt)
-hermes plugins update my-plugin              # pull latest (local edits are autostashed and re-applied)
-hermes plugins remove my-plugin              # uninstall; also drops it from plugins.enabled/disabled/entries
+ciel plugins search <term>                 # search the Ciel plugin catalog
+ciel plugins install <name>                # install a catalog entry (repo @ reviewed pinned SHA)
+ciel plugins install user/repo             # install from Git, then prompt Enable? [y/N]
+ciel plugins install user/repo --enable    # request enable; dependency consent still applies
+ciel plugins install user/repo --no-enable # install but leave disabled (no prompt)
+ciel plugins update my-plugin              # pull latest (local edits are autostashed and re-applied)
+ciel plugins remove my-plugin              # uninstall; also drops it from plugins.enabled/disabled/entries
                                              # and resets memory.provider when it was the live provider
-hermes plugins enable my-plugin              # add to allow-list
-hermes plugins disable my-plugin             # remove from allow-list + add to disabled (bundled platforms:
+ciel plugins enable my-plugin              # add to allow-list
+ciel plugins disable my-plugin             # remove from allow-list + add to disabled (bundled platforms:
                                              # either spelling works, e.g. photon-platform or platforms/photon)
-hermes plugins capabilities [my-plugin]      # declared vs granted capabilities
-hermes plugins check-updates                 # read-only: is any installed plugin outdated?
-hermes plugins adopt my-plugin               # track a self-cloned plugin dir (read its git origin)
-hermes plugins trust-update-url my-plugin    # confirm a changed update_url after review
+ciel plugins capabilities [my-plugin]      # declared vs granted capabilities
+ciel plugins check-updates                 # read-only: is any installed plugin outdated?
+ciel plugins adopt my-plugin               # track a self-cloned plugin dir (read its git origin)
+ciel plugins trust-update-url my-plugin    # confirm a changed update_url after review
 ```
 
 ### Update checks and provenance
 
-Hermes records Git install source and revision in `.install-metadata.json`.
+Ciel records Git install source and revision in `.install-metadata.json`.
 Unpinned tracked installs compare the saved source's remote HEAD, or a matching
 saved `update_url` feed. Pinned installs remain pinned. Self-cloned directories
-need `hermes plugins adopt NAME` before they become tracked installations.
+need `ciel plugins adopt NAME` before they become tracked installations.
 Manually copied or provenance-drifted directories receive diagnostic guidance.
 Pip entry-point plugins can report an owning distribution's available version;
 that check does not turn them into Git-managed installs.
 
-`hermes plugins check-updates` leaves plugin files unchanged. A scheduled gateway
+`ciel plugins check-updates` leaves plugin files unchanged. A scheduled gateway
 check runs when `plugins.auto_update_check_hours` is due: default 24 hours,
-`0` disables it. Its receipt is available through `hermes pm status` and the
+`0` disables it. Its receipt is available through `ciel pm status` and the
 desktop sync-status view. This is not a hard once-per-day limit if you configure
 a different interval.
 
-By default, updates require `hermes plugins update NAME`. Setting
+By default, updates require `ciel plugins update NAME`. Setting
 `plugins.auto_apply: true` opts tracked Git plugins into unattended updates.
 Both routes use the update security scan. Auto-apply does not manage pinned,
 manual, drifted, or pip-distribution rows.
 
-If a manifest changes or introduces `update_url`, Hermes refuses the new address
-until you approve it with `hermes plugins trust-update-url NAME`. This is a
+If a manifest changes or introduces `update_url`, Ciel refuses the new address
+until you approve it with `ciel plugins trust-update-url NAME`. This is a
 feed-source check, not a sandbox against already trusted plugin code.
 
 ### Dependency preparation and preservation
@@ -452,7 +452,7 @@ Node sidecar dependencies have a separate prompt and remain plugin-local.
 
 PM prepares Python dependencies with core and the enabled plugin set before
 publishing the new environment and configuration. A resolution failure preserves
-the previous selection. Restart Hermes when a new selected environment is not
+the previous selection. Restart Ciel when a new selected environment is not
 yet active in the running process.
 
 The enabled set is the union over the default home **and every profile** under
@@ -464,24 +464,24 @@ dependency preparation for **all** homes (`could not parse plugin selection:
 <path>`), rather than silently dropping that profile's plugins from the next
 environment. Fix or remove the offending file; an empty `config.yaml` is fine.
 
-Ordinary Hermes application updates preserve user plugin directories, including
+Ordinary Ciel application updates preserve user plugin directories, including
 wrapper files and external sidecar links. Explicit plugin updates or removals
 can change those files. See [Package management](../../reference/package-management.md)
 and the [plugin authoring guide](../../developer-guide/plugins/index.md#lazy-install-optional-python-dependencies).
 ### One-click install links (Desktop)
 
-Hermes Desktop registers the `hermes://` URL scheme, so a website, README, or
+Ciel Desktop registers the `ciel://` URL scheme, so a website, README, or
 chat message can link straight to a plugin install:
 
 ```
-hermes://plugin/install?catalog=NAME               # catalog entry, installs the reviewed pin
-hermes://plugin/install?repo=owner/repo            # any git repo
-hermes://plugin/install?repo=owner/repo&enable=1   # enable the agent plugin after install
-hermes://plugin/install?repo=owner/repo&force=1    # replace an existing install
-hermes://plugin/install?catalog=<name>             # reviewed catalog entry at its pinned commit
+ciel://plugin/install?catalog=NAME               # catalog entry, installs the reviewed pin
+ciel://plugin/install?repo=owner/repo            # any git repo
+ciel://plugin/install?repo=owner/repo&enable=1   # enable the agent plugin after install
+ciel://plugin/install?repo=owner/repo&force=1    # replace an existing install
+ciel://plugin/install?catalog=<name>             # reviewed catalog entry at its pinned commit
 ```
 
-The `catalog=<name>` form is what the **Open in Hermes Desktop** button on
+The `catalog=<name>` form is what the **Open in Ciel Desktop** button on
 every [Plugin Catalog](./plugin-catalog.md) card uses. Desktop resolves the
 name against the live catalog (the same feed the **Capabilities → Plugins**
 picker shows) and opens the same **reviewed catalog entry** dialog an in-app
@@ -491,29 +491,29 @@ catalog shows an error toast and nothing else — it is never reinterpreted as a
 git path, so a link cannot smuggle an unreviewed repo behind a
 familiar-looking name.
 
-For a `repo=` link, clicking one opens Hermes and shows a **confirmation dialog** — the repo id,
+For a `repo=` link, clicking one opens Ciel and shows a **confirmation dialog** — the repo id,
 a "Before you install" note, and GitHub browse + clone links — then
 shallow-clones the repo to detect what it ships (an **agent plugin** —
 backend Python, a **desktop plugin** — app UI, or both). You pick the
 components with checkboxes and confirm. Nothing is installed until you do;
 deep links never auto-install, and agent-plugin installs go through the same
 [install-time security scanning](#install-time-security-scanning) as
-`hermes plugins install`.
+`ciel plugins install`.
 
 Hybrid repos (agent + desktop halves in one repo) use one link and one
 dialog. The same modal is reachable without a link via **Capabilities →
-Plugins → Install from Git**. Legacy `hermes://plugin-agent/…` and
-`hermes://plugin-desktop/…` URLs route into the same dialog. In dev builds
-(`npm run dev`) the scheme is `hermes-dev://`.
+Plugins → Install from Git**. Legacy `ciel://plugin-agent/…` and
+`ciel://plugin-desktop/…` URLs route into the same dialog. In dev builds
+(`npm run dev`) the scheme is `ciel-dev://`.
 
 Websites need no SDK — a normal anchor works:
 
 ```html
-<a href="hermes://plugin/install?repo=owner/repo&enable=1">Install in Hermes</a>
+<a href="ciel://plugin/install?repo=owner/repo&enable=1">Install in Ciel</a>
 ```
 
 MCP servers have the equivalent link form — see
-[Add to Hermes link](../../reference/mcp-config-reference.md#add-to-hermes-link).
+[Add to Ciel link](../../reference/mcp-config-reference.md#add-to-ciel-link).
 
 ### Plugin capabilities and consent
 
@@ -527,8 +527,8 @@ capabilities:
   - llm.model_override    # pick the model for host-owned LLM calls
 ```
 
-When a plugin declares capabilities, `hermes plugins install` (and
-`hermes plugins enable`) shows the list with one-line risk descriptions and
+When a plugin declares capabilities, `ciel plugins install` (and
+`ciel plugins enable`) shows the list with one-line risk descriptions and
 asks once. Consenting records the grant under
 `plugins.entries.<id>.granted_capabilities` together with a consent hash and
 timestamp. Declining leaves the plugin enabled with those capabilities off —
@@ -536,7 +536,7 @@ a well-behaved plugin probes with `ctx.has_capability()` and degrades
 gracefully.
 
 **Update re-consent:** if a plugin update declares capabilities you haven't
-granted, `hermes plugins update` surfaces the additions and asks again. New
+granted, `ciel plugins update` surfaces the additions and asks again. New
 capabilities stay off until you consent — a plugin update can never silently
 widen its access. Catalog re-pins go one step further: when the new pin adds
 tools, hooks, Python dependencies, host capabilities, a provider sign-in
@@ -547,13 +547,13 @@ the old pin.
 
 **Non-interactive sessions fail closed:** installing or updating without a
 TTY completes the install, but declared capabilities are *not* granted. Run
-`hermes plugins enable <id>` interactively to grant them later.
+`ciel plugins enable <id>` interactively to grant them later.
 
 Inspect the state at any time:
 
 ```bash
-hermes plugins capabilities             # all plugins with declared/granted capabilities
-hermes plugins capabilities my-plugin   # one plugin, declared vs granted
+ciel plugins capabilities             # all plugins with declared/granted capabilities
+ciel plugins capabilities my-plugin   # one plugin, declared vs granted
 ```
 
 Capability ids map 1:1 to the older per-feature config gates, which keep
@@ -576,7 +576,7 @@ set — existing configs keep working unchanged.
 Capabilities are a **consent and audit layer**, not isolation. Plugins run as
 regular in-process Python: a malicious plugin can ignore every gate here.
 Granting a capability is a statement of trust in the plugin author — it is
-not a code audit, and Hermes has not reviewed the plugin's code. Only install
+not a code audit, and Ciel has not reviewed the plugin's code. Only install
 plugins from sources you trust.
 :::
 
@@ -627,25 +627,25 @@ capability (`gateway.raw_events`) with a "no stability guarantee" label and a
 separate design, and has not shipped.
 :::
 
-### Discovering plugins — the Hermes plugin catalog
+### Discovering plugins — the Ciel plugin catalog
 
-`hermes plugins search <term>` searches the **Hermes plugin catalog** — the
-curated, SHA-pinned catalog maintained in the hermes-agent repository
+`ciel plugins search <term>` searches the **Ciel plugin catalog** — the
+curated, SHA-pinned catalog maintained in the ciel-agent repository
 (`plugin-catalog/`). Matching covers entry names, descriptions, and declared
 tools:
 
 ```bash
-hermes plugins search telegram    # search the catalog
-hermes plugins browse             # browse every entry
-hermes plugins info <name>        # full details for one entry
+ciel plugins search telegram    # search the catalog
+ciel plugins browse             # browse every entry
+ciel plugins info <name>        # full details for one entry
 ```
 
 Once you've found a plugin, install it by bare name — the name resolves to
 the entry's repository at its **pinned commit SHA**, and catalog provenance is
-recorded so `hermes plugins update` can re-pin when the catalog moves:
+recorded so `ciel plugins update` can re-pin when the catalog moves:
 
 ```bash
-hermes plugins install <catalog-name>
+ciel plugins install <catalog-name>
 ```
 
 Explicit `owner/repo` or Git-URL identifiers never touch the catalog and are
@@ -665,7 +665,7 @@ grant). Review a plugin's source before enabling it.
 
 ### Plugin packs
 
-A **plugin pack** is a declarative, shareable YAML file (`hermes-pack.yaml`)
+A **plugin pack** is a declarative, shareable YAML file (`ciel-pack.yaml`)
 that pins a set of plugins — like sharing a modpack. Installing a pack fans
 out to ordinary pinned installs; nothing new exists at runtime.
 
@@ -675,28 +675,28 @@ description: STT + streaming TTS + approval relay
 author: hyper
 version: 1.0.0
 plugins:
-  - name: hermes-telegram-business       # bare plugin-catalog name…
+  - name: ciel-telegram-business       # bare plugin-catalog name…
     ref: e905f3bc5eeaa5a9dab9bc5155601b3ebec75757
   - repo: owner/approval-relay           # …or explicit owner/repo (or git URL)
     ref: 8f3c2d1a9b4e5f6071829304a5b6c7d8e9f00112
     subdir: plugins/relay                # optional monorepo path
 config:                                  # optional, non-secret seeds only
-  hermes-media-studio:
+  ciel-media-studio:
     default_model: flux-3
 skills: []                               # declared list only (not auto-installed yet)
 ```
 
 ```bash
-hermes plugins pack show ./hermes-pack.yaml     # dry-run review
-hermes plugins pack install ./hermes-pack.yaml  # review → confirm → install
-hermes plugins pack export > hermes-pack.yaml   # snapshot the current install
-hermes plugins pack export --enabled-only       # only plugins.enabled
+ciel plugins pack show ./ciel-pack.yaml     # dry-run review
+ciel plugins pack install ./ciel-pack.yaml  # review → confirm → install
+ciel plugins pack export > ciel-pack.yaml   # snapshot the current install
+ciel plugins pack export --enabled-only       # only plugins.enabled
 ```
 
 **Supply-chain posture.** Every entry's `ref` must be an exact 40-character
 commit SHA — tags and branch names are rejected with an error naming the
 entry, the same rule as the plugin catalog. Pack installs ride the exact
-same pinned install path as `hermes plugins install --ref <sha>` and record
+same pinned install path as `ciel plugins install --ref <sha>` and record
 the same provenance in `plugins/.install-metadata.json`, so two installs of
 the same pack resolve identically. Packs build on the
 [manifest v2 fields](../../developer-guide/plugins/index.md) (`manifest_version`,
@@ -707,7 +707,7 @@ validates through the normal install path.
 screen (every plugin, source, pinned ref, and the capabilities it declares),
 then asks **one** confirmation for the pack contents. After that, each
 plugin's declared capabilities go through the standard per-plugin
-capability-consent prompt — identical to a single `hermes plugins install`.
+capability-consent prompt — identical to a single `ciel plugins install`.
 There is no `--yes`, and non-interactive sessions cannot install packs.
 
 **Secrets never travel in packs.** `config:` seeds are limited to
@@ -723,16 +723,16 @@ reported per plugin, the rest continue, and the command exits non-zero if
 any plugin failed.
 
 **Export caveats.** `pack export` only includes plugins with known Git
-provenance (installed via `hermes plugins install`). Local-only plugins are
+provenance (installed via `ciel plugins install`). Local-only plugins are
 listed as warning comments in the emitted YAML, not as installable entries.
 
 The `skills:` list is parsed and displayed at install time but not yet
-auto-installed — install those manually for now (`hermes skills`). Wiring
+auto-installed — install those manually for now (`ciel skills`). Wiring
 skill-hub ids into pack install is a documented follow-up seam.
 
 ### Install-time security scanning
 
-Every `hermes plugins install` and `hermes plugins update` runs a static
+Every `ciel plugins install` and `ciel plugins update` runs a static
 security scan over the plugin tree before it is activated (inspired by
 Claude Cowork's skill & plugin security scanning). The scanner reuses the
 same threat-pattern engine as the [Skills Hub guard](./skills.md)
@@ -750,7 +750,7 @@ Three verdicts, matching Cowork's pass/warn/fail:
 | **caution** | Findings are shown; you confirm `Install anyway? [y/N]` (or pass `--force`) |
 | **dangerous** | Blocked. `--force` does **not** override |
 
-On `hermes plugins update`, a dangerous verdict on the updated tree
+On `ciel plugins update`, a dangerous verdict on the updated tree
 disables the plugin until you review the findings and re-enable it. A
 dangerous block names the critical findings that caused it (e.g.
 `1 critical of 42 findings (destructive_root_rm)`), so a single blocking
@@ -764,7 +764,7 @@ every finding stays in the report with file and line:
   `.rst`, `.html`) can never on its own produce **dangerous**: a command or
   credential path quoted there (an uninstall step, a refusal list naming
   `~/.ssh`) steps down one severity, and a README removing the plugin's
-  **own** install directory (`rm -rf "$HOME/.hermes/plugins/<name>"`) is a
+  **own** install directory (`rm -rf "$HOME/.ciel/plugins/<name>"`) is a
   note. Agent-facing shapes keep full severity — prompt injection, Markdown
   exfil, agent-config edits, `curl … | sh` one-liners, an `authorized_keys`
   append, a leaked provider key — and so does anything under a bundled
@@ -802,9 +802,9 @@ plugins:
 
 ### Running plugins out of process (`plugins.isolation`)
 
-By default third-party Python plugins are imported into the Hermes process, as they always have been.
+By default third-party Python plugins are imported into the Ciel process, as they always have been.
 Setting `plugins.isolation: host` moves them into a **plugin host**: one separate Python process per
-profile, started on demand, that imports the profile's user-installed plugins and talks to Hermes over a
+profile, started on demand, that imports the profile's user-installed plugins and talks to Ciel over a
 private pipe.
 
 ```yaml
@@ -816,28 +816,28 @@ plugins:
 
 Plugins do not change. They receive the same `ctx` and register tools, hooks, slash commands, skills and
 provider objects (image/video generation, web search, browser, TTS/STT, memory, context engines,
-model-provider profiles) exactly as before; Hermes registers matching entries on its side that call into
+model-provider profiles) exactly as before; Ciel registers matching entries on its side that call into
 the host. Dashboard plugin APIs are served by the host too. Bundled plugins keep running in-process.
 
 What changes in `host` mode:
 
-- **No shared interpreter.** A plugin's module never enters the Hermes process, so it cannot read
-  another profile's data from memory or patch Hermes internals. Under the multiplex gateway every
+- **No shared interpreter.** A plugin's module never enters the Ciel process, so it cannot read
+  another profile's data from memory or patch Ciel internals. Under the multiplex gateway every
   profile gets its own host, started with only that profile's environment and secrets.
-- **Crashes stay contained.** A plugin that crashes or exits kills its host, not Hermes; the call in
-  flight returns a tool error and Hermes restarts the host and reloads its plugins (bounded retries).
+- **Crashes stay contained.** A plugin that crashes or exits kills its host, not Ciel; the call in
+  flight returns a tool error and Ciel restarts the host and reloads its plugins (bounded retries).
 - **A few surfaces need in-process code** and fail that plugin with a clear reason instead of loading:
   gateway platform adapters (`register_platform`), approval transports, Telegram/platform handlers,
   model-provider profiles that build their own SDK client (`create_client`), streaming dashboard
-  endpoints, and plugins that monkeypatch Hermes modules. Run those with `isolation: in_process`.
+  endpoints, and plugins that monkeypatch Ciel modules. Run those with `isolation: in_process`.
 
 **Locking it for a shared deployment.** `plugins.isolation` is ordinary profile config, so whoever can
 edit a profile's `config.yaml` can turn it off. When the profiles belong to people you are isolating from
 each other, pin it in the [managed scope](../managed-scope.md) instead; the managed value wins over every
-profile's own config and `hermes config set` refuses to change it:
+profile's own config and `ciel config set` refuses to change it:
 
 ```yaml
-# /etc/hermes/config.yaml (root-owned, read by every profile on the machine)
+# /etc/ciel/config.yaml (root-owned, read by every profile on the machine)
 plugins:
   isolation: host
   host:
@@ -847,13 +847,13 @@ plugins:
 Run the agents' terminal on an isolated backend (Docker, SSH, ...) as well, so the agent itself cannot
 reach the operator's files.
 
-`hermes plugins validate <dir>` and `hermes plugins show <name>` report whether a plugin runs in the host
+`ciel plugins validate <dir>` and `ciel plugins show <name>` report whether a plugin runs in the host
 and, if not, why. Across the plugin catalog at the time of writing, 299 of 348 entries run in the host
 unchanged.
 
 ### Interactive UI
 
-Running `hermes plugins` with no arguments opens a composite interactive screen:
+Running `ciel plugins` with no arguments opens a composite interactive screen:
 
 ```
 Plugins
@@ -893,7 +893,7 @@ Plugins occupy one of three states:
 | `disabled` | Explicitly off — won't load even if also in `enabled` | (irrelevant) | Yes |
 | `not enabled` | Discovered but never opted in | No | No |
 
-The default for a newly-installed or bundled plugin is `not enabled`. `hermes plugins list` shows all three distinct states so you can tell what's been explicitly turned off vs. what's just waiting to be enabled.
+The default for a newly-installed or bundled plugin is `not enabled`. `ciel plugins list` shows all three distinct states so you can tell what's been explicitly turned off vs. what's just waiting to be enabled.
 
 In a running session, `/plugins` shows which plugins are currently loaded.
 
@@ -938,11 +938,11 @@ In CLI mode:
 In gateway mode:
 
 - `session_key` is required and must identify an existing gateway session. It is the stable routing key, not the CLI session ID.
-- Hermes reuses that session's stored platform, chat, thread, profile, and conversation history. Plugins cannot change that route through `session_key`.
-- Hermes rechecks the stored route against the gateway's current authorisation rules before dispatch.
-- Routes that relied only on an adapter-time or upstream authorisation decision are rejected unless Hermes can revalidate them from current core allowlists, pairing, or explicit allow-all configuration.
+- Ciel reuses that session's stored platform, chat, thread, profile, and conversation history. Plugins cannot change that route through `session_key`.
+- Ciel rechecks the stored route against the gateway's current authorisation rules before dispatch.
+- Routes that relied only on an adapter-time or upstream authorisation decision are rejected unless Ciel can revalidate them from current core allowlists, pairing, or explicit allow-all configuration.
 - Injected text is always conversational input. It cannot invoke slash commands, approve tools, or resolve pending confirmation and clarification prompts.
-- The route and conversation are pinned while dispatch is pending. Hermes drops the request if topic recovery changes the route or the session rotates before handling starts.
+- The route and conversation are pinned while dispatch is pending. Ciel drops the request if topic recovery changes the route or the session rotates before handling starts.
 - The request enters the platform adapter's normal message path. Active sessions use the existing busy-session queue rather than starting a competing turn.
 - Returns `True` when the live gateway accepts the request for asynchronous dispatch. This does not confirm that the agent turn or platform delivery has completed.
 - Returns `False` when neither `session_key` nor `origin` is given (or both are), the permission is not granted, or no live host can accept the request. Unknown or unroutable session keys discovered after asynchronous acceptance are written to the gateway log.
@@ -955,7 +955,7 @@ Starting a session with `origin` (gateway mode only):
 - Authorisation is not bypassed: the origin's user must pass the gateway's current allowlists, pairing, or allow-all configuration for that profile, the same check as the `session_key` path. Choose a `user_id` that is authorised, or the request is dropped at dispatch and logged.
 - The same text rules apply: no slash commands, approvals, or prompt resolution. The permission below is read from the plugin's own profile `config.yaml`.
 
-Ink TUI (`hermes --tui`) and the desktop / dashboard chat are a third host. They do not set the classic CLI reference and they do not register on the messaging-gateway injector — those two hosts stay separate so a live gateway cannot clobber the TUI (or the reverse). Pass the session's durable `session_key` (the `ses_…` id), not the ephemeral UI session id. Hermes queues the text on that session's prompt queue: a busy session keeps the message for the next turn, an idle session starts one. A key that is not a live TUI session is left for the messaging gateway when one is running, and is never rerouted to a different chat.
+Ink TUI (`ciel --tui`) and the desktop / dashboard chat are a third host. They do not set the classic CLI reference and they do not register on the messaging-gateway injector — those two hosts stay separate so a live gateway cannot clobber the TUI (or the reverse). Pass the session's durable `session_key` (the `ses_…` id), not the ephemeral UI session id. Ciel queues the text on that session's prompt queue: a busy session keeps the message for the next turn, an idle session starts one. A key that is not a live TUI session is left for the messaging gateway when one is running, and is never rerouted to a different chat.
 
 This enables plugins like remote control viewers, messaging bridges, or webhook receivers to feed messages into the conversation from external sources.
 
@@ -969,7 +969,7 @@ plugins:
 ```
 
 :::warning
-Only grant gateway injection to plugins you trust. Hermes checks this host API permission, restricts it to existing session routes or new sessions in the plugin's own profile, and applies current authorisation, but Python plugins run in-process and this setting is not a sandbox.
+Only grant gateway injection to plugins you trust. Ciel checks this host API permission, restricts it to existing session routes or new sessions in the plugin's own profile, and applies current authorisation, but Python plugins run in-process and this setting is not a sandbox.
 :::
 
 :::note
@@ -978,7 +978,7 @@ This plugin API does not expose a public HTTP endpoint or CLI command for extern
 
 ## Calling MCP servers from plugins
 
-`ctx.call_mcp()` lets a plugin call a tool on one of the user's configured MCP servers — synchronously, from any hook or tool handler — routing through Hermes' existing native MCP client (same connections, trust-tier gates, circuit breaker, and reconnect logic as model-invoked MCP tools; never a parallel client).
+`ctx.call_mcp()` lets a plugin call a tool on one of the user's configured MCP servers — synchronously, from any hook or tool handler — routing through Ciel' existing native MCP client (same connections, trust-tier gates, circuit breaker, and reconnect logic as model-invoked MCP tools; never a parallel client).
 
 ```python
 result = ctx.call_mcp(

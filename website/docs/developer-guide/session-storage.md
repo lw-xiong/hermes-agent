@@ -1,62 +1,62 @@
 # Session Storage
 
-Hermes Agent uses a SQLite database (`~/.hermes/state.db`) to persist session
+Ciel uses a SQLite database (`~/.ciel/state.db`) to persist session
 metadata, full message history, and model configuration across CLI and gateway
 sessions. This replaces the earlier per-session JSONL file approach.
 
-Source files: `hermes_state.py` (facade) plus the `hermes_state_*.py` siblings (schema, fts, search, compression, portability, gateway, ...)
+Source files: `ciel_state.py` (facade) plus the `ciel_state_*.py` siblings (schema, fts, search, compression, portability, gateway, ...)
 
-## Hermes home and profile isolation
+## Ciel home and profile isolation
 
-`get_hermes_home()` is the authoritative filesystem resolver for state and
-configuration. It uses a context-local override first, then the `HERMES_HOME`
-environment variable, and finally the platform default (`~/.hermes` on macOS
-and Linux; `%LOCALAPPDATA%/hermes` on Windows). Consequently, the default
-database is always `get_hermes_home() / "state.db"`, not a path that callers
-should hard-code as `~/.hermes/state.db`.
+`get_ciel_home()` is the authoritative filesystem resolver for state and
+configuration. It uses a context-local override first, then the `CIEL_HOME`
+environment variable, and finally the platform default (`~/.ciel` on macOS
+and Linux; `%LOCALAPPDATA%/ciel` on Windows). Consequently, the default
+database is always `get_ciel_home() / "state.db"`, not a path that callers
+should hard-code as `~/.ciel/state.db`.
 
 Named profiles are isolated directories: a profile named `coder`, for example,
-uses `<default Hermes root>/profiles/coder/` and therefore has its own
+uses `<default Ciel root>/profiles/coder/` and therefore has its own
 `state.db`, configuration, logs, and other profile-scoped state. A process that
 creates a database, reads configuration, or starts a child process for a
-profile must retain or pass that profile's `HERMES_HOME`; falling back to the
+profile must retain or pass that profile's `CIEL_HOME`; falling back to the
 default root mixes the wrong profile's state into the operation.
 
 The CLI bootstrap calls `_apply_profile_override()` before importing the rest
-of Hermes. An explicit `--profile`/`-p` resolves that profile and writes the
-resolved directory to `HERMES_HOME`. Without an explicit selector, a
-profile-specific `HERMES_HOME` is preserved; otherwise the bootstrap can use
+of Ciel. An explicit `--profile`/`-p` resolves that profile and writes the
+resolved directory to `CIEL_HOME`. Without an explicit selector, a
+profile-specific `CIEL_HOME` is preserved; otherwise the bootstrap can use
 the default root's active-profile selection. `HOME` only determines the
-platform default used when no context override or `HERMES_HOME` is available.
+platform default used when no context override or `CIEL_HOME` is available.
 Changing `HOME` is not a safe way to select a named profile. In particular, a
-subprocess that drops `HERMES_HOME` can fall back to the default profile even
+subprocess that drops `CIEL_HOME` can fall back to the default profile even
 when another profile is active, so subprocess spawners should pass
-`HERMES_HOME` explicitly.
+`CIEL_HOME` explicitly.
 
-Use `display_hermes_home()` only for user-facing text. It formats the resolved
+Use `display_ciel_home()` only for user-facing text. It formats the resolved
 home relative to the user's home directory when possible (for example,
-`~/.hermes/profiles/coder`); it does not provide a separate resolution rule.
+`~/.ciel/profiles/coder`); it does not provide a separate resolution rule.
 
 ### Test isolation guard
 
-Tests must use a temporary `HERMES_HOME` or an explicit temporary database
+Tests must use a temporary `CIEL_HOME` or an explicit temporary database
 path. The live-system guard raises before a test-context process opens a
-production `state.db` under the real default Hermes root or a real named
+production `state.db` under the real default Ciel root or a real named
 profile, preventing fixture data or SQLite side effects from reaching a live
 installation.
 
-`HERMES_STATE_DB_GUARD_BYPASS=1` is a test-only escape hatch for a spawned
+`CIEL_STATE_DB_GUARD_BYPASS=1` is a test-only escape hatch for a spawned
 child process that genuinely must access the live database. The equivalent
 in-process escape hatch is `@pytest.mark.live_system_guard_bypass`. Do not set
-either bypass in normal Hermes commands, development shells, or application
+either bypass in normal Ciel commands, development shells, or application
 configuration: it disables the guard (a hard `RuntimeError`) that protects live
 session history, and a shell that exports it hands the bypass to every later
 pytest run.
 
 ### Desktop profile isolation and compaction generations
 
-Each named profile stores its transcript in its own `$HERMES_HOME/state.db`,
-including when one `hermes serve` process serves several profiles. In-session
+Each named profile stores its transcript in its own `$CIEL_HOME/state.db`,
+including when one `ciel serve` process serves several profiles. In-session
 agent rebuilds (Bot Chat capability refresh and `tools.configure`) must retain
 that session's database handle and bind its profile home during construction.
 Releasing the outgoing agent must not close the handle inherited by its replacement.
@@ -82,7 +82,7 @@ history that appears to revert.
 
 The agent persists an accepted user input before starting its Codex turn. Codex
 then projects that input as a leading `userMessage` notification. At the runtime
-splice boundary, Hermes excludes only that leading item when it exactly matches
+splice boundary, Ciel excludes only that leading item when it exactly matches
 the text serialized into `turn/start`, including rich-input coercion. Later or
 nonmatching user events remain intact, as do separately accepted identical turns.
 This also applies to synthetic/keyless input; it does not depend on a platform
@@ -115,7 +115,7 @@ ownership for a redelivered event.
 ## Architecture Overview
 
 ```
-~/.hermes/state.db (SQLite, WAL mode)
+~/.ciel/state.db (SQLite, WAL mode)
 ├── sessions              — Session metadata, token counts, billing
 ├── messages              — Full message history per session
 ├── session_model_usage   — Per-model/per-task usage attribution rows
@@ -130,7 +130,7 @@ ownership for a redelivered event.
 └── schema_version        — Single-row table tracking migration state
 ```
 
-`hermes sessions recover` copies the row-bearing tables above into the
+`ciel sessions recover` copies the row-bearing tables above into the
 recovered database (FTS indexes and `schema_version` are regenerated), including
 the lazily-created `delivery_obligations` ledger when the source has one — its
 row count is verified like `sessions`/`messages`.
@@ -147,7 +147,7 @@ Key design decisions:
 
 ### Sessions Table
 
-Abridged — see `SCHEMA_SQL` in `hermes_state_common.py` (applied by `hermes_state_schema.py`) for the full current column list
+Abridged — see `SCHEMA_SQL` in `ciel_state_common.py` (applied by `ciel_state_schema.py`) for the full current column list
 (which also includes gateway routing metadata such as `session_key`, `chat_id`,
 `chat_type`, `thread_id`, `display_name`, `origin_json`, `expiry_finalized`,
 workspace fields `cwd` / `git_branch` / `git_repo_root`, handoff and
@@ -199,7 +199,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_sessions_title_unique
 
 `user_id` is the principal on the other end of the session: messaging adapters
 store the platform sender id, and `desktop` / dashboard sessions opened through
-an authenticated `hermes serve` (OAuth or the basic username/password provider)
+an authenticated `ciel serve` (OAuth or the basic username/password provider)
 store the login as `<provider>:<user id>` (for example `basic:alice`). Sessions
 with nobody behind them — anonymous loopback use, `subagent`, `cron`, `kanban`
 — keep it empty. The value is set when the row is created and never inferred
@@ -239,7 +239,7 @@ CREATE INDEX IF NOT EXISTS idx_messages_session_id ON messages(session_id, id);
 Notes:
 - `tool_calls` is stored as a JSON string (serialized list of tool call objects)
 - `reasoning_details`, `codex_reasoning_items`, and `codex_message_items` are stored as JSON strings
-- `reasoning`, `reasoning_content` and `reasoning_details` are always kept in history. On the chat-completions wire every assistant turn replays its stored reasoning on the carriers the route reads (`agent/message_sanitization.py::route_reasoning_carriers`): `reasoning_content` everywhere by default; plus `reasoning` and `reasoning_details` on OpenRouter-format gateways (OpenRouter, Kilo, Vercel AI Gateway, Nous Portal); `reasoning_details` on Novita, MiniMax `/v1` and TokenHub; `reasoning` on local servers, Ollama and Upstage. Strict schemas (Mistral, Groq, Cerebras, SambaNova) get no reasoning key, and Fireworks gets `reasoning_content` only. Only DeepSeek, Kimi and MiMo pad a reasoning-less tool-call turn with `" "`. When a route rejects a field by name ("Extra inputs are not permitted, field: messages[N].reasoning_details"), Hermes records it for that provider/host/model, strips it and retries once. The record lasts for the session and never touches history.
+- `reasoning`, `reasoning_content` and `reasoning_details` are always kept in history. On the chat-completions wire every assistant turn replays its stored reasoning on the carriers the route reads (`agent/message_sanitization.py::route_reasoning_carriers`): `reasoning_content` everywhere by default; plus `reasoning` and `reasoning_details` on OpenRouter-format gateways (OpenRouter, Kilo, Vercel AI Gateway, Nous Portal); `reasoning_details` on Novita, MiniMax `/v1` and TokenHub; `reasoning` on local servers, Ollama and Upstage. Strict schemas (Mistral, Groq, Cerebras, SambaNova) get no reasoning key, and Fireworks gets `reasoning_content` only. Only DeepSeek, Kimi and MiMo pad a reasoning-less tool-call turn with `" "`. When a route rejects a field by name ("Extra inputs are not permitted, field: messages[N].reasoning_details"), Ciel records it for that provider/host/model, strips it and retries once. The record lasts for the session and never touches history.
 - Desktop history hydration retains assistant sidecars in both REST and JSON-RPC (`session.resume`, `session.activate`, `session.history`) projections, including rows with reasoning and tool calls. REST may return the SQLite JSON string while RPC returns decoded items; Desktop accepts both. A final Responses reply may live only in `codex_message_items` while `content` is empty. Canonical content still takes precedence, and analysis/commentary items are not promoted to reply text.
 - `reasoning` stores the raw reasoning text for providers that expose it
 - A reasoning-only clean stop (empty `content`, `finish_reason=stop`, reasoning present) is answered with the reasoning text, but the assistant row is never written with that text as `content`: `content` stays empty, the text lives in `reasoning`/`reasoning_content`, and `api_content` carries it so the next request replays the answer byte-identically. History surfaces therefore show it as reasoning, not as a reply.
@@ -265,7 +265,7 @@ The FTS5 table is kept in sync via three triggers that fire on INSERT, UPDATE,
 and DELETE of the `messages` table. The current triggers are gated on the
 `fts_rebuild_high_water` / `fts_rebuild_progress` markers in `state_meta` (so a
 background FTS rebuild can proceed without double-indexing) and cover all three
-indexed columns — see `SCHEMA_SQL` in `hermes_state_common.py` for the exact SQL.
+indexed columns — see `SCHEMA_SQL` in `ciel_state_common.py` for the exact SQL.
 
 
 ## Schema Version and Migrations
@@ -303,7 +303,7 @@ Declarative column adds use `ALTER TABLE ADD COLUMN` wrapped in try/except to ha
 
 ## Write Contention Handling
 
-Multiple hermes processes (gateway + CLI sessions + worktree agents) share one
+Multiple ciel processes (gateway + CLI sessions + worktree agents) share one
 `state.db`. The `SessionDB` class handles write contention with:
 
 - **Short SQLite timeout** (1 second) instead of the default 30s
@@ -324,18 +324,18 @@ _CHECKPOINT_EVERY_N_WRITES = 50
 ```
 
 When a writer exhausts its budget the turn ends with
-`session_persistence_failed:locked` and, on Linux, `hermes_state_lockowners`
+`session_persistence_failed:locked` and, on Linux, `ciel_state_lockowners`
 logs a WARNING naming the process that held the lock at that moment
-(`PID 594094 (hermes --worktree --yolo) holds WAL write lock on state.db-shm`),
+(`PID 594094 (ciel --worktree --yolo) holds WAL write lock on state.db-shm`),
 read from `/proc/locks` — SQLite's byte-range `fcntl` locks encode the lock kind
 in their offset (`state.db-shm` byte 120 = WAL write, 121 = checkpoint,
 123-127 = read slots; the 1 GiB pending-byte page on `state.db` = rollback-journal
 PENDING/RESERVED/SHARED). The open-descriptor scan cannot make this distinction
-because every Hermes process has the DB open. Look for that line in
-`~/.hermes/logs/errors.log` next to the `database is locked` failure.
+because every Ciel process has the DB open. Look for that line in
+`~/.ciel/logs/errors.log` next to the `database is locked` failure.
 
 Lock contention is recognised by SQLite result code (`SQLITE_BUSY` /
-`SQLITE_LOCKED`, `hermes_state_errors.is_sqlite_lock_error`), not by message
+`SQLITE_LOCKED`, `ciel_state_errors.is_sqlite_lock_error`), not by message
 text. In rollback-journal (`delete`) mode a lock lost inside FTS5's table
 constructor arrives as `SQLITE_BUSY` with the text `vtable constructor failed:
 messages_fts`; it is treated like `database is locked`. Opening a writable
@@ -349,10 +349,10 @@ answers 503 (busy), not 500.
 ### Initialize
 
 ```python
-from hermes_state import SessionDB
+from ciel_state import SessionDB
 
-db = SessionDB()                           # Default: ~/.hermes/state.db
-db = SessionDB(db_path=Path("~/.hermes/cache/scratch/test.db").expanduser())  # Custom path
+db = SessionDB()                           # Default: ~/.ciel/state.db
+db = SessionDB(db_path=Path("~/.ciel/cache/scratch/test.db").expanduser())  # Custom path
 ```
 
 ### Create and Manage Sessions
@@ -555,9 +555,9 @@ db.delete_session("sess_abc123")
 
 ## Database Location
 
-Default path: `get_hermes_home() / "state.db"` — `~/.hermes/state.db` for the
-default profile, `~/.hermes/profiles/<name>/state.db` for a named profile, or
-wherever `HERMES_HOME` points (see [Hermes home and profile isolation](#hermes-home-and-profile-isolation)).
+Default path: `get_ciel_home() / "state.db"` — `~/.ciel/state.db` for the
+default profile, `~/.ciel/profiles/<name>/state.db` for a named profile, or
+wherever `CIEL_HOME` points (see [Ciel home and profile isolation](#ciel-home-and-profile-isolation)).
 
 The database file, WAL file (`state.db-wal`), and shared-memory file
 (`state.db-shm`) are all created in the same directory.

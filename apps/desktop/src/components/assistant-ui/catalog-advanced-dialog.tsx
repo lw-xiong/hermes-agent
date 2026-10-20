@@ -132,7 +132,7 @@ function CatalogAdvancedForm({ entry, fields, kind, onCancel, onInstall }: Catal
   const filesUrl = pluginFilesUrl(entry)
 
   const requirements = [
-    ...(entry.requiresHermes ? [copy.requiresHermes(entry.requiresHermes)] : []),
+    ...(entry.requiresCiel ? [copy.requiresCiel(entry.requiresCiel)] : []),
     ...fields.map(field => copy.envVar(field.name))
   ]
 

@@ -1,7 +1,7 @@
 import { atom } from 'nanostores'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { HermesConnection } from '@/global'
+import type { CielConnection } from '@/global'
 
 import { deferred } from '../test/deferred'
 
@@ -37,7 +37,7 @@ vi.mock('@/store/gateway', () => ({
   ensureGatewayForProfile,
   openGatewayForProfile
 }))
-vi.mock('@/hermes', () => ({
+vi.mock('@/ciel', () => ({
   getProfiles: vi.fn(async () => ({ profiles: [] })),
   setApiRequestProfile: vi.fn()
 }))
@@ -56,16 +56,16 @@ const {
   setCurrentProvider
 } = await import('./session')
 
-const agentConn = (over: Partial<HermesConnection> = {}): HermesConnection =>
-  ({ baseUrl: 'https://homelab.invalid', mode: 'remote', profile: 'research', ...over }) as HermesConnection
+const agentConn = (over: Partial<CielConnection> = {}): CielConnection =>
+  ({ baseUrl: 'https://homelab.invalid', mode: 'remote', profile: 'research', ...over }) as CielConnection
 
-const localConn = (over: Partial<HermesConnection> = {}): HermesConnection =>
-  ({ baseUrl: '', mode: 'local', profile: 'default', ...over }) as HermesConnection
+const localConn = (over: Partial<CielConnection> = {}): CielConnection =>
+  ({ baseUrl: '', mode: 'local', profile: 'default', ...over }) as CielConnection
 
-const getConnection = vi.fn<(profile?: string | null) => Promise<HermesConnection>>()
+const getConnection = vi.fn<(profile?: string | null) => Promise<CielConnection>>()
 
 const getConnectionFor =
-  vi.fn<(payload: { connectionId?: null | string; profile?: null | string }) => Promise<HermesConnection>>()
+  vi.fn<(payload: { connectionId?: null | string; profile?: null | string }) => Promise<CielConnection>>()
 
 beforeEach(() => {
   const localStorage = window.localStorage
@@ -78,7 +78,7 @@ beforeEach(() => {
   $gateway.set({ id: 'live-socket' })
   $activeGatewayProfile.set('default')
   $connection.set(localConn())
-  vi.stubGlobal('window', { hermesDesktop: { getConnection, getConnectionFor }, localStorage })
+  vi.stubGlobal('window', { cielDesktop: { getConnection, getConnectionFor }, localStorage })
   setComposerSelectionOwner('homelab', 'default')
 })
 
@@ -392,7 +392,7 @@ describe('ensureGatewayAgent commit hook (beforeActivate) — the Sessions switc
     vi.useFakeTimers()
 
     try {
-      getConnectionFor.mockImplementationOnce(() => new Promise<HermesConnection>(() => undefined))
+      getConnectionFor.mockImplementationOnce(() => new Promise<CielConnection>(() => undefined))
 
       const activation = ensureGatewayAgent('homelab', 'research')
       await vi.advanceTimersByTimeAsync(20_000)

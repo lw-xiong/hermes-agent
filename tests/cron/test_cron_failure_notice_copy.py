@@ -1,4 +1,4 @@
-"""User-facing cron failure notices: plain words, the real output path, and the exact `hermes cron`
+"""User-facing cron failure notices: plain words, the real output path, and the exact `ciel cron`
 command to act on. Contract tests, not snapshots (root AGENTS.md).
 
 The classifier is `agent.error_classifier.classify_api_error`; these tests pin what the copy table
@@ -27,10 +27,10 @@ def test_auth_failure_names_the_pinned_provider_and_the_failing_profile(monkeypa
     """A profile's credentials are its own (93889b770da): the notice must send the operator to
     THIS profile's sign-in for the job's pinned provider, never a bare placeholder (#114012)."""
     _no_chain(monkeypatch)
-    profile_home = tmp_path / ".hermes" / "profiles" / "ops"
+    profile_home = tmp_path / ".ciel" / "profiles" / "ops"
     profile_home.mkdir(parents=True)
     monkeypatch.setenv("HOME", str(tmp_path))
-    monkeypatch.setenv("HERMES_HOME", str(profile_home))
+    monkeypatch.setenv("CIEL_HOME", str(profile_home))
     msg = _summarize_cron_failure_for_delivery(
         {**JOB, "provider": "openai-codex"}, "Error code: 401 - Unauthorized")
     assert "`ciel -p ops auth add openai-codex --type oauth`" in msg, msg
@@ -52,7 +52,7 @@ def test_rate_and_usage_limit_phrases_still_yield_a_provider_notice(monkeypatch)
         msg = _summarize_cron_failure_for_delivery(JOB, text)
         assert "limit" in msg.lower(), msg
         assert not _HTTP_LEAD.search(msg), msg
-        assert "`hermes cron run ab12cd34`" in msg or "`hermes cron edit ab12cd34" in msg, msg
+        assert "`ciel cron run ab12cd34`" in msg or "`ciel cron edit ab12cd34" in msg, msg
 
 
 def test_cron_cause_gloss_is_the_shared_table():
@@ -62,7 +62,7 @@ def test_cron_cause_gloss_is_the_shared_table():
 
     for reason in FAILURE_CAUSE_GLOSS:
         notice = provider_failure_notice("Morning brief", "ab12cd34", reason, backup_provider_phrase="x.")
-        assert notice is not None and "`hermes cron" in notice, reason
+        assert notice is not None and "`ciel cron" in notice, reason
     assert provider_failure_notice("Morning brief", "ab12cd34", "unknown", backup_provider_phrase="x.") is None
 
 

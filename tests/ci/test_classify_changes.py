@@ -167,7 +167,7 @@ CASES = {
     "nix + python → both": (["nix/checks.nix", "agent/x.py"], _lanes(python=True, scan=True, nix=True)),
     # Product Python can still break the flake (nine checks run the built
     # binary), but the flake meets it on main, not on the PR.
-    "product python → no nix on the PR": (["hermes_cli/config.py"], _lanes(python=True, scan=True)),
+    "product python → no nix on the PR": (["ciel_cli/config.py"], _lanes(python=True, scan=True)),
     # tests/ is not packaged, so the built binary cannot change.
     "tests-only → no nix": (
         ["tests/agent/test_foo.py"],
@@ -182,8 +182,8 @@ CASES = {
     # The Windows desktop-update hand-off is a PowerShell integration surface:
     # its tests spawn the real script and poll its loopback server. They run
     # when the script, the Electron side that launches it, or their own test
-    # files change — not on every hermes_state.py PR. The script runs a real
-    # `hermes update`, and the Windows crash cells that kill it mid-run live in
+    # files change — not on every ciel_state.py PR. The script runs a real
+    # `ciel update`, and the Windows crash cells that kill it mid-run live in
     # the install + update journey, so it starts e2e_upgrade as well.
     "windows.ps1 → desktop_updater": (
         ["scripts/desktop-update/windows.ps1"],
@@ -266,7 +266,7 @@ CASES = {
         _lanes(python=True),
     ),
     "mcp_catalog.py → python + scan": (
-        ["hermes_cli/mcp_catalog.py"],
+        ["ciel_cli/mcp_catalog.py"],
         _lanes(python=True, scan=True),
     ),
     "eslint config → frontend": (
@@ -307,8 +307,8 @@ CASES = {
         ["scripts/install.sh"],
         _lanes(python=True, bootstrap=True, python_prod=True, e2e_upgrade=True, e2e_desktop_update=True),
     ),
-    "setup-hermes.sh → bootstrap lane": (
-        ["setup-hermes.sh"],
+    "setup-ciel.sh → bootstrap lane": (
+        ["setup-ciel.sh"],
         _lanes(python=True, bootstrap=True, python_prod=True, e2e_upgrade=True),
     ),
     "tauri installer source → bootstrap + rust": (
@@ -349,25 +349,25 @@ CASES = {
         ["tests/e2e/core/sqlite/test_torture.py"],
         _lanes(python=True, python_prod=False, scan=True, e2e=True),
     ),
-    "state db → e2e": (["hermes_state_wal.py"], _lanes(python=True, scan=True, e2e=True)),
+    "state db → e2e": (["ciel_state_wal.py"], _lanes(python=True, scan=True, e2e=True)),
     "upgrade suite → e2e_upgrade, not e2e": (
         ["tests/e2e/core/upgrade/pm/test_pm_lifecycle.py"],
         _lanes(python=True, python_prod=False, scan=True, e2e_upgrade=True),
     ),
     "updater → e2e_upgrade + desktop update": (
-        ["hermes_cli/update_cmd_git.py"],
+        ["ciel_cli/update_cmd_git.py"],
         _lanes(python=True, scan=True, e2e_upgrade=True, e2e_desktop_update=True),
     ),
     "PM → e2e_upgrade + docker": (["pm/environments.py"], _lanes(python=True, scan=True, e2e_upgrade=True, docker=True)),
     # The update pipeline lives beyond the update_* family too: the entry
     # point, launch-time recovery, the gateway restart/pause surface.
-    # main.py is also `hermes desktop --build-only`, the update's Desktop rebuild.
+    # main.py is also `ciel desktop --build-only`, the update's Desktop rebuild.
     "cmd_update entry → both update suites": (
-        ["hermes_cli/main.py"], _lanes(python=True, scan=True, e2e_upgrade=True, e2e_desktop_update=True),
+        ["ciel_cli/main.py"], _lanes(python=True, scan=True, e2e_upgrade=True, e2e_desktop_update=True),
     ),
     "gateway status stamp → e2e_upgrade": (["gateway/status.py"], _lanes(python=True, scan=True, e2e_upgrade=True)),
     "desktop verify → desktop_updater + both update suites": (
-        ["hermes_cli/desktop_update_verify.py"],
+        ["ciel_cli/desktop_update_verify.py"],
         _lanes(python=True, scan=True, desktop_updater=True, e2e_upgrade=True, e2e_desktop_update=True),
     ),
     "electron main → desktop update": (
@@ -452,36 +452,36 @@ def test_every_slow_lane_path_matches_a_tracked_file():
     assert dead == set()
 
 
-# Every file the `hermes update` pipeline runs on the update path (the step
+# Every file the `ciel update` pipeline runs on the update path (the step
 # tables of the updater audit's cli-update and desktop-update code maps). A
 # PR that edits only one of these must start the real-update suite that would
 # catch the regression; before, main.py / _early_recovery.py / relaunch.py /
-# gateway/ / hermes_bootstrap.py skipped both the Linux and Windows journeys.
+# gateway/ / ciel_bootstrap.py skipped both the Linux and Windows journeys.
 _UPDATE_PATH_FILES = (
-    "hermes_cli/main.py",
-    "hermes_cli/main_dashboard.py",
-    "hermes_cli/main_desktop.py",
-    "hermes_cli/_early_recovery.py",
-    "hermes_cli/venv_sync.py",
-    "hermes_cli/update_lock.py",
-    "hermes_cli/update_cmd.py",
-    "hermes_cli/update_completion.py",
-    "hermes_cli/update_cmd_windows.py",
-    "hermes_cli/update_cmd_zip.py",
-    "hermes_cli/_update_takeover.py",
-    "hermes_cli/source_completion.py",
-    "hermes_cli/source_build.py",
-    "hermes_cli/source_releases.py",
-    "hermes_cli/_launchers.py",
-    "hermes_cli/gitlock.py",
-    "hermes_cli/process_identity.py",
-    "hermes_cli/relaunch.py",
-    "hermes_cli/gateway.py",
-    "hermes_cli/gateway_windows.py",
-    "hermes_cli/gateway_migrate.py",
-    "hermes_cli/desktop_update_verify.py",
-    "hermes_bootstrap.py",
-    "hermes_constants.py",
+    "ciel_cli/main.py",
+    "ciel_cli/main_dashboard.py",
+    "ciel_cli/main_desktop.py",
+    "ciel_cli/_early_recovery.py",
+    "ciel_cli/venv_sync.py",
+    "ciel_cli/update_lock.py",
+    "ciel_cli/update_cmd.py",
+    "ciel_cli/update_completion.py",
+    "ciel_cli/update_cmd_windows.py",
+    "ciel_cli/update_cmd_zip.py",
+    "ciel_cli/_update_takeover.py",
+    "ciel_cli/source_completion.py",
+    "ciel_cli/source_build.py",
+    "ciel_cli/source_releases.py",
+    "ciel_cli/_launchers.py",
+    "ciel_cli/gitlock.py",
+    "ciel_cli/process_identity.py",
+    "ciel_cli/relaunch.py",
+    "ciel_cli/gateway.py",
+    "ciel_cli/gateway_windows.py",
+    "ciel_cli/gateway_migrate.py",
+    "ciel_cli/desktop_update_verify.py",
+    "ciel_bootstrap.py",
+    "ciel_constants.py",
     "gateway/status.py",
     "gateway/control_socket.py",
     "gateway/code_skew.py",
@@ -500,8 +500,8 @@ _DESKTOP_UPDATE_PATH_FILES = (
     "apps/desktop/electron/host-backend-attach.ts",
     "scripts/desktop-update/windows.ps1",
     "scripts/desktop-update/posix.sh",
-    "hermes_cli/desktop_update_verify.py",
-    "hermes_cli/main_desktop.py",
+    "ciel_cli/desktop_update_verify.py",
+    "ciel_cli/main_desktop.py",
 )
 
 
@@ -521,7 +521,7 @@ _REPO = Path(__file__).resolve().parents[2]
 
 
 def _yaml(rel: str) -> dict:
-    yaml = pytest.importorskip("hermes_yaml")
+    yaml = pytest.importorskip("ciel_yaml")
     return yaml.safe_load((_REPO / rel).read_text(encoding="utf-8-sig"))
 
 

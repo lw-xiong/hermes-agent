@@ -1,10 +1,10 @@
-import { compactNumber } from '@hermes/shared'
+import { compactNumber } from '@ciel/shared'
 import { useMemo } from 'react'
 
 import { Codicon } from '@/components/ui/codicon'
 import { useI18n } from '@/i18n'
 import { cn } from '@/lib/utils'
-import type { ContextBreakdown, ContextUsageCategory, UsageStats } from '@/types/hermes'
+import type { ContextBreakdown, ContextUsageCategory, UsageStats } from '@/types/ciel'
 
 interface ContextUsagePanelProps {
   breakdown: ContextBreakdown | null

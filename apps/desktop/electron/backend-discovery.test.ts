@@ -15,7 +15,7 @@ import { runPrimaryBackendStartup } from './primary-backend-startup'
 
 const LEDGER = JSON.stringify([
   {
-    argv: 'hermes serve --host 127.0.0.1 --port 0',
+    argv: 'ciel serve --host 127.0.0.1 --port 0',
     create_time: 1_000,
     host: '127.0.0.1',
     install: 'abc',
@@ -176,7 +176,7 @@ test('a lost spawn-gate race attaches instead of spawning a second backend', asy
 
 /** Gate creation is exclusive and an old release cannot remove a replacement. */
 test('only one process owns the spawn gate file', () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'hermes-spawn-gate-'))
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ciel-spawn-gate-'))
   const gatePath = path.join(directory, 'gate.json')
 
   try {
@@ -215,7 +215,7 @@ test('only one process owns the spawn gate file', () => {
 
 /** A crashed owner cannot leave every later launch waiting on an orphan. */
 test('a stale spawn gate is reclaimed before taking ownership', () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'hermes-spawn-gate-stale-'))
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ciel-spawn-gate-stale-'))
   const gatePath = path.join(directory, 'gate.json')
 
   try {
@@ -244,7 +244,7 @@ test('a stale spawn gate is reclaimed before taking ownership', () => {
 
 /** Discovery takes over a crashed owner immediately instead of polling for a minute. */
 test('a crashed spawn-gate owner is reclaimed without waiting', async () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'hermes-spawn-gate-crashed-'))
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ciel-spawn-gate-crashed-'))
   const gatePath = path.join(directory, 'gate.json')
   let sleeps = 0
 
@@ -286,7 +286,7 @@ test('a crashed spawn-gate owner is reclaimed without waiting', async () => {
 
 /** Recovery must not replace a live owner merely because a contender exists. */
 test('a live spawn gate is not reclaimed', () => {
-  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'hermes-spawn-gate-live-'))
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ciel-spawn-gate-live-'))
   const gatePath = path.join(directory, 'gate.json')
 
   try {
@@ -451,7 +451,7 @@ test('a live pid still attaches (liveness gate must not break the hot path)', as
   assert.equal(attached?.pid, 4711)
 })
 
-// A real `hermes serve` stand-in: serves its session token at GET / and its
+// A real `ciel serve` stand-in: serves its session token at GET / and its
 // boot commit on the public GET /api/health (omitted when `commit` is null,
 // i.e. a backend predating the field).
 const FAKE_BACKEND = `
@@ -462,7 +462,7 @@ http.createServer((req, res) => {
     res.setHeader('content-type', 'application/json')
     return res.end(JSON.stringify({ ok: true, version: '0.21.5', commit }))
   }
-  res.end('<script>window.__HERMES_SESSION_TOKEN__ = "tok-' + process.pid + '"</script>')
+  res.end('<script>window.__CIEL_SESSION_TOKEN__ = "tok-' + process.pid + '"</script>')
 }).listen(0, '127.0.0.1', function () { process.stdout.write(this.address().port + '\\n') })
 `
 
@@ -517,7 +517,7 @@ const OLD_COMMIT = 'a'.repeat(40)
 const NEW_COMMIT = 'b'.repeat(40)
 
 /**
- * V15: a CLI/launchd `hermes serve` that survived an update keeps running the
+ * V15: a CLI/launchd `ciel serve` that survived an update keeps running the
  * OLD code and answers 503 "Restart required"; re-attaching it on every
  * Restart wedges the app. Attach skips it — even as the newest record — and
  * takes the backend that booted from this Desktop's checkout.
@@ -568,7 +568,7 @@ test('a transient identity read failure retries the running backend instead of s
 
   const server = http.createServer((req, res) => {
     if (req.url !== '/api/health') {
-      return res.end('<script>window.__HERMES_SESSION_TOKEN__ = "tok-slow"</script>')
+      return res.end('<script>window.__CIEL_SESSION_TOKEN__ = "tok-slow"</script>')
     }
 
     healthReads += 1

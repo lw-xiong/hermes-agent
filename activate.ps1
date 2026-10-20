@@ -1,5 +1,5 @@
 # Source this file to sync and apply the PM environment; deactivate restores it.
-# Trusts the recorded tool digest. `hermes pm install` re-checks the bytes.
+# Trusts the recorded tool digest. `ciel pm install` re-checks the bytes.
 # -TestExtras a,b selects runtime extras in the test environment (default: [all]).
 param([string]$TestExtras = '')
 $ErrorActionPreference = 'Stop'
@@ -18,7 +18,7 @@ try {
     $shell = (Get-Process -Id $PID).Path
     $testArgs = @()
     if ($TestExtras) { $testArgs = @('-TestExtras', $TestExtras) }
-    & $shell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$repo\setup-hermes.ps1" -RuntimeOnly @testArgs | Out-Host
+    & $shell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File "$repo\setup-ciel.ps1" -RuntimeOnly @testArgs | Out-Host
     if ($LASTEXITCODE -ne 0) { throw 'activate: setup failed; shell environment unchanged' }
 } finally {
     foreach ($key in $bootstrapSaved.Keys) {
@@ -32,8 +32,8 @@ foreach ($candidate in @("$repo\.venv\Scripts\python.exe", "$repo\venv\Scripts\p
     if (Test-Path -LiteralPath $candidate) { $py = $candidate; break }
 }
 if (-not $py) {
-    $roots = @($env:HERMES_RUNTIME_DIR, "$repo\..\tools")
-    $homeRoot = if ($env:HERMES_HOME) { $env:HERMES_HOME } else { "$env:LOCALAPPDATA\hermes" }
+    $roots = @($env:CIEL_RUNTIME_DIR, "$repo\..\tools")
+    $homeRoot = if ($env:CIEL_HOME) { $env:CIEL_HOME } else { "$env:LOCALAPPDATA\ciel" }
     $roots += (Join-Path $homeRoot 'tools')
     foreach ($root in $roots) {
         if (-not $root) { continue }
@@ -44,7 +44,7 @@ if (-not $py) {
         if ($py) { break }
     }
 }
-if (-not $py) { throw 'activate: no bootstrap Python found; run setup-hermes.ps1' }
+if (-not $py) { throw 'activate: no bootstrap Python found; run setup-ciel.ps1' }
 $priorPath = $env:PYTHONPATH
 $priorHome = $env:PYTHONHOME
 try {
@@ -57,12 +57,12 @@ try {
     if ($null -eq $priorPath) { Remove-Item env:PYTHONPATH -ErrorAction SilentlyContinue } else { $env:PYTHONPATH = $priorPath }
     if ($null -eq $priorHome) { Remove-Item env:PYTHONHOME -ErrorAction SilentlyContinue } else { $env:PYTHONHOME = $priorHome }
 }
-# __HERMES_ACTIVATED (the sentinel repo scripts and the shebang prologue read)
+# __CIEL_ACTIVATED (the sentinel repo scripts and the shebang prologue read)
 # is part of the composed env, so it is saved and restored with the rest.
-$global:_hermesKeys = @($composed.PSObject.Properties.Name)
-$global:_hermesSaved = @{}
-foreach ($key in $global:_hermesKeys) {
-    $global:_hermesSaved[$key] = [pscustomobject]@{
+$global:_cielKeys = @($composed.PSObject.Properties.Name)
+$global:_cielSaved = @{}
+foreach ($key in $global:_cielKeys) {
+    $global:_cielSaved[$key] = [pscustomobject]@{
         WasSet = (Test-Path "env:$key")
         Value = [Environment]::GetEnvironmentVariable($key)
     }
@@ -70,27 +70,27 @@ foreach ($key in $global:_hermesKeys) {
 foreach ($property in $composed.PSObject.Properties) {
     Set-Item -Path "env:$($property.Name)" -Value ([string]$property.Value)
 }
-# This checkout, not whichever `hermes` PATH finds. A function beats PATH,
+# This checkout, not whichever `ciel` PATH finds. A function beats PATH,
 # an alias, and the MSIX execution alias. It runs only while the shell is
 # inside this worktree.
-$global:_hermesWorktree = $repo
+$global:_cielWorktree = $repo
 # The branch names the worktree. A checkout cannot share a branch with another.
 # git's "not a repository" is not an activation failure: the directory name is
 # the label, and the command still refuses outside this tree.
 $branch = $null
 try { $branch = & git -C $repo rev-parse --abbrev-ref HEAD 2>$null } catch { $branch = $null }
 if ($branch -and $branch -ne 'HEAD') {
-    $global:_hermesWorktreeName = $branch
+    $global:_cielWorktreeName = $branch
 } else {
-    $global:_hermesWorktreeName = Split-Path -Leaf $repo
+    $global:_cielWorktreeName = Split-Path -Leaf $repo
 }
 if (Test-Path function:prompt) {
-    $global:_hermesSavedPrompt = (Get-Item function:prompt).ScriptBlock
+    $global:_cielSavedPrompt = (Get-Item function:prompt).ScriptBlock
 } else {
-    $global:_hermesSavedPrompt = $null
+    $global:_cielSavedPrompt = $null
 }
 
-function global:_hermesWorktreeHere {
+function global:_cielWorktreeHere {
     # Prompt calls this after every command. Keep the user's exit code.
     $saved = $global:LASTEXITCODE
     $top = $null
@@ -98,18 +98,18 @@ function global:_hermesWorktreeHere {
     $global:LASTEXITCODE = $saved
     if (-not $top) { return $false }
     $here = [System.IO.Path]::GetFullPath($top).TrimEnd('\')
-    $root = [System.IO.Path]::GetFullPath($global:_hermesWorktree).TrimEnd('\')
+    $root = [System.IO.Path]::GetFullPath($global:_cielWorktree).TrimEnd('\')
     return $here.Equals($root, [System.StringComparison]::OrdinalIgnoreCase)
 }
 
-function global:hermes {
-    if (-not (_hermesWorktreeHere)) {
+function global:ciel {
+    if (-not (_cielWorktreeHere)) {
         $here = (Get-Location).Path
-        Write-Error "hermes: $here is outside $($global:_hermesWorktree); refusing (the installed command is hidden while this checkout is active)" -ErrorAction Continue
+        Write-Error "ciel: $here is outside $($global:_cielWorktree); refusing (the installed command is hidden while this checkout is active)" -ErrorAction Continue
         $global:LASTEXITCODE = 1
         return
     }
-    Push-Location -LiteralPath $global:_hermesWorktree
+    Push-Location -LiteralPath $global:_cielWorktree
     try {
         $py = $env:PYTHON
         if (-not $py) {
@@ -121,7 +121,7 @@ function global:hermes {
             }
         }
         if (-not $py) { $py = 'python' }
-        & $py hermes @args
+        & $py ciel @args
     } finally {
         Pop-Location
     }
@@ -129,28 +129,28 @@ function global:hermes {
 
 function global:prompt {
     $prefix = ''
-    if (_hermesWorktreeHere) { $prefix = "($($global:_hermesWorktreeName)) " }
-    if ($global:_hermesSavedPrompt) {
-        return $prefix + (& $global:_hermesSavedPrompt)
+    if (_cielWorktreeHere) { $prefix = "($($global:_cielWorktreeName)) " }
+    if ($global:_cielSavedPrompt) {
+        return $prefix + (& $global:_cielSavedPrompt)
     }
     return "$prefix$($(Get-Location).Path)> "
 }
 
 function global:deactivate {
-    foreach ($key in $global:_hermesKeys) {
-        $saved = $global:_hermesSaved[$key]
+    foreach ($key in $global:_cielKeys) {
+        $saved = $global:_cielSaved[$key]
         if ($saved.WasSet) { Set-Item -Path "env:$key" -Value $saved.Value }
         else { Remove-Item -Path "env:$key" -ErrorAction SilentlyContinue }
     }
-    if ($global:_hermesSavedPrompt) {
-        Set-Item -Path function:prompt -Value $global:_hermesSavedPrompt
+    if ($global:_cielSavedPrompt) {
+        Set-Item -Path function:prompt -Value $global:_cielSavedPrompt
     } else {
         Remove-Item function:prompt -ErrorAction SilentlyContinue
     }
-    $global:_hermesKeys = $null
-    $global:_hermesSaved = $null
-    $global:_hermesWorktree = $null
-    $global:_hermesWorktreeName = $null
-    $global:_hermesSavedPrompt = $null
-    Remove-Item function:deactivate, function:hermes, function:_hermesWorktreeHere -ErrorAction SilentlyContinue
+    $global:_cielKeys = $null
+    $global:_cielSaved = $null
+    $global:_cielWorktree = $null
+    $global:_cielWorktreeName = $null
+    $global:_cielSavedPrompt = $null
+    Remove-Item function:deactivate, function:ciel, function:_cielWorktreeHere -ErrorAction SilentlyContinue
 }

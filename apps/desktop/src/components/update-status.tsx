@@ -197,7 +197,7 @@ function relativeTime(ms: number | undefined, u: Translations['updates']): strin
 }
 
 /**
- * The "Hermes Desktop / version / brand mark" hero shared by the About page
+ * The "Ciel Desktop / version / brand mark" hero shared by the About page
  * and the updates overlay, including the bundle-out-of-sync warning. The
  * heading render is injectable so a dialog surface can emit a DialogTitle
  * for its accessible name while About keeps a plain h2.
@@ -240,7 +240,7 @@ export function VersionHero({
               {version.bundleSwapPending ? (
                 <Button
                   className="mt-2"
-                  onClick={() => void window.hermesDesktop?.relaunchApp?.()}
+                  onClick={() => void window.cielDesktop?.relaunchApp?.()}
                   size="sm"
                   variant="textStrong"
                 >
@@ -253,7 +253,7 @@ export function VersionHero({
                     href={INSTALLER_URL}
                     onClick={event => {
                       event.preventDefault()
-                      void window.hermesDesktop?.openExternal?.(INSTALLER_URL)
+                      void window.cielDesktop?.openExternal?.(INSTALLER_URL)
                     }}
                     rel="noreferrer"
                     target="_blank"
@@ -383,7 +383,7 @@ export function UpdateStatusCard({
                 href={RELEASE_NOTES_URL}
                 onClick={event => {
                   event.preventDefault()
-                  void window.hermesDesktop?.openExternal?.(RELEASE_NOTES_URL)
+                  void window.cielDesktop?.openExternal?.(RELEASE_NOTES_URL)
                 }}
                 rel="noreferrer"
                 target="_blank"

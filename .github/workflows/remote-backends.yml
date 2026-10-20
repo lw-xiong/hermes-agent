@@ -31,7 +31,7 @@ concurrency:
 env:
   # One small image for both the sshd host and the docker backend's sandbox, pinned
   # by digest so a tag move cannot change what the lane tests.
-  HERMES_TEST_IMAGE_REF: debian:13-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f
+  CIEL_TEST_IMAGE_REF: debian:13-slim@sha256:a29215f6a35e51e22adffa17f89e9d2ef06214e64a2bad10d765c46aea49f11f
 
 jobs:
   real-backends:
@@ -47,13 +47,13 @@ jobs:
       - name: Pull the test image
         uses: ./.github/actions/retry
         with:
-          command: docker pull -q "$HERMES_TEST_IMAGE_REF"
+          command: docker pull -q "$CIEL_TEST_IMAGE_REF"
 
       - name: Start a throwaway sshd
-        # Exports HERMES_TEST_SSH_{HOST,USER,PORT,KEY} through $GITHUB_ENV.
+        # Exports CIEL_TEST_SSH_{HOST,USER,PORT,KEY} through $GITHUB_ENV.
         env:
-          HERMES_TEST_SSHD_IMAGE: ${{ env.HERMES_TEST_IMAGE_REF }}
-        run: scripts/ci/start_test_sshd.sh "$RUNNER_TEMP/hermes-test-sshd"
+          CIEL_TEST_SSHD_IMAGE: ${{ env.CIEL_TEST_IMAGE_REF }}
+        run: scripts/ci/start_test_sshd.sh "$RUNNER_TEMP/ciel-test-sshd"
 
       - name: Set up locked Python and test dependencies
         uses: ./.github/actions/setup-pm
@@ -64,7 +64,7 @@ jobs:
 
       - name: Run the real-backend tests
         env:
-          HERMES_TEST_DOCKER_IMAGE: ${{ env.HERMES_TEST_IMAGE_REF }}
+          CIEL_TEST_DOCKER_IMAGE: ${{ env.CIEL_TEST_IMAGE_REF }}
           OPENROUTER_API_KEY: ""
           OPENAI_API_KEY: ""
           NOUS_API_KEY: ""
@@ -80,4 +80,4 @@ jobs:
 
       - name: sshd log
         if: failure()
-        run: docker logs hermes-test-sshd || true
+        run: docker logs ciel-test-sshd || true

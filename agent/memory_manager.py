@@ -449,7 +449,7 @@ class MemoryManager:
         schemas = list(provider.get_tool_schemas())
 
         if provider.name != "builtin":
-            from hermes_cli.config import load_config
+            from ciel_cli.config import load_config
 
             # Recall is provider-ranked: keep it whole unless this profile opts in.
             # Snapshot both gates at registration, never re-read them mid-conversation.
@@ -468,14 +468,14 @@ class MemoryManager:
         # ``clarify``, ``delegate_task``). Reject it here, at the door, so it never enters the routing table
         # at all — matching the built-ins-always-win invariant used by the TTS/browser/search provider
         # registries. See #40466.
-        from toolsets import _HERMES_CORE_TOOLS
+        from toolsets import _CIEL_CORE_TOOLS
 
         for raw_schema in schemas:
             schema = normalize_tool_schema(raw_schema)
             if schema is None:
                 continue
             tool_name = schema["name"]
-            if tool_name in _HERMES_CORE_TOOLS:
+            if tool_name in _CIEL_CORE_TOOLS:
                 logger.warning(
                     "Memory provider '%s' tool '%s' shadows a reserved core "
                     "tool name; registration ignored. Core tools always win — "
@@ -686,7 +686,7 @@ class MemoryManager:
     def get_all_tool_schemas(self) -> list[dict[str, Any]]:
         """Collect deduplicated tool schemas from all providers; reserved core tool names are
         skipped because :meth:`add_provider` refuses to route them."""
-        from toolsets import _HERMES_CORE_TOOLS
+        from toolsets import _CIEL_CORE_TOOLS
 
         schemas: list[dict[str, Any]] = []
         seen = set()
@@ -699,7 +699,7 @@ class MemoryManager:
                         "Memory provider '%s' returned a tool schema with "
                         "no resolvable name; skipping (%r)", provider.name, raw_schema,
                     )
-                elif schema["name"] not in _HERMES_CORE_TOOLS and schema["name"] not in seen:
+                elif schema["name"] not in _CIEL_CORE_TOOLS and schema["name"] not in seen:
                     schemas.append(schema)
                     seen.add(schema["name"])
 
@@ -718,7 +718,7 @@ class MemoryManager:
         if provider is None:
             return tool_error(f"No memory provider handles tool '{tool_name}'")
         args = _redact_for_provider(args)
-        from hermes_cli.observability.shared_metrics_loop import record_provider_memory_call
+        from ciel_cli.observability.shared_metrics_loop import record_provider_memory_call
         try:
             result = provider.handle_tool_call(tool_name, args, **kwargs)
         except Exception as e:
@@ -990,9 +990,9 @@ class MemoryManager:
         )
 
     def initialize_all(self, session_id: str, **kwargs) -> None:
-        """Initialize all providers, injecting ``hermes_home`` so they resolve profile-scoped paths."""
-        if "hermes_home" not in kwargs:
-            from hermes_constants import get_hermes_home
-            kwargs["hermes_home"] = str(get_hermes_home())
+        """Initialize all providers, injecting ``ciel_home`` so they resolve profile-scoped paths."""
+        if "ciel_home" not in kwargs:
+            from ciel_constants import get_ciel_home
+            kwargs["ciel_home"] = str(get_ciel_home())
         self._each_provider("initialize failed", lambda p: p.initialize(session_id=session_id, **kwargs),
                             level=logging.WARNING)

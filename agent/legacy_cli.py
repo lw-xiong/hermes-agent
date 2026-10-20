@@ -1,6 +1,6 @@
-"""Argument layer for the legacy ``hermes-agent`` runner (``run_agent.main``).
+"""Argument layer for the legacy ``ciel-agent`` runner (``run_agent.main``).
 
-A console script calls its target with no arguments, so pointing ``hermes-agent``
+A console script calls its target with no arguments, so pointing ``ciel-agent``
 at ``run_agent.main`` ignored argv entirely: ``--help``, ``--version`` and a bare
 invocation all ran a real model turn with ``main()``'s built-in demo query, and
 ``--query`` was silently dropped (#54648). ``python run_agent.py`` routes through
@@ -9,15 +9,15 @@ here too, so the installer's PATH launcher behaves the same way.
 
 from __future__ import annotations
 
-# hermes_bootstrap first (UTF-8 stdio on Windows; no-op on POSIX), like every other entry point.
+# ciel_bootstrap first (UTF-8 stdio on Windows; no-op on POSIX), like every other entry point.
 try:
-    import hermes_bootstrap
+    import ciel_bootstrap
 except ModuleNotFoundError:
-    pass  # partial `hermes update` — only skips the Windows UTF-8 stdio setup
+    pass  # partial `ciel update` — only skips the Windows UTF-8 stdio setup
 
-# The `hermes-agent` console script lands here without hermes_cli.main: repair a `hermes update` killed
+# The `ciel-agent` console script lands here without ciel_cli.main: repair a `ciel update` killed
 # while git wrote the new tree before importing anything else from the checkout.
-from hermes_cli import _early_recovery
+from ciel_cli import _early_recovery
 
 if _early_recovery.restore_interrupted_pull():
     _early_recovery.relaunch_after_restore()
@@ -27,11 +27,11 @@ from typing import Callable, List, Optional
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    from hermes_cli import __release_date__, __version__
+    from ciel_cli import __release_date__, __version__
 
     parser = argparse.ArgumentParser(
-        prog="hermes-agent",
-        description="Legacy single-query Ciel runner. For the full CLI use `hermes`.",
+        prog="ciel-agent",
+        description="Legacy single-query Ciel runner. For the full CLI use `ciel`.",
     )
     parser.add_argument("--version", action="version", version=f"Ciel v{__version__} ({__release_date__})")
     parser.add_argument("prompt", nargs="*", help="query to run (same as --query)")
@@ -71,7 +71,7 @@ def main(argv: Optional[list[str]] = None, *, run: Optional[Callable[..., object
     query = args.query or positional or None
     if query is None and not args.list_tools:
         parser.print_help()
-        print("\nNo query given: pass one with --query (or run `hermes` for the interactive CLI).")
+        print("\nNo query given: pass one with --query (or run `ciel` for the interactive CLI).")
         return 0
 
     if run is None:

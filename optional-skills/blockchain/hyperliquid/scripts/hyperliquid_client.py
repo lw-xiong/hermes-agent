@@ -40,13 +40,13 @@ from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
 
-USER_AGENT = "HermesAgent/1.0"
+USER_AGENT = "CielAgent/1.0"
 DEFAULT_USER_ENV = "HYPERLIQUID_USER_ADDRESS"
 DEFAULT_API_BASE = "https://api.hyperliquid.xyz"
 
 
-def _hermes_home() -> Path:
-    return Path(os.environ.get("HERMES_HOME", "~/.hermes")).expanduser()
+def _ciel_home() -> Path:
+    return Path(os.environ.get("CIEL_HOME", "~/.ciel")).expanduser()
 
 
 def _dotenv_paths() -> list[Path]:
@@ -55,7 +55,7 @@ def _dotenv_paths() -> list[Path]:
     if project_env.exists():
         paths.append(project_env)
 
-    user_env = _hermes_home() / ".env"
+    user_env = _ciel_home() / ".env"
     if user_env.exists():
         paths.append(user_env)
 
@@ -115,7 +115,7 @@ def _resolve_user(user: Optional[str]) -> str:
 
     sys.exit(
         "Missing Hyperliquid address. Pass <address> explicitly or set "
-        f"{DEFAULT_USER_ENV} in your environment or {_hermes_home() / '.env'}."
+        f"{DEFAULT_USER_ENV} in your environment or {_ciel_home() / '.env'}."
     )
 
 

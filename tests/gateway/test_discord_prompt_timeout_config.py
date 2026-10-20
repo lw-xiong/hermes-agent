@@ -52,9 +52,9 @@ from plugins.platforms.discord.adapter import (
 )
 
 def _patch_config(monkeypatch, cfg):
-    """Stub ``hermes_cli.config.read_raw_config`` to return ``cfg``."""
-    import hermes_cli.config
-    monkeypatch.setattr(hermes_cli.config, "read_raw_config", lambda: cfg)
+    """Stub ``ciel_cli.config.read_raw_config`` to return ``cfg``."""
+    import ciel_cli.config
+    monkeypatch.setattr(ciel_cli.config, "read_raw_config", lambda: cfg)
 
 def test_explicit_int_value(monkeypatch):
     _patch_config(monkeypatch, {"approvals": {"discord_prompt_timeout": 600}})

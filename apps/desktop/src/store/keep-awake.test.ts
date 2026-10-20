@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { storedString, writeKey } from '@/lib/storage'
 
-const KEY = 'hermes.desktop.keepAwakeMode.v1'
-const LEGACY_KEY = 'hermes.desktop.keepAwake.v1'
-const desktopWindow = window as unknown as { hermesDesktop?: Window['hermesDesktop'] }
-const initialHermesDesktop = desktopWindow.hermesDesktop
+const KEY = 'ciel.desktop.keepAwakeMode.v1'
+const LEGACY_KEY = 'ciel.desktop.keepAwake.v1'
+const desktopWindow = window as unknown as { cielDesktop?: Window['cielDesktop'] }
+const initialCielDesktop = desktopWindow.cielDesktop
 const setKeepAwakeBridge = vi.fn()
 
 /** The atom reads storage at import time, so migration tests need a fresh module. */
@@ -16,14 +16,14 @@ async function loadStore() {
 }
 
 beforeEach(() => {
-  desktopWindow.hermesDesktop = { setKeepAwake: setKeepAwakeBridge } as unknown as Window['hermesDesktop']
+  desktopWindow.cielDesktop = { setKeepAwake: setKeepAwakeBridge } as unknown as Window['cielDesktop']
   writeKey(KEY, null)
   writeKey(LEGACY_KEY, null)
   setKeepAwakeBridge.mockClear()
 })
 
 afterEach(() => {
-  desktopWindow.hermesDesktop = initialHermesDesktop
+  desktopWindow.cielDesktop = initialCielDesktop
 })
 
 describe('keep-awake store', () => {
@@ -73,14 +73,14 @@ describe('keep-awake store', () => {
   it("shows main's offer, and its button turns on while-working", async () => {
     let deliverOffer: (() => void) | undefined
 
-    desktopWindow.hermesDesktop = {
+    desktopWindow.cielDesktop = {
       onKeepAwakeOffer: (callback: () => void) => {
         deliverOffer = callback
 
         return () => {}
       },
       setKeepAwake: setKeepAwakeBridge
-    } as unknown as Window['hermesDesktop']
+    } as unknown as Window['cielDesktop']
     writeKey(KEY, 'off')
 
     const { $keepAwakeMode } = await loadStore()

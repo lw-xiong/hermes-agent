@@ -6,7 +6,7 @@ author: Ciel (adapted from obra/superpowers + MorAlekss)
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  ciel:
     tags: [code-review, security, verification, quality, pre-commit, auto-fix]
     related_skills: [subagent-driven-development, test-driven-development, github]
 ---
@@ -124,7 +124,7 @@ Quick scan before dispatching the reviewer:
 
 ## Step 5 — Independent reviewer subagent
 
-**Interactive sessions only.** In a one-shot run (`hermes chat -q`, `--oneshot`, a
+**Interactive sessions only.** In a one-shot run (`ciel chat -q`, `--oneshot`, a
 benchmark harness) there is no one to hand the verdict to and a fresh subagent re-pays
 the whole system prompt plus a repo re-read: skip Steps 5 and 7, apply the Step 4
 checklist to the diff yourself, run the tests, and go to Step 8.

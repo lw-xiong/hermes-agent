@@ -3,20 +3,20 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { atom } from 'nanostores'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { AutomationBlueprint, CronJob } from '@/hermes'
+import type { AutomationBlueprint, CronJob } from '@/ciel'
 
-const hermes = vi.hoisted(() => ({
+const ciel = vi.hoisted(() => ({
   getAutomationBlueprints: vi.fn(),
   getCronJobs: vi.fn(),
   instantiateAutomationBlueprint: vi.fn()
 }))
 
-vi.mock('@/hermes', async importOriginal => ({
+vi.mock('@/ciel', async importOriginal => ({
   ...(await importOriginal<Record<string, unknown>>()),
-  getAutomationBlueprints: hermes.getAutomationBlueprints,
+  getAutomationBlueprints: ciel.getAutomationBlueprints,
   getCronDeliveryTargets: vi.fn(async () => ({ targets: [] })),
-  getCronJobs: hermes.getCronJobs,
-  instantiateAutomationBlueprint: hermes.instantiateAutomationBlueprint
+  getCronJobs: ciel.getCronJobs,
+  instantiateAutomationBlueprint: ciel.instantiateAutomationBlueprint
 }))
 
 // The view writes jobs into a named profile; pin the scope instead of booting the gateway store.
@@ -28,7 +28,7 @@ vi.mock('@/store/profile', async importOriginal => ({
 const { CronView } = await import('./index')
 
 const pluginBlueprint: AutomationBlueprint = {
-  appUrl: 'hermes://blueprint/teamtools%3Astandup',
+  appUrl: 'ciel://blueprint/teamtools%3Astandup',
   category: 'work',
   command: '/blueprint teamtools:standup',
   description: 'Weekday summary of what changed in a repo.',
@@ -53,7 +53,7 @@ const pluginBlueprint: AutomationBlueprint = {
 
 const builtinBlueprint: AutomationBlueprint = {
   ...pluginBlueprint,
-  appUrl: 'hermes://blueprint/morning-brief',
+  appUrl: 'ciel://blueprint/morning-brief',
   command: '/blueprint morning-brief',
   key: 'morning-brief',
   plugin: null,
@@ -72,9 +72,9 @@ function renderView() {
 }
 
 beforeEach(() => {
-  hermes.getCronJobs.mockResolvedValue([])
-  hermes.getAutomationBlueprints.mockResolvedValue({ blueprints: [builtinBlueprint, pluginBlueprint] })
-  hermes.instantiateAutomationBlueprint.mockResolvedValue({
+  ciel.getCronJobs.mockResolvedValue([])
+  ciel.getAutomationBlueprints.mockResolvedValue({ blueprints: [builtinBlueprint, pluginBlueprint] })
+  ciel.instantiateAutomationBlueprint.mockResolvedValue({
     id: 'job-1',
     name: 'Team standup digest',
     prompt: 'Summarize yesterday',
@@ -98,7 +98,7 @@ describe('plugin-registered automation blueprints', () => {
     const builtinRow = screen.getByText('Morning briefing').closest('button') as HTMLElement
     expect(within(builtinRow.parentElement as HTMLElement).queryByText('teamtools')).toBeNull()
     // The catalog is per profile (plugins load per profile): fetched for the job's target profile.
-    expect(hermes.getAutomationBlueprints).toHaveBeenCalledWith('work')
+    expect(ciel.getAutomationBlueprints).toHaveBeenCalledWith('work')
 
     fireEvent.click(row)
     // The dialog's "Start from" select names the plugin next to the title.
@@ -107,7 +107,7 @@ describe('plugin-registered automation blueprints', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Schedule it' }))
 
     await waitFor(() =>
-      expect(hermes.instantiateAutomationBlueprint).toHaveBeenCalledWith(
+      expect(ciel.instantiateAutomationBlueprint).toHaveBeenCalledWith(
         { blueprint: 'teamtools:standup', values: { time: '09:15' } },
         'work'
       )

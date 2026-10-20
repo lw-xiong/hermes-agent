@@ -1,7 +1,7 @@
 ---
 sidebar_position: 3
 title: "Updating & Uninstalling"
-description: "How to update Hermes Agent to the latest version or uninstall it"
+description: "How to update Ciel to the latest version or uninstall it"
 ---
 
 # Updating & Uninstalling
@@ -12,35 +12,35 @@ Choose the update method for the installation that is running:
 
 | Installation | Update method |
 |---|---|
-| Managed source checkout | `hermes update`, or the source-built desktop's update handoff. |
+| Managed source checkout | `ciel update`, or the source-built desktop's update handoff. |
 | Windows sideload MSIX | The desktop Update control and Windows App Installer. |
 | Microsoft Store package | Microsoft Store updates. |
 | macOS bundled app | The desktop Update control, through `electron-updater`. |
 | Docker image | Pull the chosen image and recreate the container with the same data mount. |
 | Nix | Update the flake/profile and rebuild. |
-| Termux APT | `pkg update`, then `pkg upgrade hermes-agent`. |
+| Termux APT | `pkg update`, then `pkg upgrade ciel-agent`. |
 
-`hermes update` does not rewrite package-owned application files. PM manages
-dependencies, not application distribution: `hermes pm update` is a maintainer
+`ciel update` does not rewrite package-owned application files. PM manages
+dependencies, not application distribution: `ciel pm update` is a maintainer
 pin-update command, not an alternative application updater.
 
 For a managed source installation:
 
 ```bash
-hermes update
+ciel update
 ```
 
 A source checkout of the official repository tracks the **stable** channel: the
 latest published `vX.Y.Z` GitHub release (never a draft, prerelease or canary tag),
-checked out at its exact commit. `hermes update` and the Desktop update button move
+checked out at its exact commit. `ciel update` and the Desktop update button move
 only from one release to the next, never commit by commit. Forks and mirrors keep
 tracking their `main` branch. The update prepares dependencies through PM and
 reports configuration changes and process-restart results.
 
 ```bash
-hermes update --set-channel main     # follow every commit on main instead
-hermes update --set-channel stable   # back to releases only
-hermes update --channel main         # one run against main; nothing is saved
+ciel update --set-channel main     # follow every commit on main instead
+ciel update --set-channel stable   # back to releases only
+ciel update --channel main         # one run against main; nothing is saved
 ```
 
 The choice is stored per install under `update.installs` in `config.yaml`. An
@@ -48,10 +48,10 @@ install that never chose a channel only moves forward: a checkout already newer
 than the latest release (for example one that tracked `main` before this default)
 stays where it is until a newer release ships. Running `--set-channel stable`
 pins the checkout to the exact release commit, even when that is older; the
-Desktop names that move as a rollback to the release, and `hermes update --check`
+Desktop names that move as a rollback to the release, and `ciel update --check`
 says the checkout is newer, instead of announcing a new update. Re-running the
-installer (`install.sh`, `install.ps1` or Hermes-Setup) over an install that chose
-a channel other than `main` keeps its checkout where it is: only `hermes update`
+installer (`install.sh`, `install.ps1` or Ciel-Setup) over an install that chose
+a channel other than `main` keeps its checkout where it is: only `ciel update`
 moves it. An explicit `--commit` pin still applies.
 Windows Store, MSIX and bundled desktop installs are unaffected; their channel
 is baked into the package (see below).
@@ -79,26 +79,26 @@ does not replace stable, including on Windows with MSIX. Each application keeps
 its own desktop state and updates within the channel baked into its build;
 changing channels means installing the other application, not changing a setting.
 The canary icon has a yellow background (dark yellow in dark mode), and its CLI
-command is `hermes-canary`.
+command is `ciel-canary`.
 
 One-off commit bundles are separate from both release channels and from other
 commit bundles. Their red icons show the short build SHA, also used in the
-`hermes-<short-sha>` CLI command. They do not check for or install updates,
-including through `hermes update` or `hermes update --check`. They explain:
+`ciel-<short-sha>` CLI command. They do not check for or install updates,
+including through `ciel update` or `ciel update --check`. They explain:
 
 > This build doesn't get updates. Ask the developer who gave it to you for a new build.
 
-Separate applications still share Hermes profiles, configuration, and sessions
-under the same Hermes home. Running different builds against one profile is not
+Separate applications still share Ciel profiles, configuration, and sessions
+under the same Ciel home. Running different builds against one profile is not
 schema isolation: newer builds can change stored data that an older build cannot
 read. Back up shared data before testing. The desktop and standalone CLI warn
 when another live installation uses the same profile; this is advisory, not a
 lock. Desktop post-update notices are scoped to the application, so launching
-canary cannot consume stable's pending notice. The `hermes://` URL scheme remains
+canary cannot consume stable's pending notice. The `ciel://` URL scheme remains
 shared; the application that most recently registered it handles links.
 
 :::tip
-`hermes update` automatically detects new configuration options and prompts you to add them. If you skipped that prompt, you can manually run `hermes config check` to see missing options, then `hermes config migrate` to interactively add them.
+`ciel update` automatically detects new configuration options and prompts you to add them. If you skipped that prompt, you can manually run `ciel config check` to see missing options, then `ciel config migrate` to interactively add them.
 :::
 
 ### Passive update notices
@@ -106,32 +106,32 @@ shared; the application that most recently registered it handles links.
 Pinned or noninteractive installations can disable passive CLI version and banner update checks:
 
 ```bash
-hermes config set updates.check false
+ciel config set updates.check false
 ```
 
-This suppresses both cached update notices and passive update-check network requests. The default is `true`. Explicit `hermes update --check` and `hermes update` still work; this setting does not control the Desktop application's updater.
+This suppresses both cached update notices and passive update-check network requests. The default is `true`. Explicit `ciel update --check` and `ciel update` still work; this setting does not control the Desktop application's updater.
 
 ### What happens during an update
 
-For an admitted source checkout, `hermes update` runs these phases:
+For an admitted source checkout, `ciel update` runs these phases:
 
-1. **Pre-update snapshot** — Hermes saves selected state files for every profile in that profile's `state-snapshots/` directory. These include pairing data, cron jobs, `config.yaml`, `.env`, and `auth.json`. Automatic quick snapshots skip individual files larger than 1 GiB. `updates.pre_update_backup` selects `quick`, `full`, or `off`. Full archives use the [backup exclusions](../reference/faq.md#hermes-backup-vs-hermes-profile-export). Recovery uses [Snapshots and rollback](../user-guide/checkpoints-and-rollback.md). Quick snapshots recover state files, not application code. The snapshot is best-effort: if it fails, the update prints a `⚠ Pre-update snapshot FAILED` warning and continues, and the receipt records `pre_update_backup` as a failed step (a deliberate `off`/`--no-backup` lands in the receipt's skips with its reason instead).
+1. **Pre-update snapshot** — Ciel saves selected state files for every profile in that profile's `state-snapshots/` directory. These include pairing data, cron jobs, `config.yaml`, `.env`, and `auth.json`. Automatic quick snapshots skip individual files larger than 1 GiB. `updates.pre_update_backup` selects `quick`, `full`, or `off`. Full archives use the [backup exclusions](../reference/faq.md#ciel-backup-vs-ciel-profile-export). Recovery uses [Snapshots and rollback](../user-guide/checkpoints-and-rollback.md). Quick snapshots recover state files, not application code. The snapshot is best-effort: if it fails, the update prints a `⚠ Pre-update snapshot FAILED` warning and continues, and the receipt records `pre_update_backup` as a failed step (a deliberate `off`/`--no-backup` lands in the receipt's skips with its reason instead).
 2. **Code update** — applies the configured source branch or stable release tag and updates submodules. On Linux and macOS every gateway running from this install is paused immediately before the first change to the checkout (see [Gateway downtime during an update](#gateway-downtime-during-an-update)); an update that has nothing to apply, or that fails before it changes the checkout, stops nothing.
-3. **Post-pull syntax validation + auto-rollback** — after the pull, Hermes compiles the nine critical files every `hermes` invocation imports at startup. If any fails to parse (e.g. an orphan merge-conflict marker, an accidentally truncated file), Hermes rolls the install back so your shell stays bootable: it resets the checkout to the commit it ran before the pull (`git reset --hard <pre-pull-sha>`), or, when the update switched away from a detached checkout or a parked feature branch, returns there with `git checkout --detach <sha>` / `git checkout <branch>` (a branch it cannot check out again is restored detached at the same commit). Re-run `hermes update` once the upstream fix lands.
-4. **Dependency preparation** — PM provisions required tools and prepares a complete Python environment from the new lock, existing extras, and enabled plugin requirements. It validates that environment before publishing its selection. A plugin never fails the update. A plugin that no longer fits the new core is added to `plugins.disabled` in every profile that enables it (a memory provider has `memory.provider` cleared). That covers a `requires-python` that excludes Hermes's Python, a `manifest_version` newer than this Hermes supports, and dependencies that the resolver proves can't resolve alongside core and earlier plugins in config order, or that fail their own build. A download or network failure gets one retry and is disabled if it fails again. The update prints `⚠ Disabled plugin '<name>' in <home>: <reason>`, records it in the receipt's warnings, and continues. Re-enable it with `hermes plugins enable <name>` once the plugin ships a compatible release, or once the network is back. A `requires_hermes` range the running version misses never disables a plugin, because a source checkout without release tags can read as an older release. That plugin sits out instead (`⚠ Left plugin '<name>' … out of this update`), stays enabled, and rejoins once Hermes reports a version it accepts. A secondary profile whose config cannot be read sits out the same way until the config is fixed. Only a core that cannot build on its own fails this step.
+3. **Post-pull syntax validation + auto-rollback** — after the pull, Ciel compiles the nine critical files every `ciel` invocation imports at startup. If any fails to parse (e.g. an orphan merge-conflict marker, an accidentally truncated file), Ciel rolls the install back so your shell stays bootable: it resets the checkout to the commit it ran before the pull (`git reset --hard <pre-pull-sha>`), or, when the update switched away from a detached checkout or a parked feature branch, returns there with `git checkout --detach <sha>` / `git checkout <branch>` (a branch it cannot check out again is restored detached at the same commit). Re-run `ciel update` once the upstream fix lands.
+4. **Dependency preparation** — PM provisions required tools and prepares a complete Python environment from the new lock, existing extras, and enabled plugin requirements. It validates that environment before publishing its selection. A plugin never fails the update. A plugin that no longer fits the new core is added to `plugins.disabled` in every profile that enables it (a memory provider has `memory.provider` cleared). That covers a `requires-python` that excludes Ciel's Python, a `manifest_version` newer than this Ciel supports, and dependencies that the resolver proves can't resolve alongside core and earlier plugins in config order, or that fail their own build. A download or network failure gets one retry and is disabled if it fails again. The update prints `⚠ Disabled plugin '<name>' in <home>: <reason>`, records it in the receipt's warnings, and continues. Re-enable it with `ciel plugins enable <name>` once the plugin ships a compatible release, or once the network is back. A `requires_ciel` range the running version misses never disables a plugin, because a source checkout without release tags can read as an older release. That plugin sits out instead (`⚠ Left plugin '<name>' … out of this update`), stays enabled, and rejoins once Ciel reports a version it accepts. A secondary profile whose config cannot be read sits out the same way until the config is fixed. Only a core that cannot build on its own fails this step.
 5. **Config migration** — detects new config options added since your version and prompts you to set them
-6. **Desktop rebuild (stage-and-swap)** — if the Hermes Desktop app was built from this checkout, it is rebuilt so the GUI matches the new code. The rebuild packs into a temporary staging directory next to `apps/desktop/release/`, verifies the staged app, and only then renames it over the previous build (on Windows a real-time scanner briefly holding `release/win-unpacked` is ridden out with a few short retries). A rebuild that fails at any point — corrupt Electron download, missing dependency, disk full — leaves the previous app untouched and launchable; the update prints a `⚠` line, still finishes the remaining steps (config migration, gateway restart) and exits 0 with a `build` follow-up in its receipt, and the next launch, `hermes update` or `hermes desktop --build-only --force-build` retries the rebuild. On macOS the rebuilt bundle is then copied (with `ditto`, signature intact) over a stale `/Applications/Hermes.app` or `~/Applications/Hermes.app`, so the copy Finder and the Dock launch matches the backend; an installed copy that is currently running is left alone and the update tells you to quit it and run `hermes update` again. If a copy an earlier update installed has since been removed (including dragged to the Trash), the update rebuilds it if needed, puts it back and says so, so Finder, the Dock and Spotlight find Hermes again; `hermes uninstall` removes the app for good. On Windows, when the update finishes from inside the Desktop app it would rebuild (the app completing an interrupted update at launch), the rebuild is skipped with a notice instead: Windows locks a running app's files, and stopping the app would end the update with it. The rest of the update completes; quit Hermes Desktop and run `hermes desktop` from a terminal, or use **Update now** in **Settings → About**, to rebuild and reopen it.
-7. **Gateway auto-restart**: on Linux and macOS, gateways paused for the update are started again as soon as the dependencies are prepared and the launchers refreshed, before the product builds; on Windows they restart after the builds. Any other running gateway is refreshed after the update completes. Service-managed gateways (systemd on Linux, launchd on macOS) restart through the service manager. Manual gateways are relaunched when Hermes can map their PID to a profile. Manually launched `hermes serve` / `hermes dashboard` backends are different: the updater leaves them running and asks their owner to restart them. See [Manual backend restart reminders](#manual-backend-restart-reminders). Backends owned by a running Desktop app remain the app's responsibility.
-8. **Multiplex migration (multi-profile installs)** — once the fleet is verified on the new code, an install with two or more profiles that still run **one gateway per profile** is folded into a single multiplexed default gateway when nothing blocks it (same as `hermes gateway migrate --multiplex --yes`); if a blocker exists (a bot token shared by two profiles, a secondary profile binding a port with no `/p/<profile>/` ingress) the update prints the blockers with their fixes and changes nothing. Single-profile installs are never touched. See [Migrating from per-profile gateways](../user-guide/multi-profile-gateways.md#migrating-from-per-profile-gateways).
+6. **Desktop rebuild (stage-and-swap)** — if the Ciel Desktop app was built from this checkout, it is rebuilt so the GUI matches the new code. The rebuild packs into a temporary staging directory next to `apps/desktop/release/`, verifies the staged app, and only then renames it over the previous build (on Windows a real-time scanner briefly holding `release/win-unpacked` is ridden out with a few short retries). A rebuild that fails at any point — corrupt Electron download, missing dependency, disk full — leaves the previous app untouched and launchable; the update prints a `⚠` line, still finishes the remaining steps (config migration, gateway restart) and exits 0 with a `build` follow-up in its receipt, and the next launch, `ciel update` or `ciel desktop --build-only --force-build` retries the rebuild. On macOS the rebuilt bundle is then copied (with `ditto`, signature intact) over a stale `/Applications/Ciel.app` or `~/Applications/Ciel.app`, so the copy Finder and the Dock launch matches the backend; an installed copy that is currently running is left alone and the update tells you to quit it and run `ciel update` again. If a copy an earlier update installed has since been removed (including dragged to the Trash), the update rebuilds it if needed, puts it back and says so, so Finder, the Dock and Spotlight find Ciel again; `ciel uninstall` removes the app for good. On Windows, when the update finishes from inside the Desktop app it would rebuild (the app completing an interrupted update at launch), the rebuild is skipped with a notice instead: Windows locks a running app's files, and stopping the app would end the update with it. The rest of the update completes; quit Ciel Desktop and run `ciel desktop` from a terminal, or use **Update now** in **Settings → About**, to rebuild and reopen it.
+7. **Gateway auto-restart**: on Linux and macOS, gateways paused for the update are started again as soon as the dependencies are prepared and the launchers refreshed, before the product builds; on Windows they restart after the builds. Any other running gateway is refreshed after the update completes. Service-managed gateways (systemd on Linux, launchd on macOS) restart through the service manager. Manual gateways are relaunched when Ciel can map their PID to a profile. Manually launched `ciel serve` / `ciel dashboard` backends are different: the updater leaves them running and asks their owner to restart them. See [Manual backend restart reminders](#manual-backend-restart-reminders). Backends owned by a running Desktop app remain the app's responsibility.
+8. **Multiplex migration (multi-profile installs)** — once the fleet is verified on the new code, an install with two or more profiles that still run **one gateway per profile** is folded into a single multiplexed default gateway when nothing blocks it (same as `ciel gateway migrate --multiplex --yes`); if a blocker exists (a bot token shared by two profiles, a secondary profile binding a port with no `/p/<profile>/` ingress) the update prints the blockers with their fixes and changes nothing. Single-profile installs are never touched. See [Migrating from per-profile gateways](../user-guide/multi-profile-gateways.md#migrating-from-per-profile-gateways).
 
 ### Gateway downtime during an update
 
-On Linux and macOS, `hermes update` stops every gateway running from this install right before it first changes the checkout, and starts exactly that set again on the new code once the dependencies are prepared (before the web UI, TUI and Desktop builds, which can take minutes). Your bots are offline for that window: typically the git update plus the dependency sync. Before this, a gateway kept running old code while git rewrote the files under it, and any module it imported lazily in that window came from the new code.
+On Linux and macOS, `ciel update` stops every gateway running from this install right before it first changes the checkout, and starts exactly that set again on the new code once the dependencies are prepared (before the web UI, TUI and Desktop builds, which can take minutes). Your bots are offline for that window: typically the git update plus the dependency sync. Before this, a gateway kept running old code while git rewrote the files under it, and any module it imported lazily in that window came from the new code.
 
-- The update prints one line naming what it paused (`⏸ Paused for the update: hermes-gateway.service`) and one when it is back (`▶ Restarted paused gateway(s): …`).
-- systemd units and launchd agents are stopped and started through systemd/launchd, so the service manager cannot restart them on old code mid-update. A gateway you started by hand (`hermes gateway run`) is drained and then started again in the background from the same command line and Hermes home; its output goes to `logs/gateway-update-resume.log` in that home instead of your terminal.
+- The update prints one line naming what it paused (`⏸ Paused for the update: ciel-gateway.service`) and one when it is back (`▶ Restarted paused gateway(s): …`).
+- systemd units and launchd agents are stopped and started through systemd/launchd, so the service manager cannot restart them on old code mid-update. A gateway you started by hand (`ciel gateway run`) is drained and then started again in the background from the same command line and Ciel home; its output goes to `logs/gateway-update-resume.log` in that home instead of your terminal.
 - `/update` from chat survives the pause: when the update runs inside the gateway's own systemd unit, it first moves itself into a scope of its own. A prompt asked while the gateways are paused takes its default immediately, because no gateway can relay it.
-- The paused set is recorded in the Hermes home before the first stop. If the update is killed, the next `hermes` command (or `hermes update`) starts exactly those gateways again. A failed update that never changed the checkout restarts them on the old code. If the dependency sync fails after the checkout moved, they restart once a launch has synced the dependencies.
+- The paused set is recorded in the Ciel home before the first stop. If the update is killed, the next `ciel` command (or `ciel update`) starts exactly those gateways again. A failed update that never changed the checkout restarts them on the old code. If the dependency sync fails after the checkout moved, they restart once a launch has synced the dependencies.
 - A gateway the updater cannot stop through its supervisor (an s6 or custom systemd unit, `--external-supervisor`, a launchd job that started this update) is left running and refreshed after the update, as before.
 - `--no-gateway-restart` stops nothing; you manage the gateways.
 - The pause never blocks an update. If it cannot list, record or stop the gateways, it restarts anything it stopped, says so, and the update continues the way it did before the pause existed: gateways run through the swap and are restarted afterwards.
@@ -143,14 +143,14 @@ Windows already paused its gateways before the update (they lock files the depen
 The restart is drain-first: the running gateway refuses new turns, then waits for in-flight work (chat turns, cron jobs, API runs) to finish before exiting, capped by `agent.restart_after_turn_timeout` (30 minutes by default) so a long-running job is never cut off mid-run. While that wait is in progress the updater prints, every 30 seconds, what the gateway is still holding for — for example:
 
 ```
-  → hermes-gateway: draining (up to 1875s)...
+  → ciel-gateway: draining (up to 1875s)...
   ⏳ still draining — 1560s left before the forced restart
      waiting on 1 active work unit(s):
        • cron job 6ba19dab68df (nightly-scout) in external worker pid 573597, running 6m40s
      finish or kill the work above to release the drain now; agent.restart_after_turn_timeout in config.yaml caps this wait
 ```
 
-Chat turns show their session key, model and current tool; cron jobs show the job id, name and the process running them (an external restart-safe worker on systemd installs, otherwise the gateway itself). `hermes gateway status` lists the same units while the gateway is draining. To stop waiting, finish or kill the listed work, or lower `agent.restart_after_turn_timeout` in `config.yaml` (`0` enters the forced drain immediately).
+Chat turns show their session key, model and current tool; cron jobs show the job id, name and the process running them (an external restart-safe worker on systemd installs, otherwise the gateway itself). `ciel gateway status` lists the same units while the gateway is draining. To stop waiting, finish or kill the listed work, or lower `agent.restart_after_turn_timeout` in `config.yaml` (`0` enters the forced drain immediately).
 
 Wedged work does not hold the restart: a chat turn idle past `agent.gateway_timeout`, or a cron run older than the scheduler's in-flight allowance (`max(2 × the job's interval, cron.inflight_max_minutes)`, 30 minutes by default), is excluded from the wait and interrupted by the restart instead.
 
@@ -166,22 +166,22 @@ On Windows, a Desktop reopened during packaging is stopped again immediately bef
 
 Git 2.53 and newer can crash while fetching into a partial clone when some of its pack files lack a
 `.promisor` marker. That happens when a filtered fetch turned a full or shallow clone into a partial
-one, or when markers were lost. `hermes update` marks those packs and retries the fetch once, and
+one, or when markers were lost. `ciel update` marks those packs and retries the fetch once, and
 an installer rerun marks them before it fetches. An install whose own updater predates that fix
-can't fetch it: rerun the installer, or mark the packs by hand (with Hermes closed) and update again.
+can't fetch it: rerun the installer, or mark the packs by hand (with Ciel closed) and update again.
 
-The checkout is `hermes-agent` under your Hermes home (`~/.hermes`, or `HERMES_HOME` when set;
-on Windows `%LOCALAPPDATA%\hermes` unless `HERMES_HOME` is set).
+The checkout is `ciel-agent` under your Ciel home (`~/.ciel`, or `CIEL_HOME` when set;
+on Windows `%LOCALAPPDATA%\ciel` unless `CIEL_HOME` is set).
 
 ```bash
 # macOS / Linux
-repo="${HERMES_HOME:-$HOME/.hermes}/hermes-agent"
+repo="${CIEL_HOME:-$HOME/.ciel}/ciel-agent"
 for p in "$repo"/.git/objects/pack/pack-*.pack; do [ -e "${p%.pack}.promisor" ] || : > "${p%.pack}.promisor"; done
 ```
 
 ```powershell
 # Windows
-$repo = Join-Path ($(if ($env:HERMES_HOME) { $env:HERMES_HOME } else { "$env:LOCALAPPDATA\hermes" })) 'hermes-agent'
+$repo = Join-Path ($(if ($env:CIEL_HOME) { $env:CIEL_HOME } else { "$env:LOCALAPPDATA\ciel" })) 'ciel-agent'
 Get-ChildItem "$repo\.git\objects\pack\pack-*.pack" | ForEach-Object {
   $m = [IO.Path]::ChangeExtension($_.FullName, '.promisor')
   if (-not (Test-Path -LiteralPath $m)) { New-Item -ItemType File -Path $m | Out-Null }
@@ -209,42 +209,42 @@ The installer's checkout is a blobless partial clone: every commit and directory
 and git downloads file contents on demand, each on-demand download written as its own small pack.
 Installers from late September 2026 made treeless (`--filter=tree:0`) clones instead. git asks for
 a missing tree without saying which ones it already has, so a treeless checkout downloaded complete
-directory snapshots again on every checkout and path-filtered history walk. `hermes update`
+directory snapshots again on every checkout and path-filtered history walk. `ciel update`
 converts such a checkout once, as its first step after pulling the new code and before the
 dependency work: one `git fetch --refetch --filter=blob:none` brings every commit and tree (about
 120 MB), and later updates stop re-downloading them. Re-running the installer over such a checkout
 converts it the same way. If that fetch fails, the update prints a warning, carries on, and retries
 the conversion next time.
 
-A Hermes Desktop built before the conversion existed runs path-filtered history walks every few
+A Ciel Desktop built before the conversion existed runs path-filtered history walks every few
 minutes, so on a treeless checkout it could fill a disk with pack files (one report reached 434 GB)
 and keep going after a failed update. To recover when that already happened:
 
-1. Quit Hermes Desktop, then end any leftover `git rev-list`, `git maintenance` or
+1. Quit Ciel Desktop, then end any leftover `git rev-list`, `git maintenance` or
    `git commit-graph` processes; quitting the app does not stop them.
 2. If the disk is completely full, delete the abandoned transfer files to get room back:
    `rm -f "$repo"/.git/objects/pack/tmp_pack_*` (Windows: delete `tmp_pack_*` in
    `.git\objects\pack`). Each update also removes them on its own once no git process is running.
-3. Run `hermes update`. It converts the checkout first, then cleans the pack pile down over this
+3. Run `ciel update`. It converts the checkout first, then cleans the pack pile down over this
    and later updates as described below.
 
-If `hermes update` itself cannot start, the conversion by hand is:
+If `ciel update` itself cannot start, the conversion by hand is:
 
 ```bash
 git -C "$repo" fetch --refetch --filter=blob:none origin
 git -C "$repo" config remote.origin.partialclonefilter blob:none
-``` `hermes update` and `hermes update --check`
+``` `ciel update` and `ciel update --check`
 set `maintenance.commit-graph.enabled`, `gc.writeCommitGraph` and `fetch.writeCommitGraph` to
 `false` in that checkout, because a commit-graph write over commits the graph has not seen yet
 downloads every one of their trees. Leave those settings alone, and leave `gc.auto` at its
 default so git's own automatic gc can still fold packs.
 
-Each `hermes update` also spends at most 60 seconds cleaning those packs up, picking up where the
+Each `ciel update` also spends at most 60 seconds cleaning those packs up, picking up where the
 previous update stopped. It deletes packs whose every object is also stored in another pack, then
 merges the smallest remaining packs while there are more than 50. Nothing stored locally is ever
 lost, and nothing depends on GitHub still serving it. Packs that a killed `git fetch` left pinned
 with a `.keep` file are included; git's own repack never touches those. To fold
-everything at once by hand instead (with Hermes closed; on a large checkout this is a full repack
+everything at once by hand instead (with Ciel closed; on a large checkout this is a full repack
 that can run for many minutes):
 
 ```bash
@@ -257,103 +257,103 @@ git -C "$repo" -c gc.writeCommitGraph=false gc --auto
 instead of the selected channel:
 
 ```bash
-hermes update --branch release-candidate
-hermes update --check --branch experimental   # preview behindness only
+ciel update --branch release-candidate
+ciel update --check --branch experimental   # preview behindness only
 ```
 
-If your local checkout is on a different branch, Hermes auto-stashes any uncommitted work, switches HEAD to the target branch, and then pulls. Branches that don't exist locally are auto-tracked from `origin/<name>` (`git checkout -B <name> origin/<name>`). Branches that don't exist anywhere fail cleanly — your stashed changes are restored before exit so you're never stranded in a weird state. The `main`-only fork-upstream sync logic is automatically skipped on non-`main` branches.
+If your local checkout is on a different branch, Ciel auto-stashes any uncommitted work, switches HEAD to the target branch, and then pulls. Branches that don't exist locally are auto-tracked from `origin/<name>` (`git checkout -B <name> origin/<name>`). Branches that don't exist anywhere fail cleanly — your stashed changes are restored before exit so you're never stranded in a weird state. The `main`-only fork-upstream sync logic is automatically skipped on non-`main` branches.
 
 ### Checkout parked on a feature branch
 
-If the source checkout was left sitting on a feature branch (by tooling, a worktree experiment, or a manual checkout), `hermes update` switches it back to the update target automatically whenever the working tree is clean:
+If the source checkout was left sitting on a feature branch (by tooling, a worktree experiment, or a manual checkout), `ciel update` switches it back to the update target automatically whenever the working tree is clean:
 
 - **Branch fully merged** (every commit already contained in `origin/main` — `git cherry` reports nothing unmerged): the update says so — `Checkout was parked on '<branch>' (fully merged) — switched back to main` — and stays on `main` afterwards.
 - **Branch has unmerged commits** but the tree is clean: the update still switches to `main` so the update can proceed — this is what non-interactive callers (the desktop update button, gateway `/update`, cron) rely on, since they have no way to resolve a skip. Your commits are untouched: `git checkout` never discards committed work, and the update prints a loud notice naming the branch and commit count, plus the `git checkout <branch>` command to pick the work back up later.
 
-If you *deliberately* run a custom branch (local patches maintained on top of main), set `updates.parked_branch_strategy: update_in_place` in `config.yaml`. The update then merges `origin/main` **into** your branch instead of switching away from it — the checkout never moves, your commits survive, and the running code advances. Fast-forward when possible; on divergence a true merge behind a `pre-update-<stamp>` safety tag, stopping cleanly (nothing changed) on conflict. `hermes update --switch-branch` overrides back to the switch path for one run — useful on a deep feature branch that must not accumulate update-driven merge commits.
+If you *deliberately* run a custom branch (local patches maintained on top of main), set `updates.parked_branch_strategy: update_in_place` in `config.yaml`. The update then merges `origin/main` **into** your branch instead of switching away from it — the checkout never moves, your commits survive, and the running code advances. Fast-forward when possible; on divergence a true merge behind a `pre-update-<stamp>` safety tag, stopping cleanly (nothing changed) on conflict. `ciel update --switch-branch` overrides back to the switch path for one run — useful on a deep feature branch that must not accumulate update-driven merge commits.
 
-When the parked branch has **uncommitted changes** (dirty tree), Hermes does **not** touch it. The code update is marked **SKIPPED** with a loud warning naming the branch, how far behind `origin/main` it is, and the exact commands to resolve — instead of pretending the update succeeded. The completion line always shows the actual branch and HEAD (`✓ Update complete! [main @ 30fcf9580]`) so drift is visible at a glance. Set `updates.auto_switch_parked_branch: false` in `config.yaml` to disable the auto-switch entirely (the skip warning still fires).
+When the parked branch has **uncommitted changes** (dirty tree), Ciel does **not** touch it. The code update is marked **SKIPPED** with a loud warning naming the branch, how far behind `origin/main` it is, and the exact commands to resolve — instead of pretending the update succeeded. The completion line always shows the actual branch and HEAD (`✓ Update complete! [main @ 30fcf9580]`) so drift is visible at a glance. Set `updates.auto_switch_parked_branch: false` in `config.yaml` to disable the auto-switch entirely (the skip warning still fires).
 
 ### Local commits on the target branch
 
-Commits made directly on the update target (`main`) stop fast-forwards once upstream moves, and the checkout cannot tell them apart from an upstream force-push, so the update resets `main` to `origin/main`. Before the reset it saves the old HEAD as `refs/hermes-update-backups/diverged-main-<stamp>-<sha>` and prints that ref along with how many commits leave the branch. `git log origin/main..<ref>` lists them; `git branch <name> <ref>` or `git cherry-pick` brings them back. Re-running the installer over an existing checkout (`install.sh` / `install.ps1`, which desktop bootstrap does) writes the same refs. Whenever `hermes update` writes one, it keeps the ten newest per kind and drops any older than 30 days. To carry patches across updates, keep them on a custom branch with `updates.parked_branch_strategy: update_in_place` instead.
+Commits made directly on the update target (`main`) stop fast-forwards once upstream moves, and the checkout cannot tell them apart from an upstream force-push, so the update resets `main` to `origin/main`. Before the reset it saves the old HEAD as `refs/ciel-update-backups/diverged-main-<stamp>-<sha>` and prints that ref along with how many commits leave the branch. `git log origin/main..<ref>` lists them; `git branch <name> <ref>` or `git cherry-pick` brings them back. Re-running the installer over an existing checkout (`install.sh` / `install.ps1`, which desktop bootstrap does) writes the same refs. Whenever `ciel update` writes one, it keeps the ten newest per kind and drops any older than 30 days. To carry patches across updates, keep them on a custom branch with `updates.parked_branch_strategy: update_in_place` instead.
 
 ### Local changes on non-interactive updates
 
-When you run `hermes update` in a terminal, Hermes stashes any uncommitted source-tree changes, pulls, then **asks** whether to restore them — exactly as it always has. Nothing changes for interactive updates.
+When you run `ciel update` in a terminal, Ciel stashes any uncommitted source-tree changes, pulls, then **asks** whether to restore them — exactly as it always has. Nothing changes for interactive updates.
 
-The autostash only ever covers *source-tree* changes. On a **flat install** — where the git checkout root is also `$HERMES_HOME` (for example an install made with `HERMES_INSTALL_DIR=$HERMES_HOME`, or one created by an older installer) — the profile's runtime state (`state.db` and its WAL/SHM sidecars, `state-snapshots/`, `backups/`, `sessions/`, `cron/jobs.json`, the `cron/*.db` stores, `config.yaml`, `auth.json`, `memories/`, lock/pid files, …) lives inside the checkout as untracked files. Those paths are git-ignored, so the autostash never touches them and the running gateway keeps its database through the update. If you keep other untracked files in a flat install's root, move them out of the checkout or add them to `.git/info/exclude`; anything untracked and not ignored is swept into the autostash like a source edit.
+The autostash only ever covers *source-tree* changes. On a **flat install** — where the git checkout root is also `$CIEL_HOME` (for example an install made with `CIEL_INSTALL_DIR=$CIEL_HOME`, or one created by an older installer) — the profile's runtime state (`state.db` and its WAL/SHM sidecars, `state-snapshots/`, `backups/`, `sessions/`, `cron/jobs.json`, the `cron/*.db` stores, `config.yaml`, `auth.json`, `memories/`, lock/pid files, …) lives inside the checkout as untracked files. Those paths are git-ignored, so the autostash never touches them and the running gateway keeps its database through the update. If you keep other untracked files in a flat install's root, move them out of the checkout or add them to `.git/info/exclude`; anything untracked and not ignored is swept into the autostash like a source edit.
 
 When the update runs **without a terminal** — from the desktop/chat app's "Update" button or a gateway-triggered update — there's no prompt to answer. The `updates.non_interactive_local_changes` setting decides what happens to your stashed changes:
 
 ```yaml
-# ~/.hermes/config.yaml
+# ~/.ciel/config.yaml
 updates:
   non_interactive_local_changes: stash   # default: keep + auto-restore
   # non_interactive_local_changes: discard  # throw local source edits away
 ```
 
 - `stash` (default) — auto-stash, pull, then auto-restore your changes on top of the updated code. Nothing is lost; if a restore hits conflicts they're preserved in a git stash for manual recovery.
-- `discard` — auto-stash and drop the stash after the pull, so the update always lands on a clean tree. Use this only on machines where you never intend to keep local edits to the Hermes source. It stash-drops (not `git reset --hard` + `git clean -fd`), so ignored paths like `node_modules`, `venv`, and build outputs are never touched.
+- `discard` — auto-stash and drop the stash after the pull, so the update always lands on a clean tree. Use this only on machines where you never intend to keep local edits to the Ciel source. It stash-drops (not `git reset --hard` + `git clean -fd`), so ignored paths like `node_modules`, `venv`, and build outputs are never touched.
 
 In the desktop app this is **Settings → Advanced → In-App Update Local Changes**.
 
-**Desktop updates never auto-restore.** The desktop updater invokes `hermes update --keep-stash`: local source edits are still stashed so the update can proceed, but they are **not** re-applied afterward — they stay parked in `git stash` and the update log prints the exact `git stash apply <ref>` command to bring them back. This prevents local edits from silently riding along across desktop updates and breaking the freshly updated install. (`non_interactive_local_changes: discard` still wins if you've opted into discarding.) To restore parked changes manually:
+**Desktop updates never auto-restore.** The desktop updater invokes `ciel update --keep-stash`: local source edits are still stashed so the update can proceed, but they are **not** re-applied afterward — they stay parked in `git stash` and the update log prints the exact `git stash apply <ref>` command to bring them back. This prevents local edits from silently riding along across desktop updates and breaking the freshly updated install. (`non_interactive_local_changes: discard` still wins if you've opted into discarding.) To restore parked changes manually:
 
 ```bash
-cd ~/.hermes/hermes-agent   # or your install root
-git stash list --format='%gd %H %s'   # find the hermes-update-autostash entry
+cd ~/.ciel/ciel-agent   # or your install root
+git stash list --format='%gd %H %s'   # find the ciel-update-autostash entry
 git stash apply stash@{0}
 ```
 
-You can pass `--keep-stash` to a terminal `hermes update` too if you want the same never-reapply behavior interactively.
+You can pass `--keep-stash` to a terminal `ciel update` too if you want the same never-reapply behavior interactively.
 
-### Preview-only: `hermes update --check`
+### Preview-only: `ciel update --check`
 
-`hermes update --check` compares the checkout with the selected channel's
+`ciel update --check` compares the checkout with the selected channel's
 target (the latest stable release by default, `origin/main` on the main channel)
 without applying code, installing dependencies, or restarting gateways. The
 comparison can fetch Git metadata; it is not a promise of zero filesystem writes.
 Package-owned installs report their external update method.
 
-### Fleet preview: `hermes update --plan`
+### Fleet preview: `ciel update --plan`
 
-Before updating a machine that runs several profiles or services, run `hermes update --plan`. It prints the install kind, running Hermes services across profiles, their supervisors and running code versions, and the restart mechanism for each service. Manually launched `hermes serve` / `hermes dashboard` backends appear with their recorded bind endpoint, but restart is deferred to their owner; the updater does not stop or relaunch them. Image- or package-managed installs report the external update command instead. The plan is read-only and safe on a live fleet.
+Before updating a machine that runs several profiles or services, run `ciel update --plan`. It prints the install kind, running Ciel services across profiles, their supervisors and running code versions, and the restart mechanism for each service. Manually launched `ciel serve` / `ciel dashboard` backends appear with their recorded bind endpoint, but restart is deferred to their owner; the updater does not stop or relaunch them. Image- or package-managed installs report the external update command instead. The plan is read-only and safe on a live fleet.
 
-The same inventory is embedded in every real update's receipt (`~/.hermes/logs/update_receipts/`), so after an update you can compare what the updater saw against what it did.
+The same inventory is embedded in every real update's receipt (`~/.ciel/logs/update_receipts/`), so after an update you can compare what the updater saw against what it did.
 
 ### Update receipts and the fleet version check
 
-Every `hermes update` run writes a machine-readable receipt to `~/.hermes/logs/update_receipts/` (last 20 kept, `latest.json` always points at the most recent): the pre-update fleet plan, each step taken, anything skipped and why, the gateway restart outcome, and the final fleet version matrix. The SQLite runtime repair is one of those steps (`sqlite_runtime_repair`): a failed repair records the actual reason (for example the `uv sync` error) and the SQLite version pair, a deferred or not-applicable repair lands in the skips with its reason. After the restart phase the updater compares each live gateway's running code against the freshly updated checkout and prints a per-profile matrix — a gateway still serving pre-update code is reported loudly with the exact restart command and recorded as a `gateway_restart` follow-up in the receipt; the code is already in place, so the update still exits 0, and every later command warns until the fleet serves the new code, so a mixed-version fleet is never silently healthy. Both `--plan` and the fleet check ask each running gateway directly over its local control socket (`gateway.sock` in the profile's data directory, a named pipe on Windows) when available, so version and supervisor information comes from the gateway itself; gateways from older versions are still discovered through their state files as before.
+Every `ciel update` run writes a machine-readable receipt to `~/.ciel/logs/update_receipts/` (last 20 kept, `latest.json` always points at the most recent): the pre-update fleet plan, each step taken, anything skipped and why, the gateway restart outcome, and the final fleet version matrix. The SQLite runtime repair is one of those steps (`sqlite_runtime_repair`): a failed repair records the actual reason (for example the `uv sync` error) and the SQLite version pair, a deferred or not-applicable repair lands in the skips with its reason. After the restart phase the updater compares each live gateway's running code against the freshly updated checkout and prints a per-profile matrix — a gateway still serving pre-update code is reported loudly with the exact restart command and recorded as a `gateway_restart` follow-up in the receipt; the code is already in place, so the update still exits 0, and every later command warns until the fleet serves the new code, so a mixed-version fleet is never silently healthy. Both `--plan` and the fleet check ask each running gateway directly over its local control socket (`gateway.sock` in the profile's data directory, a named pipe on Windows) when available, so version and supervisor information comes from the gateway itself; gateways from older versions are still discovered through their state files as before.
 
-A multiplexed default gateway is one process serving several profiles, so it appears once in the matrix and vouches for every profile in its `served_profiles` record. The same coverage clears the "A previous `hermes update` pulled new code but did not restart running gateways" hint: once that gateway (or, after a manual `git pull`, every gateway an update restarted) runs the current code, `hermes gateway restart` is enough — the hint no longer waits for the next `hermes update` to write a fresh receipt. The same is true of the restart obligation left by an update that died before recording which gateways it owed (or by an older updater that never recorded them): once every live gateway runs the current checkout, the obligation is retired and the hint stops. On a host that runs no gateway at all (the Desktop app alone), it is retired once no profile has a gateway that went away without a clean stop and every running backend is restarted by its own supervisor or has its own reminder. That obligation is recorded once per HOST, in the cross-profile rendezvous directory (`$HERMES_GATEWAY_LOCK_DIR`, else `$XDG_STATE_HOME/hermes/gateway-locks`) as `host-update-restart-<install key>.json` (one per installation, so a second Hermes checkout for the same user keeps its own; an older release's unkeyed `host-update-restart.json` is honoured and cleared only by an installation that has no record of its own, so another checkout still on that release keeps its debt), so every profile's CLI sees the same one: `hermes -p coder update` and `hermes -p writer update` restart the shared multiplexed gateway once between them, not once each. An obligation left behind by an older per-profile updater (`fleet_restart_pending` in one profile's Hermes home) is still read and cleared. An update whose pre-update plan found no gateway at all owes nothing and leaves no breadcrumb. A backend supervised by Desktop, systemd or launchd is restarted by its supervisor and never blocks this settlement; only a manual backend whose reminder could not be saved keeps the obligation open.
+A multiplexed default gateway is one process serving several profiles, so it appears once in the matrix and vouches for every profile in its `served_profiles` record. The same coverage clears the "A previous `ciel update` pulled new code but did not restart running gateways" hint: once that gateway (or, after a manual `git pull`, every gateway an update restarted) runs the current code, `ciel gateway restart` is enough — the hint no longer waits for the next `ciel update` to write a fresh receipt. The same is true of the restart obligation left by an update that died before recording which gateways it owed (or by an older updater that never recorded them): once every live gateway runs the current checkout, the obligation is retired and the hint stops. On a host that runs no gateway at all (the Desktop app alone), it is retired once no profile has a gateway that went away without a clean stop and every running backend is restarted by its own supervisor or has its own reminder. That obligation is recorded once per HOST, in the cross-profile rendezvous directory (`$CIEL_GATEWAY_LOCK_DIR`, else `$XDG_STATE_HOME/ciel/gateway-locks`) as `host-update-restart-<install key>.json` (one per installation, so a second Ciel checkout for the same user keeps its own; an older release's unkeyed `host-update-restart.json` is honoured and cleared only by an installation that has no record of its own, so another checkout still on that release keeps its debt), so every profile's CLI sees the same one: `ciel -p coder update` and `ciel -p writer update` restart the shared multiplexed gateway once between them, not once each. An obligation left behind by an older per-profile updater (`fleet_restart_pending` in one profile's Ciel home) is still read and cleared. An update whose pre-update plan found no gateway at all owes nothing and leaves no breadcrumb. A backend supervised by Desktop, systemd or launchd is restarted by its supervisor and never blocks this settlement; only a manual backend whose reminder could not be saved keeps the obligation open.
 
 ### Manual backend restart reminders
 
-After updating, ask the owner of each manually launched backend to relaunch `hermes serve` or `hermes dashboard`; reconnect Desktop for an SSH backend. Restarting gateways alone does not refresh these processes.
+After updating, ask the owner of each manually launched backend to relaunch `ciel serve` or `ciel dashboard`; reconnect Desktop for an SSH backend. Restarting gateways alone does not refresh these processes.
 
 For a verified live backend, the updater saves a reminder before recording its restart as `deferred`. This allows the update to complete if the remaining checks pass. An unknown process identity cannot qualify for fresh deferral.
 
-Reminders live in `serve_restart_pending/` under the active Hermes home, separately from rotating update receipts. Each reminder identifies a process by PID and creation time. Startup warnings retain it while that process is alive or its liveness is unknown, and remove it only when that exact process is confirmed gone. A later update or a healthy gateway does not remove it.
+Reminders live in `serve_restart_pending/` under the active Ciel home, separately from rotating update receipts. Each reminder identifies a process by PID and creation time. Startup warnings retain it while that process is alive or its liveness is unknown, and remove it only when that exact process is confirmed gone. A later update or a healthy gateway does not remove it.
 
-If saving fails, Hermes warns and carries the unsaved obligation into later receipts for retry. Check storage permissions and free space, and restart the backend as instructed. If both reminder and receipt storage fail, durable retention cannot be guaranteed.
+If saving fails, Ciel warns and carries the unsaved obligation into later receipts for retry. Check storage permissions and free space, and restart the backend as instructed. If both reminder and receipt storage fail, durable retention cannot be guaranteed.
 
 ### Automated updates from inside the gateway: `--no-gateway-restart`
 
 An update launched *by* the gateway (a cron job, the Desktop updater, any automation that is a
 child of the gateway process) cannot survive its own fleet restart: the gateway drains on
 `SIGUSR1` and systemd's `KillMode=mixed` then kills everything left in the cgroup, updater
-included. `hermes update --no-gateway-restart` runs the full pipeline (pull, dependencies,
+included. `ciel update --no-gateway-restart` runs the full pipeline (pull, dependencies,
 Node workspaces, web UI, maintenance) and skips only the restart and fleet verification; on Linux
 and macOS it also skips the pause before the checkout changes, so nothing is stopped. The
-pending-restart marker is kept, so the next CLI start warns and the next normal `hermes update`
-(or `hermes gateway restart`) catches the fleet up. Pair it with a separate restart step, for
+pending-restart marker is kept, so the next CLI start warns and the next normal `ciel update`
+(or `ciel gateway restart`) catches the fleet up. Pair it with a separate restart step, for
 example a timer 10–15 minutes after the update job. The receipt records the deferral; a stale
 fleet caused only by the deferral does not make the update `partial`.
 
 ### Interrupted gateway restarts
 
-If an earlier update pulled code but did not finish restarting the fleet, the next `hermes update` retries even when the checkout is already current. An empty process scan does not prove recovery: failed systemd units and installed launchd jobs may have no live PID. If discovery or restart fails, or a requested service cannot be verified active, the marker stays pending: the update still exits 0 (the new code is in place), prints a `⚠` line and a `gateway_restart` follow-up in its receipt, every CLI start warns about the owed restart, and the next `hermes update` retries it. Recover the affected services with the printed commands, or rerun `hermes update`.
+If an earlier update pulled code but did not finish restarting the fleet, the next `ciel update` retries even when the checkout is already current. An empty process scan does not prove recovery: failed systemd units and installed launchd jobs may have no live PID. If discovery or restart fails, or a requested service cannot be verified active, the marker stays pending: the update still exits 0 (the new code is in place), prints a `⚠` line and a `gateway_restart` follow-up in its receipt, every CLI start warns about the owed restart, and the next `ciel update` retries it. Recover the affected services with the printed commands, or rerun `ciel update`.
 
 A failed historical receipt alone does not prove that gateways are still stale. Startup and gateway-status warnings, as well as update catch-up, check for a live successor on the current checkout for every gateway profile recorded in that receipt. A manual gateway restart can settle receipt-only advice without rewriting the historical outcome. Manual backend obligations must first transfer to their separate reminders.
 
@@ -363,16 +363,16 @@ Legacy markers without an inventory, and malformed or unsupported inventories, c
 
 ### Full pre-update backup: `--backup`
 
-For high-value profiles (production gateways, shared team installs) you can opt into a full pre-pull backup of `HERMES_HOME` (config, auth, sessions, skills, pairing):
+For high-value profiles (production gateways, shared team installs) you can opt into a full pre-pull backup of `CIEL_HOME` (config, auth, sessions, skills, pairing):
 
 ```bash
-hermes update --backup
+ciel update --backup
 ```
 
 Or make it the default for every run:
 
 ```yaml
-# ~/.hermes/config.yaml
+# ~/.ciel/config.yaml
 updates:
   pre_update_backup: full
 ```
@@ -380,13 +380,13 @@ updates:
 `updates.pre_update_backup` has three modes:
 
 - `quick` saves the selected state files described above. This is the default.
-- `full` adds a zip archive with the [backup exclusions](../reference/faq.md#hermes-backup-vs-hermes-profile-export). Large data directories can take several minutes.
+- `full` adds a zip archive with the [backup exclusions](../reference/faq.md#ciel-backup-vs-ciel-profile-export). Large data directories can take several minutes.
 - `off` disables pre-update backups. `--no-backup` selects this mode for one run.
 
 Legacy boolean values remain supported: `true` means `full`, and `false` means `off`.
 
 :::tip Moving to a new machine instead?
-Update backups protect an in-place update. If you're migrating your whole setup to different hardware, use `hermes backup` + `hermes import` instead — see [Exporting Hermes to another machine](../reference/faq.md#exporting-hermes-to-another-machine) and [`hermes backup` vs `hermes profile export`](../reference/faq.md#hermes-backup-vs-hermes-profile-export).
+Update backups protect an in-place update. If you're migrating your whole setup to different hardware, use `ciel backup` + `ciel import` instead — see [Exporting Ciel to another machine](../reference/faq.md#exporting-ciel-to-another-machine) and [`ciel backup` vs `ciel profile export`](../reference/faq.md#ciel-backup-vs-ciel-profile-export).
 :::
 
 ### Windows process ownership and dependency changes
@@ -397,12 +397,12 @@ imported libraries in place. A running process keeps its current imports until
 it restarts.
 
 Follow any blocker diagnostic for the specific process and installation. Do
-not kill every process named Python or Hermes. Source updates and MSIX package
+not kill every process named Python or Ciel. Source updates and MSIX package
 replacement have different owners and shutdown requirements.
 
 The parser retains `--force` and `--force-venv` for Windows compatibility. They
 are not normal update instructions or a guarantee that an OS file lock can be
-bypassed. Inspect `hermes update --plan`, the update log, and `hermes pm status`
+bypassed. Inspect `ciel update --plan`, the update log, and `ciel pm status`
 before retrying a failed update.
 
 ### Recommended Post-Update Validation
@@ -411,43 +411,43 @@ After a source update, run the following diagnostics. For a bundled app, use
 its About page and backend health instead of Git commands inside the package.
 
 1. `git status --short` — if the tree is unexpectedly dirty, inspect before continuing
-2. `hermes doctor` — checks config, dependencies, and service health
-3. `hermes --version` — confirm the version bumped as expected
-4. If you use the gateway: `hermes gateway status`
-5. `hermes pm status` — inspect dependency preparation and any failed steps.
+2. `ciel doctor` — checks config, dependencies, and service health
+3. `ciel --version` — confirm the version bumped as expected
+4. If you use the gateway: `ciel gateway status`
+5. `ciel pm status` — inspect dependency preparation and any failed steps.
 
 :::warning Dirty working tree after update
-If `git status --short` shows unexpected changes after `hermes update`, stop and inspect them before continuing. This usually means local modifications were reapplied on top of the updated code, or a dependency step refreshed lockfiles.
+If `git status --short` shows unexpected changes after `ciel update`, stop and inspect them before continuing. This usually means local modifications were reapplied on top of the updated code, or a dependency step refreshed lockfiles.
 :::
 
 ### If your terminal disconnects mid-update
 
-`hermes update` protects itself against accidental terminal loss:
+`ciel update` protects itself against accidental terminal loss:
 
 - The update ignores `SIGHUP`, so closing your SSH session or terminal window no longer kills it mid-install. `pip` and `git` child processes inherit this protection, so the Python environment cannot be left half-installed by a dropped connection.
-- All output is mirrored to `~/.hermes/logs/update.log` while the update runs. If your terminal disappears, reconnect and inspect the log to see whether the update finished and whether the gateway restart succeeded:
+- All output is mirrored to `~/.ciel/logs/update.log` while the update runs. If your terminal disappears, reconnect and inspect the log to see whether the update finished and whether the gateway restart succeeded:
 
 ```bash
-tail -f ~/.hermes/logs/update.log
+tail -f ~/.ciel/logs/update.log
 ```
 
-- `Ctrl-C` (SIGINT) and system shutdown (SIGTERM) are still honored — those are deliberate cancellations, not accidents. A `Ctrl-C` after the new code is in place exits 130 and says so: the remaining steps (dependencies, builds, gateway restart) are owed, and the next launch or `hermes update` finishes them.
+- `Ctrl-C` (SIGINT) and system shutdown (SIGTERM) are still honored — those are deliberate cancellations, not accidents. A `Ctrl-C` after the new code is in place exits 130 and says so: the remaining steps (dependencies, builds, gateway restart) are owed, and the next launch or `ciel update` finishes them.
 
-You no longer need to wrap `hermes update` in `screen` or `tmux` to survive a terminal drop.
+You no longer need to wrap `ciel update` in `screen` or `tmux` to survive a terminal drop.
 
 ### When an update or launch refuses instead of guessing
 
 A few situations stop with a message rather than carry on, because carrying on could leave a half-updated checkout or a gateway running old code:
 
-- **Another launch is repairing an interrupted update.** When an update was killed while git moved the checkout, the next `hermes` launch puts the checkout back first. Launches that start together (a restarting gateway or Desktop backend next to your CLI) take turns. A launch that waits more than 10 seconds for another one's repair exits with status 1: `hermes: another Hermes launch is finishing an interrupted 'hermes update'; launch again in a moment.` Launch again once the other one finishes. A backend started by Hermes Desktop at that moment shows up as a failed start; reopening it is enough.
-- **Windows git failure → ZIP fallback.** On Windows, a git error during `hermes update` falls back to downloading the release ZIP only when git has not touched the checkout yet: same commit and branch as when the update started, no stash taken, no tree move begun. Once git has stashed, switched branch or started moving files, the update reports the git error and exits 1 instead, because the ZIP overlay would bury that state. Re-run `hermes update` after fixing the git problem.
-- **Desktop builds need a writable `.git`.** Building Hermes Desktop from a checkout with `hermes desktop` takes the same checkout lock as `hermes update` (which needs it too), kept in the checkout's git directory. If that directory is not writable for your user (for example a checkout owned by another account), the build refuses with `.../.git/hermes-update.lock is not writable` instead of building alongside a possible update. Fix the ownership or permissions of `.git`. On macOS/Linux, a lock file left read-only by a `sudo hermes update` is still usable.
-- **Restart record not writable.** `hermes update` records the owed gateway restart before it moves the checkout, in the host state directory (`$HERMES_GATEWAY_LOCK_DIR`, else `$XDG_STATE_HOME/hermes/gateway-locks`). If that directory cannot be written, the record goes into the current profile's Hermes home instead. Only that profile reads it, so the update goes ahead only on an install with no other profile. If other profiles exist, or the profile list cannot be read, the update refuses before moving anything. Make the state directory writable and run it again.
+- **Another launch is repairing an interrupted update.** When an update was killed while git moved the checkout, the next `ciel` launch puts the checkout back first. Launches that start together (a restarting gateway or Desktop backend next to your CLI) take turns. A launch that waits more than 10 seconds for another one's repair exits with status 1: `ciel: another Ciel launch is finishing an interrupted 'ciel update'; launch again in a moment.` Launch again once the other one finishes. A backend started by Ciel Desktop at that moment shows up as a failed start; reopening it is enough.
+- **Windows git failure → ZIP fallback.** On Windows, a git error during `ciel update` falls back to downloading the release ZIP only when git has not touched the checkout yet: same commit and branch as when the update started, no stash taken, no tree move begun. Once git has stashed, switched branch or started moving files, the update reports the git error and exits 1 instead, because the ZIP overlay would bury that state. Re-run `ciel update` after fixing the git problem.
+- **Desktop builds need a writable `.git`.** Building Ciel Desktop from a checkout with `ciel desktop` takes the same checkout lock as `ciel update` (which needs it too), kept in the checkout's git directory. If that directory is not writable for your user (for example a checkout owned by another account), the build refuses with `.../.git/ciel-update.lock is not writable` instead of building alongside a possible update. Fix the ownership or permissions of `.git`. On macOS/Linux, a lock file left read-only by a `sudo ciel update` is still usable.
+- **Restart record not writable.** `ciel update` records the owed gateway restart before it moves the checkout, in the host state directory (`$CIEL_GATEWAY_LOCK_DIR`, else `$XDG_STATE_HOME/ciel/gateway-locks`). If that directory cannot be written, the record goes into the current profile's Ciel home instead. Only that profile reads it, so the update goes ahead only on an install with no other profile. If other profiles exist, or the profile list cannot be read, the update refuses before moving anything. Make the state directory writable and run it again.
 
 ### Checking your current version
 
 ```bash
-hermes --version
+ciel --version
 ```
 
 Compare against the latest release at the [GitHub releases page](https://github.com/NousResearch/hermes-agent/releases).
@@ -484,31 +484,31 @@ procedure. Do not run Git or pip inside a signed app or an immutable image.
 
 ### Python 3.14 and older interpreters
 
-Hermes runs only on **Python 3.14**. `pyproject.toml` still declares
+Ciel runs only on **Python 3.14**. `pyproject.toml` still declares
 `requires-python = ">=3.11,<3.15"`, but every runtime dependency carries a
 `python_version >= '3.14'` marker. The wider range exists for one reason: a
 source install whose venv predates the PM migration (Python 3.11–3.13) must be
-able to check out the new code and run `hermes update` once more. That update
+able to check out the new code and run `ciel update` once more. That update
 hands off to a fresh completion process, PM provisions the pinned 3.14
 interpreter from `pm/lock.json`, builds the dependency environment on it, and
 repoints the launchers. After that the old interpreter is no longer used.
 
-What this means outside `hermes update`:
+What this means outside `ciel update`:
 
 - `pip install .`, `uv pip install .`, `pip install -e .`, or a Homebrew/PyPI
-  package built on Python 3.11–3.13 installs `hermes-agent` with **no
+  package built on Python 3.11–3.13 installs `ciel-agent` with **no
   dependencies** and the package does not import. These install methods are
   [unsupported](./platform-support.md#unsupported); use the source installer or
   a packaged build.
 - A Nix build outside the repo flake sees the same marker-gated dependency set
   and needs a 3.14 interpreter.
-- A `hermes` launcher that still points at a pre-migration venv should be
-  repaired with `hermes update` (or `python -m pm.cli install` from the
+- A `ciel` launcher that still points at a pre-migration venv should be
+  repaired with `ciel update` (or `python -m pm.cli install` from the
   checkout), not by reinstalling into the old venv.
 
 ### Image-managed installs (Docker): the provenance marker
 
-Published Docker images bake a small read-only marker (`/etc/hermes/image-provenance.json`) that authoritatively identifies the filesystem as image-managed. `hermes update`, `hermes update --check`, and the dashboard's Update button all consult it before touching anything: on an image-managed install they refuse cleanly (exit code 2), print the actual update command (`docker pull nousresearch/hermes-agent:latest`), and write a `refused` receipt so fleet tooling can see the attempt happened. The marker wins even when a source checkout is bind-mounted into the container — the refusal is based on what the running filesystem *is*, not what it looks like. A damaged marker still refuses (fail-closed). Nix- and apt-managed installs refuse through the same gate using the existing detection.
+Published Docker images bake a small read-only marker (`/etc/ciel/image-provenance.json`) that authoritatively identifies the filesystem as image-managed. `ciel update`, `ciel update --check`, and the dashboard's Update button all consult it before touching anything: on an image-managed install they refuse cleanly (exit code 2), print the actual update command (`docker pull nousresearch/hermes-agent:latest`), and write a `refused` receipt so fleet tooling can see the attempt happened. The marker wins even when a source checkout is bind-mounted into the container — the refusal is based on what the running filesystem *is*, not what it looks like. A damaged marker still refuses (fail-closed). Nix- and apt-managed installs refuse through the same gate using the existing detection.
 
 ### Note for Nix users
 
@@ -516,10 +516,10 @@ Nix is no longer an explicitly supported install path (best-effort only) — see
 
 ```bash
 # Update the flake input
-nix flake update hermes-agent
+nix flake update ciel-agent
 
 # Or rebuild with the latest
-nix profile upgrade hermes-agent
+nix profile upgrade ciel-agent
 ```
 
 Nix installations are immutable — rollback is handled by Nix's generation system:
@@ -535,40 +535,40 @@ See [Nix Setup](./nix-setup.md) for more details.
 ## Uninstalling
 
 ```bash
-hermes uninstall
+ciel uninstall
 ```
 
-For source installs, review `hermes uninstall --dry-run` before removal.
+For source installs, review `ciel uninstall --dry-run` before removal.
 The default removal can preserve configuration and user data. `--full` also
 removes data. `--data` removes user data without deleting package-owned code.
 These modes are destructive; make a backup first.
 
 For MSIX/Store, use Windows Settings → Apps → Installed apps. For macOS,
-quit Hermes and move its app bundle to Trash. Docker, Nix, and Termux use the
+quit Ciel and move its app bundle to Trash. Docker, Nix, and Termux use the
 same manager that installed them. Their package files are not removed by the
 source uninstaller. Data deletion is separate from package removal.
 
 :::tip Moving to a new machine rather than leaving?
-Run `hermes backup` before you remove the installation. The full archive includes
+Run `ciel backup` before you remove the installation. The full archive includes
 credentials but excludes downloaded runtimes, dependency environments, caches,
 and browser profiles. Review its skipped-file report before you delete source data.
-`hermes profile export` packs one profile without credentials.
-See [`hermes backup` vs `hermes profile export`](../reference/faq.md#hermes-backup-vs-hermes-profile-export).
+`ciel profile export` packs one profile without credentials.
+See [`ciel backup` vs `ciel profile export`](../reference/faq.md#ciel-backup-vs-ciel-profile-export).
 :::
 
 ### Manual Uninstall
 
 ```bash
-rm -f ~/.local/bin/hermes
-rm -rf /path/to/hermes-agent
-rm -rf ~/.hermes            # Optional — keep if you plan to reinstall
+rm -f ~/.local/bin/ciel
+rm -rf /path/to/ciel-agent
+rm -rf ~/.ciel            # Optional — keep if you plan to reinstall
 ```
 
 :::info
 If you installed the gateway as a system service, stop and disable it first:
 ```bash
-hermes gateway stop
-# Linux: systemctl --user disable hermes-gateway
-# macOS: launchctl remove ai.hermes.gateway
+ciel gateway stop
+# Linux: systemctl --user disable ciel-gateway
+# macOS: launchctl remove ai.ciel.gateway
 ```
 :::

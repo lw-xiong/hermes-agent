@@ -8,7 +8,7 @@ import { test } from 'vitest'
 import {
   appendUniquePathEntries,
   buildDesktopBackendEnv,
-  normalizeHermesHomeRoot,
+  normalizeCielHomeRoot,
   pathEnvKey,
   pooledProfileBackendEnv,
   POSIX_SANE_PATH_ENTRIES,
@@ -46,16 +46,16 @@ test('POSIX backend PATH keeps the inherited PATH first and appends missing sane
 })
 
 test('backend runs the store toolchain even after the login-shell PATH is merged in front of it', async () => {
-  // `hermes desktop` hands Electron a PATH with the PM store first; the
+  // `ciel desktop` hands Electron a PATH with the PM store first; the
   // login-shell merge then puts nvm/Homebrew ahead of it in process.env.
   const env: Record<string, string> = {
-    PATH: '/Users/u/.hermes/tools/node-26.7.0-darwin-arm64/bin:/Users/u/.hermes/tools/uv-0.12.3-darwin-arm64:/usr/bin:/bin'
+    PATH: '/Users/u/.ciel/tools/node-26.7.0-darwin-arm64/bin:/Users/u/.ciel/tools/uv-0.12.3-darwin-arm64:/usr/bin:/bin'
   }
 
   const loginPath = '/Users/u/.nvm/versions/node/v20.0.0/bin:/opt/homebrew/bin:/usr/bin'
 
   const execFileFn = (_file, _args, _options, callback) => {
-    queueMicrotask(() => callback(null, `__HERMES_LOGIN_PATH_START__${loginPath}__HERMES_LOGIN_PATH_END__`, ''))
+    queueMicrotask(() => callback(null, `__CIEL_LOGIN_PATH_START__${loginPath}__CIEL_LOGIN_PATH_END__`, ''))
 
     return { stdin: { end() {} } }
   }
@@ -66,21 +66,21 @@ test('backend runs the store toolchain even after the login-shell PATH is merged
   const backend = buildDesktopBackendEnv({ currentEnv: env, platform: 'darwin', homedir: '/Users/u' })
 
   assert.deepEqual(backend.PATH.split(':').slice(0, 5), [
-    '/Users/u/.hermes/tools/node-26.7.0-darwin-arm64/bin',
-    '/Users/u/.hermes/tools/uv-0.12.3-darwin-arm64',
+    '/Users/u/.ciel/tools/node-26.7.0-darwin-arm64/bin',
+    '/Users/u/.ciel/tools/uv-0.12.3-darwin-arm64',
     '/Users/u/.nvm/versions/node/v20.0.0/bin',
     '/opt/homebrew/bin',
     '/usr/bin'
   ])
 })
 
-test('HERMES_RUNTIME_DIR names the store; look-alike prefixes are not Hermes-owned', () => {
-  const store = '/Applications/Hermes.app/Contents/Resources/agent-payload/tools'
+test('CIEL_RUNTIME_DIR names the store; look-alike prefixes are not Ciel-owned', () => {
+  const store = '/Applications/Ciel.app/Contents/Resources/agent-payload/tools'
 
   const backend = buildDesktopBackendEnv({
     currentEnv: {
-      HERMES_RUNTIME_DIR: store,
-      PATH: `/opt/homebrew/bin:/Users/u/.hermes/tools-old/bin:${store}/npm-12.0.2-darwin-arm64/bin:/usr/bin`
+      CIEL_RUNTIME_DIR: store,
+      PATH: `/opt/homebrew/bin:/Users/u/.ciel/tools-old/bin:${store}/npm-12.0.2-darwin-arm64/bin:/usr/bin`
     },
     platform: 'darwin',
     homedir: '/Users/u'
@@ -89,7 +89,7 @@ test('HERMES_RUNTIME_DIR names the store; look-alike prefixes are not Hermes-own
   assert.deepEqual(backend.PATH.split(':').slice(0, 4), [
     `${store}/npm-12.0.2-darwin-arm64/bin`,
     '/opt/homebrew/bin',
-    '/Users/u/.hermes/tools-old/bin',
+    '/Users/u/.ciel/tools-old/bin',
     '/usr/bin'
   ])
 })
@@ -120,32 +120,32 @@ test('buildDesktopBackendEnv forces PYTHONUTF8 unless the user set it explicitly
   assert.equal(optedOut.PYTHONUTF8, '0')
 })
 
-test('normalizeHermesHomeRoot expands a literal leading ~ against the home directory, not cwd', () => {
+test('normalizeCielHomeRoot expands a literal leading ~ against the home directory, not cwd', () => {
   assert.equal(
-    normalizeHermesHomeRoot('~/.hermes', { pathModule: path.posix, homedir: '/Users/test' }),
-    '/Users/test/.hermes'
+    normalizeCielHomeRoot('~/.ciel', { pathModule: path.posix, homedir: '/Users/test' }),
+    '/Users/test/.ciel'
   )
   assert.equal(
-    normalizeHermesHomeRoot('~/.hermes/profiles/oracle', { pathModule: path.posix, homedir: '/Users/test' }),
-    '/Users/test/.hermes'
+    normalizeCielHomeRoot('~/.ciel/profiles/oracle', { pathModule: path.posix, homedir: '/Users/test' }),
+    '/Users/test/.ciel'
   )
   assert.equal(
-    normalizeHermesHomeRoot('~\\.hermes', { pathModule: path.win32, homedir: 'C:\\Users\\test' }),
-    'C:\\Users\\test\\.hermes'
+    normalizeCielHomeRoot('~\\.ciel', { pathModule: path.win32, homedir: 'C:\\Users\\test' }),
+    'C:\\Users\\test\\.ciel'
   )
-  assert.equal(normalizeHermesHomeRoot('~', { pathModule: path.posix, homedir: '/Users/test' }), '/Users/test')
+  assert.equal(normalizeCielHomeRoot('~', { pathModule: path.posix, homedir: '/Users/test' }), '/Users/test')
 })
 
-test('normalizeHermesHomeRoot maps profile homes back to the global Hermes root', () => {
+test('normalizeCielHomeRoot maps profile homes back to the global Ciel root', () => {
   assert.equal(
-    normalizeHermesHomeRoot('/Users/test/.hermes/profiles/oracle', { pathModule: path.posix }),
-    '/Users/test/.hermes'
+    normalizeCielHomeRoot('/Users/test/.ciel/profiles/oracle', { pathModule: path.posix }),
+    '/Users/test/.ciel'
   )
   assert.equal(
-    normalizeHermesHomeRoot('C:\\Users\\test\\AppData\\Local\\hermes\\profiles\\oracle', { pathModule: path.win32 }),
-    'C:\\Users\\test\\AppData\\Local\\hermes'
+    normalizeCielHomeRoot('C:\\Users\\test\\AppData\\Local\\ciel\\profiles\\oracle', { pathModule: path.win32 }),
+    'C:\\Users\\test\\AppData\\Local\\ciel'
   )
-  assert.equal(normalizeHermesHomeRoot('/Users/test/.hermes', { pathModule: path.posix }), '/Users/test/.hermes')
+  assert.equal(normalizeCielHomeRoot('/Users/test/.ciel', { pathModule: path.posix }), '/Users/test/.ciel')
 })
 
 test('pathEnvKey finds the platform-cased PATH key', () => {
@@ -159,10 +159,10 @@ test('appendUniquePathEntries flattens, dedupes, and preserves first occurrence'
   assert.equal(appendUniquePathEntries(['/a:/b', ['/b', '/c'], '', null], { delimiter: ':' }), '/a:/b:/c')
 })
 
-// `hermes desktop` loads its launch profile's .env/.op.env into os.environ and
+// `ciel desktop` loads its launch profile's .env/.op.env into os.environ and
 // hands that env to Electron; these cover what a profile backend inherits (#68367).
-function withHermesRoot(files: Record<string, string>, run: (root: string) => void) {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hermes-profile-env-'))
+function withCielRoot(files: Record<string, string>, run: (root: string) => void) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ciel-profile-env-'))
 
   try {
     for (const [rel, contents] of Object.entries(files)) {
@@ -192,9 +192,9 @@ const ROOT_LAUNCHED_ENV = {
 }
 
 test('a named profile backend does not inherit secrets the root .env/.op.env loaded into Desktop', () => {
-  withHermesRoot(ROOT_SCOPE_FILES, root => {
+  withCielRoot(ROOT_SCOPE_FILES, root => {
     const env = profileBackendParentEnv({
-      hermesHome: root,
+      cielHome: root,
       profile: 'urbot',
       currentEnv: ROOT_LAUNCHED_ENV,
       platform: 'linux'
@@ -206,10 +206,10 @@ test('a named profile backend does not inherit secrets the root .env/.op.env loa
 })
 
 test('the launch profile backend inherits the Desktop env unchanged', () => {
-  withHermesRoot(ROOT_SCOPE_FILES, root => {
+  withCielRoot(ROOT_SCOPE_FILES, root => {
     for (const profile of ['default', null, undefined]) {
       assert.deepEqual(
-        profileBackendParentEnv({ hermesHome: root, profile, currentEnv: ROOT_LAUNCHED_ENV, platform: 'linux' }),
+        profileBackendParentEnv({ cielHome: root, profile, currentEnv: ROOT_LAUNCHED_ENV, platform: 'linux' }),
         ROOT_LAUNCHED_ENV
       )
     }
@@ -217,8 +217,8 @@ test('the launch profile backend inherits the Desktop env unchanged', () => {
 })
 
 test('a primary backend without an explicit profile follows the sticky active_profile', () => {
-  withHermesRoot({ ...ROOT_SCOPE_FILES, active_profile: 'urbot\n' }, root => {
-    const env = profileBackendParentEnv({ hermesHome: root, profile: null, currentEnv: ROOT_LAUNCHED_ENV })
+  withCielRoot({ ...ROOT_SCOPE_FILES, active_profile: 'urbot\n' }, root => {
+    const env = profileBackendParentEnv({ cielHome: root, profile: null, currentEnv: ROOT_LAUNCHED_ENV })
 
     assert.equal(env.TLON_SHIP_CODE, undefined)
     assert.equal(env.OP_SERVICE_ACCOUNT_TOKEN, undefined)
@@ -227,30 +227,30 @@ test('a primary backend without an explicit profile follows the sticky active_pr
 })
 
 test('Desktop launched from a named profile keeps that profile out of the default backend', () => {
-  withHermesRoot(
+  withCielRoot(
     {
       '.env': 'OPENAI_API_KEY=root-key\n',
       'profiles/work/.env': 'TLON_SHIP_CODE=work-code\nOP_SERVICE_ACCOUNT_TOKEN=work-op\n'
     },
     root => {
       const currentEnv = {
-        HERMES_HOME: path.join(root, 'profiles', 'work'),
+        CIEL_HOME: path.join(root, 'profiles', 'work'),
         TLON_SHIP_CODE: 'work-code',
         OP_SERVICE_ACCOUNT_TOKEN: 'work-op',
         OPENAI_API_KEY: 'shell-key'
       }
 
-      assert.deepEqual(profileBackendParentEnv({ hermesHome: root, profile: 'default', currentEnv }), {
-        HERMES_HOME: currentEnv.HERMES_HOME,
+      assert.deepEqual(profileBackendParentEnv({ cielHome: root, profile: 'default', currentEnv }), {
+        CIEL_HOME: currentEnv.CIEL_HOME,
         OPENAI_API_KEY: 'shell-key'
       })
-      assert.deepEqual(profileBackendParentEnv({ hermesHome: root, profile: 'work', currentEnv }), currentEnv)
+      assert.deepEqual(profileBackendParentEnv({ cielHome: root, profile: 'work', currentEnv }), currentEnv)
     }
   )
 })
 
 test('Windows matches profile homes and dotenv names case-insensitively', () => {
-  const root = 'C:\\Users\\test\\AppData\\Local\\hermes'
+  const root = 'C:\\Users\\test\\AppData\\Local\\ciel'
   const files = { [`${root}\\.env`]: 'TELEGRAM_BOT_TOKEN=root-token\r\n' }
 
   const fsModule = {
@@ -264,24 +264,24 @@ test('Windows matches profile homes and dotenv names case-insensitively', () => 
   }
 
   const currentEnv = {
-    HERMES_HOME: 'c:\\users\\test\\appdata\\local\\HERMES',
+    CIEL_HOME: 'c:\\users\\test\\appdata\\local\\CIEL',
     Path: 'C:\\Windows',
     Telegram_Bot_Token: 'root-token'
   }
 
   const scoped = (profile: string) =>
-    profileBackendParentEnv({ hermesHome: root, profile, currentEnv, platform: 'win32', fsModule })
+    profileBackendParentEnv({ cielHome: root, profile, currentEnv, platform: 'win32', fsModule })
 
   assert.deepEqual(scoped('default'), currentEnv)
-  assert.deepEqual(scoped('urbot'), { HERMES_HOME: currentEnv.HERMES_HOME, Path: 'C:\\Windows' })
+  assert.deepEqual(scoped('urbot'), { CIEL_HOME: currentEnv.CIEL_HOME, Path: 'C:\\Windows' })
 })
 
 test('a pooled profile backend drops the launch profile TERMINAL_CWD (#87584)', () => {
-  withHermesRoot(ROOT_SCOPE_FILES, root => {
-    // The Desktop env carries the app-global cwd (resolveHermesCwd) and the
+  withCielRoot(ROOT_SCOPE_FILES, root => {
+    // The Desktop env carries the app-global cwd (resolveCielCwd) and the
     // runtime may add its own; both name the LAUNCH profile's workspace.
     const env = pooledProfileBackendEnv({
-      hermesHome: root,
+      cielHome: root,
       profile: 'urbot',
       currentEnv: { ...ROOT_LAUNCHED_ENV, TERMINAL_CWD: '/source/launch-workspace' },
       backendEnv: { TERMINAL_CWD: '/stale/runtime-workspace', KEEP_BACKEND: '1' },
@@ -289,7 +289,7 @@ test('a pooled profile backend drops the launch profile TERMINAL_CWD (#87584)', 
     })
 
     assert.equal(env.TERMINAL_CWD, undefined)
-    assert.equal(env.HERMES_HOME, root, 'the child resolves --profile under the Desktop-resolved root')
+    assert.equal(env.CIEL_HOME, root, 'the child resolves --profile under the Desktop-resolved root')
     assert.equal(env.KEEP_BACKEND, '1')
     // The named-profile dotenv scrub (#68367) still applies on top.
     assert.equal(env.TLON_SHIP_CODE, undefined)
@@ -299,9 +299,9 @@ test('a pooled profile backend drops the launch profile TERMINAL_CWD (#87584)', 
 })
 
 test('a pooled backend removes case-insensitive TERMINAL_CWD on Windows', () => {
-  withHermesRoot(ROOT_SCOPE_FILES, root => {
+  withCielRoot(ROOT_SCOPE_FILES, root => {
     const env = pooledProfileBackendEnv({
-      hermesHome: root,
+      cielHome: root,
       profile: 'urbot',
       currentEnv: { Path: 'C:\\Windows', Terminal_Cwd: 'C:\\source\\workspace' },
       backendEnv: { terminal_cwd: 'C:\\backend' },
@@ -315,12 +315,12 @@ test('a pooled backend removes case-insensitive TERMINAL_CWD on Windows', () => 
 })
 
 test('the launch profile pooled backend keeps its TERMINAL_CWD', () => {
-  withHermesRoot(ROOT_SCOPE_FILES, root => {
+  withCielRoot(ROOT_SCOPE_FILES, root => {
     // profile 'default' targets the root home: no dotenv scrub, and the pin
     // survives only when the caller (main.ts) provides it — the pooled helper
     // itself never stamps one, it only strips inherited/global values.
     const env = pooledProfileBackendEnv({
-      hermesHome: root,
+      cielHome: root,
       profile: 'default',
       currentEnv: { TERMINAL_CWD: '/launch-workspace', PATH: '/usr/bin' },
       platform: 'linux'

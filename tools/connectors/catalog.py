@@ -22,8 +22,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
-from hermes_cli.plugin_install_phase import InstallPhase
-from hermes_constants import get_hermes_home, profile_name_for_home
+from ciel_cli.plugin_install_phase import InstallPhase
+from ciel_constants import get_ciel_home, profile_name_for_home
 from tools.connectors.contract import Actor, SettleReason, TargetState
 from tools.connectors.mcp import _fail, _move
 from tools.connectors.operation import ConnectionOperation, IllegalTransition, Target
@@ -60,8 +60,8 @@ def target_scope(home: Path):
     from tui_gateway import server
     from tui_gateway.launch_profile_policy import launch_profile_runtime_scope
 
-    launch = home.resolve() == Path(server._hermes_home).resolve()
-    scope = (launch_profile_runtime_scope(server._hermes_home) if launch
+    launch = home.resolve() == Path(server._ciel_home).resolve()
+    scope = (launch_profile_runtime_scope(server._ciel_home) if launch
              else server._session_profile_runtime_scope({"profile_home": str(home)}))
     with scope:
         yield
@@ -71,7 +71,7 @@ def _named_home(name: str) -> Path:
     """The home of the profile the Advanced modal named; raises for one that does not exist."""
     from tui_gateway import server
 
-    return server._profile_home(name) or Path(server._hermes_home)
+    return server._profile_home(name) or Path(server._ciel_home)
 
 
 class HostInstaller:
@@ -79,26 +79,26 @@ class HostInstaller:
     installer."""
 
     def plugin_entry(self, name: str) -> Any:
-        from hermes_cli.plugin_catalog import get_live_catalog_entry
+        from ciel_cli.plugin_catalog import get_live_catalog_entry
 
         return get_live_catalog_entry(name)
 
     def refuse(self, entry: Any) -> None:
         """Raise with the installer's own text when the catalog would refuse this entry here."""
-        from hermes_cli.plugins_cmd_catalog import _refuse_unsupported_catalog_platform, raise_if_removed
+        from ciel_cli.plugins_cmd_catalog import _refuse_unsupported_catalog_platform, raise_if_removed
 
         raise_if_removed(entry.name, entry.repo)
         _refuse_unsupported_catalog_platform(entry)
 
     def install_plugin(self, name: str, *, force: bool, enable: bool, ref: Optional[str],
                        on_step: Callable[[InstallPhase], None]) -> dict[str, Any]:
-        from hermes_cli.plugins_cmd import dashboard_install_plugin
+        from ciel_cli.plugins_cmd import dashboard_install_plugin
 
         return dashboard_install_plugin("", force=force, enable=enable, catalog_name=name, ref=ref, on_step=on_step)
 
     def skill_meta(self, identifier: str) -> Optional[dict[str, Any]]:
         """The first hub source that knows the identifier; metadata only, no bundle download."""
-        from hermes_cli.skills_hub import _sources
+        from ciel_cli.skills_hub import _sources
         from tools.skills_hub import skills_hub_http_session
 
         with skills_hub_http_session():
@@ -118,7 +118,7 @@ class HostInstaller:
         installed (force off) is left as it is and reported so."""
         from rich.console import Console
 
-        from hermes_cli.skills_hub import do_install
+        from ciel_cli.skills_hub import do_install
         from tools.skills_hub import HubLockFile
 
         def entry() -> Optional[dict[str, Any]]:
@@ -160,7 +160,7 @@ class _Runner:
         self.approved_env: dict[str, dict[str, str]] = {}
         # Built on the tool call's thread: the calling chat's own home is the default install
         # target, and its profile name labels the row (None for a home that is no named profile).
-        self.home: Path = get_hermes_home()
+        self.home: Path = get_ciel_home()
         self.label: Optional[str] = profile_name_for_home(self.home)
 
     # -- prepare: resolve each id and draw its row ------------------------------------------------
@@ -179,7 +179,7 @@ class _Runner:
         if target.kind == "plugin":
             entry = self.installer.plugin_entry(target.name)
             if entry is None:
-                raise LookupError(f"'{target.name}' is not in the Hermes plugin catalog")
+                raise LookupError(f"'{target.name}' is not in the Ciel plugin catalog")
             self.facts[target.name] = entry
             target.extra = _plugin_row(entry, self.label)
             target.required_env = [{"name": name, "required": False, "secret": True, "default": ""}
@@ -308,7 +308,7 @@ def target_declared_env(fact: Any) -> list[str]:
 
 
 def _plugin_row(entry: Any, label: Optional[str]) -> dict[str, Any]:
-    from hermes_cli.plugin_catalog_presence import presence
+    from ciel_cli.plugin_catalog_presence import presence
 
     row: dict[str, Any] = {
         "display": getattr(entry, "title", "") or _display(entry.name),
@@ -316,7 +316,7 @@ def _plugin_row(entry: Any, label: Optional[str]) -> dict[str, Any]:
         "tier": entry.tier if entry.tier in _TIERS else "community",
         "repo": entry.repo,
         "sha": entry.sha,
-        "requires_hermes": entry.requires_hermes or None,
+        "requires_ciel": entry.requires_ciel or None,
         "has_desktop_half": False,
         "target_profile": label,
         "app_state": presence(entry).state,
@@ -355,7 +355,7 @@ def _installed_row(target: Target, outcome: dict[str, Any]) -> tuple:
 
 
 def _save_credentials(env: dict[str, str]) -> None:
-    from hermes_cli.config import save_env_value, validate_env_var_name_for_write
+    from ciel_cli.config import save_env_value, validate_env_var_name_for_write
 
     for key, value in env.items():
         validate_env_var_name_for_write(key)

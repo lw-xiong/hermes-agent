@@ -6,7 +6,7 @@ author: Ciel
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  ciel:
     tags: [LOC, Code Analysis, pygount, Codebase, Metrics, Repository]
     related_skills: [github]
 prerequisites:

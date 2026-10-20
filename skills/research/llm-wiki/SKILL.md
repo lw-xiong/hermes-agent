@@ -6,7 +6,7 @@ author: Ciel
 license: MIT
 platforms: [linux, macos, windows]
 metadata:
-  hermes:
+  ciel:
     tags: [wiki, knowledge-base, research, notes, markdown, rag-alternative]
     category: research
     related_skills: [obsidian, arxiv]
@@ -35,7 +35,7 @@ Use this skill when the user:
 
 ## Wiki Location
 
-**Location:** Set via `WIKI_PATH` environment variable (e.g. in `${HERMES_HOME:-~/.hermes}/.env`).
+**Location:** Set via `WIKI_PATH` environment variable (e.g. in `${CIEL_HOME:-~/.ciel}/.env`).
 
 If unset, defaults to `~/wiki`.
 

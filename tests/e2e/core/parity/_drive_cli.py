@@ -20,13 +20,13 @@ from __future__ import annotations
 
 import subprocess
 
-from tests.e2e.core.parity._helpers import TURN_TIMEOUT, DriveResult, ParityHome, hermes_argv
+from tests.e2e.core.parity._helpers import TURN_TIMEOUT, DriveResult, ParityHome, ciel_argv
 from tests.fakes.fake_llm_provider import FakeLLMServer
 
 
 def _run_cli(ph: ParityHome, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(
-        hermes_argv(*args), cwd=ph.project, env=ph.env(), capture_output=True, text=True,
+        ciel_argv(*args), cwd=ph.project, env=ph.env(), capture_output=True, text=True,
         timeout=TURN_TIMEOUT, stdin=subprocess.DEVNULL,
         check=False,
     )
@@ -34,11 +34,11 @@ def _run_cli(ph: ParityHome, *args: str) -> subprocess.CompletedProcess:
 
 def drive_oneshot(ph: ParityHome, srv: FakeLLMServer, prompt: str) -> DriveResult:
     proc = _run_cli(ph, "-z", prompt)
-    assert proc.returncode == 0, f"hermes -z exited {proc.returncode}: {proc.stderr[-2000:]}"
-    return DriveResult(final_text=proc.stdout.strip(), toolset="hermes-cli")
+    assert proc.returncode == 0, f"ciel -z exited {proc.returncode}: {proc.stderr[-2000:]}"
+    return DriveResult(final_text=proc.stdout.strip(), toolset="ciel-cli")
 
 
 def drive_chat_q(ph: ParityHome, srv: FakeLLMServer, prompt: str) -> DriveResult:
     proc = _run_cli(ph, "chat", "-q", prompt, "-Q")
-    assert proc.returncode == 0, f"hermes chat -q exited {proc.returncode}: {proc.stderr[-2000:]}"
-    return DriveResult(final_text=proc.stdout.strip(), toolset="hermes-cli")
+    assert proc.returncode == 0, f"ciel chat -q exited {proc.returncode}: {proc.stderr[-2000:]}"
+    return DriveResult(final_text=proc.stdout.strip(), toolset="ciel-cli")

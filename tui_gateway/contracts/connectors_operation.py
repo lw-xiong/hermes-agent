@@ -13,7 +13,7 @@ from typing import Literal
 
 from pydantic import Field
 
-from hermes_cli.plugin_install_phase import InstallPhase
+from ciel_cli.plugin_install_phase import InstallPhase
 
 from .base import Params, Payload, Result, WireEnum
 from .common import ConnectorOwner, ProfileParams
@@ -82,7 +82,7 @@ class CatalogTier(WireEnum):
 
 
 class CatalogAppState(WireEnum):
-    """The desktop app a catalog plugin drives, from its ``hermes_platform`` declaration."""
+    """The desktop app a catalog plugin drives, from its ``ciel_platform`` declaration."""
 
     present = "present"
     missing_app = "missing_app"
@@ -151,8 +151,8 @@ class ConnectionOperationTarget(Payload):
     sha: str | None = None
     subdir: str | None = None
     scan: CatalogScan | None = None
-    # The Hermes version range the plugin needs; its env vars ride in ``required_env``.
-    requires_hermes: str | None = None
+    # The Ciel version range the plugin needs; its env vars ride in ``required_env``.
+    requires_ciel: str | None = None
     has_desktop_half: bool | None = None
     # The profile the row installs into; absent when the chat's home is no named profile.
     target_profile: str | None = None
@@ -236,7 +236,7 @@ class ConnectionWakeResult(Result):
 
 
 method("connectors.operation.wake", params=ConnectionOperationParams, result=ConnectionWakeResult,
-       doc="The browser leg came back (hermes://connections/done): read the accounts now, not at the next tick.")
+       doc="The browser leg came back (ciel://connections/done): read the accounts now, not at the next tick.")
 
 
 class ConnectionAnswerStatus(WireEnum):

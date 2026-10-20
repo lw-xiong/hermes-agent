@@ -59,7 +59,7 @@ _PATTERNS: list[tuple[str, str, str]] = [
     (r'only\s+use\s+one[\s\-]?liners?\b', "anti_forensic_oneliner", "context"),
     (rf'never\s+{_FILLER}(?:create|write)\s+{_FILLER}(?:script|file)\s+{_FILLER}disk', "anti_forensic_disk", "context"),
     # Unsetting agent-runtime env vars is pure attack behavior (Brainworm sub-session bypass).
-    (r'unset\s+\w*(?:CLAUDE|CODEX|HERMES|AGENT|OPENAI|ANTHROPIC)\w*', "env_var_unset_agent", "context"),
+    (r'unset\s+\w*(?:CLAUDE|CODEX|CIEL|AGENT|OPENAI|ANTHROPIC)\w*', "env_var_unset_agent", "context"),
 
     # ── Known C2 / red-team framework names (warn-only) ─────────────
     # Every token must be a distinctive offensive-security brand: a common English word here
@@ -88,15 +88,15 @@ _PATTERNS: list[tuple[str, str, str]] = [
      r'|sed|chmod|chown|truncate|rm|touch|curl|wget|git)\b|\bopen\s*\(|>>?)'
      r'[^\n]{0,512}(?:\$HOME/\.ssh|~/\.ssh)', "ssh_access", "strict"),
     # Verb-gated like ssh_access above: a bare path match blocked ordinary notes
-    # ("sudo creds live in ~/.hermes/.env"), while the shapes that actually exfiltrate are
+    # ("sudo creds live in ~/.ciel/.env"), while the shapes that actually exfiltrate are
     # read/copy/serialize verbs. Any of them within 512 chars before the path still blocks.
     (r'(?:\b(?:echo|cat|cp|mv|dd|tee|install|printf|rsync|scp|ln|append|add|write'
      r'|sed|chmod|chown|truncate|rm|touch|curl|wget|git|grep|awk|source|read|tar'
      r'|zip|less|more|head|tail|strings|base64|xxd|od|printenv|export|env)\b'
-     r'|\bopen\s*\(|>>?)[^\n]{0,512}(?:\$HOME/\.hermes/\.env|~/\.hermes/\.env)',
-     "hermes_env", "strict"),
+     r'|\bopen\s*\(|>>?)[^\n]{0,512}(?:\$HOME/\.ciel/\.env|~/\.ciel/\.env)',
+     "ciel_env", "strict"),
     (rf'{_MODIFY}(?:AGENTS\.md|CLAUDE\.md|\.cursorrules|\.clinerules)', "agent_config_mod", "strict"),
-    (rf'{_MODIFY}\.hermes/(config\.yaml|SOUL\.md)', "hermes_config_mod", "strict"),
+    (rf'{_MODIFY}\.ciel/(config\.yaml|SOUL\.md)', "ciel_config_mod", "strict"),
 
     # ── Hardcoded secrets ────────────────────────────────────────────
     # The lookahead skips a value that is itself an environment-variable NAME

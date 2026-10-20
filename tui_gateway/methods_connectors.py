@@ -250,7 +250,7 @@ def _connector_rpc(rid, params, action):
     runtime_token = _current_runtime_session_record.set(session)
     try:
         profile_home = session.get("profile_home")
-        with _session_profile_runtime_scope({"profile_home": profile_home or str(_hermes_home)}):
+        with _session_profile_runtime_scope({"profile_home": profile_home or str(_ciel_home)}):
             tokens = _set_session_context(session["session_key"], cwd=_session_cwd(session), ui_session_id=request.owner.session_id)
             try:
                 result = _session_connector_rpc(rid, request, session, action)
@@ -319,7 +319,7 @@ def _account_home(request):
 def _desktop_page_vars():
     """Bind the session vars of a sessionless request from the desktop Connectors page. Only that
     page sends account-owned and account RPCs, so the surface comes from the request: the backend's
-    ``HERMES_DESKTOP`` is absent on a URL or cloud backend and would name the caller ``tui``."""
+    ``CIEL_DESKTOP`` is absent on a URL or cloud backend and would name the caller ``tui``."""
     from gateway.session_context import set_session_vars
 
     tokens = set_session_vars(source="desktop", profile=_current_profile_name(), cron_session="")
@@ -398,7 +398,7 @@ def _(rid, params):
     if request.owner.type == "account":
         with _account_scope(request):
             return _apply_connection_answer(rid, answer, operation)
-    with _session_profile_runtime_scope({"profile_home": session.get("profile_home") or str(_hermes_home)}):
+    with _session_profile_runtime_scope({"profile_home": session.get("profile_home") or str(_ciel_home)}):
         return _apply_connection_answer(rid, answer, operation)
 
 
@@ -429,7 +429,7 @@ def _operation_view(operation):
 
 
 def _connection_update(operation, change, snapshot):
-    from hermes_constants import get_process_hermes_home, hermes_home_key
+    from ciel_constants import get_process_ciel_home, ciel_home_key
     from tui_gateway import server
     from tui_gateway.connector_payload import connector_ui_payload
 
@@ -450,7 +450,7 @@ def _connection_update(operation, change, snapshot):
                 sid
                 for sid, session in server._sessions.items()
                 if session.get("session_key") == operation.session_key
-                and hermes_home_key(session.get("profile_home") or get_process_hermes_home()) == operation.profile_key
+                and ciel_home_key(session.get("profile_home") or get_process_ciel_home()) == operation.profile_key
             ),
             None,
         )

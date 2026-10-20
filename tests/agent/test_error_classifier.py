@@ -15,7 +15,7 @@ from agent.error_classifier import (
     _extract_error_code,
     _classify_402,
 )
-from tests.hermes_cli.anon_portal import make_jwt
+from tests.ciel_cli.anon_portal import make_jwt
 
 
 # ── Helper: mock API errors ────────────────────────────────────────────
@@ -1889,7 +1889,7 @@ class TestServerInjectedParameterRejection:
 
     The Codex backend (chatgpt.com/backend-api/codex) intermittently adds
     ``prompt_cache_retention`` to its own upstream call and then rejects it,
-    so an identical request succeeds on retry ~80% of the time.  Hermes never
+    so an identical request succeeds on retry ~80% of the time.  Ciel never
     sends that field on this route, so the 400 is not a deterministic
     request-shape error and must stay retryable instead of aborting the turn.
     """
@@ -1988,7 +1988,7 @@ class TestServerInjectedParameterRejection:
         assert result.retryable is False
 
     def test_retention_rejection_from_meta_host_stays_non_retryable(self):
-        """Boundary: on api.meta.ai / Bedrock Mantle Hermes DOES send
+        """Boundary: on api.meta.ai / Bedrock Mantle Ciel DOES send
         ``prompt_cache_retention`` deliberately, so a rejection there is a
         real client-side request error and must not be retried blindly."""
         e = MockAPIError(

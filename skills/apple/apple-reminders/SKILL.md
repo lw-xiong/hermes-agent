@@ -6,7 +6,7 @@ author: Ciel
 license: MIT
 platforms: [macos]
 metadata:
-  hermes:
+  ciel:
     tags: [Reminders, tasks, todo, macOS, Apple]
 prerequisites:
   commands: [remindctl]

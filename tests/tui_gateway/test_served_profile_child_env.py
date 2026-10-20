@@ -16,22 +16,22 @@ from pathlib import Path
 import pytest
 
 from agent.secret_scope import set_multiplex_active
-from hermes_constants import reset_hermes_home_override, set_hermes_home_override
+from ciel_constants import reset_ciel_home_override, set_ciel_home_override
 
 _PROBE = ("import json,os;print(json.dumps({k:os.environ.get(k) for k in "
-          "('HERMES_HOME','A_MARKER','B_MARKER','TERMINAL_ENV','HERMES_MODEL','FIRECRAWL_API_KEY')}))")
+          "('CIEL_HOME','A_MARKER','B_MARKER','TERMINAL_ENV','CIEL_MODEL','FIRECRAWL_API_KEY')}))")
 
 
 @pytest.fixture
 def mux_homes(tmp_path, monkeypatch):
     """Launch home A (its .env mirrored into os.environ, as the multiplexer loads it) and served home B."""
-    a = tmp_path / ".hermes"
+    a = tmp_path / ".ciel"
     b = a / "profiles" / "b"
     b.mkdir(parents=True)
-    (a / ".env").write_text("A_MARKER=a\nHERMES_MODEL=a-model\nTERMINAL_ENV=docker\nFIRECRAWL_API_KEY=a-fc\n", encoding="utf-8")
+    (a / ".env").write_text("A_MARKER=a\nCIEL_MODEL=a-model\nTERMINAL_ENV=docker\nFIRECRAWL_API_KEY=a-fc\n", encoding="utf-8")
     (b / ".env").write_text("B_MARKER=b\nFIRECRAWL_API_KEY=b-fc\n", encoding="utf-8")
-    monkeypatch.setenv("HERMES_HOME", str(a))
-    for key, val in (("A_MARKER", "a"), ("HERMES_MODEL", "a-model"), ("TERMINAL_ENV", "docker"),
+    monkeypatch.setenv("CIEL_HOME", str(a))
+    for key, val in (("A_MARKER", "a"), ("CIEL_MODEL", "a-model"), ("TERMINAL_ENV", "docker"),
                      ("FIRECRAWL_API_KEY", "a-fc")):
         monkeypatch.setenv(key, val)
     monkeypatch.delenv("B_MARKER", raising=False)
@@ -48,8 +48,8 @@ def _child_view(env: dict) -> dict:
 
 
 def _assert_is_b_env(seen: dict, b: Path, *, with_secrets: bool):
-    assert seen["HERMES_HOME"] == str(b)
-    assert seen["A_MARKER"] is None and seen["TERMINAL_ENV"] is None and seen["HERMES_MODEL"] is None
+    assert seen["CIEL_HOME"] == str(b)
+    assert seen["A_MARKER"] is None and seen["TERMINAL_ENV"] is None and seen["CIEL_MODEL"] is None
     assert seen["B_MARKER"] == ("b" if with_secrets else None)
 
 
@@ -71,16 +71,16 @@ def test_slash_worker_child_runs_in_the_served_profiles_env(mux_homes, monkeypat
 
     with monkeypatch.context() as m:  # restored before the probe child spawns through the real Popen
         m.setattr(server.subprocess, "Popen", _Popen)
-        token = set_hermes_home_override(str(b))
+        token = set_ciel_home_override(str(b))
         try:
             server._SlashWorker("sess", "", profile_home=str(b))
         finally:
-            reset_hermes_home_override(token)
+            reset_ciel_home_override(token)
         served_env = captured["env"]
         # Outside multiplex the launch profile's own worker keeps its env untouched.
         set_multiplex_active(False)
         server._SlashWorker("sess", "", profile_home=None)
-        assert captured["env"]["A_MARKER"] == "a" and captured["env"]["HERMES_HOME"] == str(a)
+        assert captured["env"]["A_MARKER"] == "a" and captured["env"]["CIEL_HOME"] == str(a)
     _assert_is_b_env(_child_view(served_env), b, with_secrets=True)
 
 
@@ -92,7 +92,7 @@ def test_launch_profile_worker_spawns_with_own_home_after_multiplex_flip(mux_hom
     from tui_gateway import server
 
     a, _b = mux_homes
-    monkeypatch.setattr(server, "_hermes_home", str(a))  # launch profile home, captured at import
+    monkeypatch.setattr(server, "_ciel_home", str(a))  # launch profile home, captured at import
     captured = {}
 
     class _Popen:
@@ -110,7 +110,7 @@ def test_launch_profile_worker_spawns_with_own_home_after_multiplex_flip(mux_hom
         server._SlashWorker("sess", "", profile_home=None)
     # No UnscopedSecretError: the worker is launched under the launch profile's own home, not routed.
     env = captured["env"]
-    assert env["HERMES_HOME"] == str(a)
+    assert env["CIEL_HOME"] == str(a)
     assert env["A_MARKER"] == "a"  # launch residual retained (target is not a routed/foreign home)
 
 
@@ -122,7 +122,7 @@ def test_helper_children_resolve_secrets_through_the_served_profile(mux_homes):
 
     _a, b = mux_homes
     helper = (f"{sys.executable} -c \"import os;print(os.environ.get('B_MARKER','-')+'|'"
-              f"+os.environ.get('A_MARKER','-')+'|'+os.environ.get('HERMES_HOME',''))\"")
+              f"+os.environ.get('A_MARKER','-')+'|'+os.environ.get('CIEL_HOME',''))\"")
     with _profile_runtime_scope(b, hydrate_secrets=False):
         token, _ttl = _mint(helper, "b-provider")
         browser_env = _build_browser_env()

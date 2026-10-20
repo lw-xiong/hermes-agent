@@ -118,9 +118,9 @@ def _tingbudont_pdf(path: str) -> Optional[str]:
     """Convert a PDF through ``tingbudont`` when it is installed (native text + local OCR).
 
     Returns None when the binary is absent, fails, or yields nothing, so the caller
-    silently falls back to anydoc. Override the binary with ``$HERMES_PDF_CONVERTER``.
+    silently falls back to anydoc. Override the binary with ``$CIEL_PDF_CONVERTER``.
     """
-    exe = shutil.which(os.environ.get("HERMES_PDF_CONVERTER", "tingbudont"))
+    exe = shutil.which(os.environ.get("CIEL_PDF_CONVERTER", "tingbudont"))
     if not exe:
         return None
     try:
@@ -169,7 +169,7 @@ def _anydoc_missing_error(path: str) -> str:
     return (
         f"Cannot convert {path!r}: this format needs the optional anydoc "
         "converter, which is not installed (install blocked or first "
-        "attempt failed; retried every 5 minutes). Run `hermes pm repair` "
+        "attempt failed; retried every 5 minutes). Run `ciel pm repair` "
         "to restore firecrawl-anydoc, or convert the file "
         "yourself via terminal (e.g. libreoffice --headless --convert-to "
         "txt).")
@@ -185,7 +185,7 @@ def _hosted_ocr_config() -> tuple:
     api_key = get_secret("FIRECRAWL_API_KEY") or None
     enabled = api_key is not None
     with contextlib.suppress(Exception):
-        from hermes_cli.config import load_config_readonly
+        from ciel_cli.config import load_config_readonly
         section = load_config_readonly().get("file_tools")
         if isinstance(section, dict) and section.get("hosted_ocr") is False:
             enabled = False

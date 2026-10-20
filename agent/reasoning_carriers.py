@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from typing import Any, Optional
 
-CARRIER_TYPE = "hermes.native_assistant"
+CARRIER_TYPE = "ciel.native_assistant"
 _MESSAGE_KEYS = ("extra_content", "reasoning_opaque", "reasoning_text")
 
 

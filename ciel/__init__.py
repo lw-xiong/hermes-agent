@@ -1,4 +1,4 @@
-"""Ciel-specific layer over the Hermes harness.
+"""Ciel-specific layer over the Ciel harness.
 
 Everything here is additive: upstream files gain at most a one-line import, so `ciel-sync`
 rebases cleanly. Persona first; later tiers (memory, prompt assembly, permissions) land here

@@ -1,9 +1,9 @@
-# Hermes Plugin Catalog
+# Ciel Plugin Catalog
 
-Curated, Nous-approved Hermes plugins. Each YAML file in this directory
+Curated, Nous-approved Ciel plugins. Each YAML file in this directory
 (except `removed.yaml`) is one catalog entry, discoverable via
-`hermes plugins catalog` / `hermes plugins search` and installable with
-`hermes plugins install <name>`.
+`ciel plugins catalog` / `ciel plugins search` and installable with
+`ciel plugins install <name>`.
 
 ## Admission policy
 
@@ -12,7 +12,7 @@ meaningful:
 
 <!-- admission-rules:start (mirrored in website/docs/developer-guide/plugins/catalog-submission.md; tests/website/test_catalog_rules_mirror.py keeps them identical) -->
 1. **Human-merged gate.** Entries are added *only* via a PR to the
-   `hermes-agent` repository, reviewed and merged by a maintainer. There is
+   `ciel-agent` repository, reviewed and merged by a maintainer. There is
    no self-serve registry, no automated ingestion.
 2. **Exact SHA pins are mandatory.** Every entry pins a full 40-character
    commit SHA. Branches, tags, and short SHAs are rejected by the loader.
@@ -22,7 +22,7 @@ meaningful:
    remote `plugin.js` loaders). The exact SHA pin *is* the trust model; a
    self-updater lets an installed copy move to a commit nobody reviewed.
    Updates reach users only through a SHA-bump PR here plus
-   `hermes plugins update <name>`. Keep the updater in the standalone
+   `ciel plugins update <name>`. Keep the updater in the standalone
    distribution if you want one; strip it from the catalog build.
 4. **SHA bumps are new PRs.** Updating an entry's pin is a new PR whose diff
    (old SHA → new SHA) is re-reviewed like any other change — reviewers are
@@ -30,7 +30,7 @@ meaningful:
 5. **Owner-or-major-contributor submissions, or a maintainer-curated sweep.**
    An entry may be submitted by the plugin repository's owner or a major
    contributor to it; drive-by submissions of third-party repos are declined.
-   Hermes maintainers may also add entries in batches from a reviewed sweep
+   Ciel maintainers may also add entries in batches from a reviewed sweep
    of community plugins (every pin validated and scanned at the pinned
    commit, self-updater and credential-store checks run, English-first UI).
    Authors of swept-in entries keep control: a PR from the owner adjusting
@@ -40,7 +40,7 @@ meaningful:
    (tools, hooks, middleware, env vars) must match what the plugin actually
    registers at the pinned commit. Validation fails the entry otherwise —
    undeclared capability creep is treated as a security issue.
-7. **The install scanner runs at admission.** `hermes plugins validate` includes
+7. **The install scanner runs at admission.** `ciel plugins validate` includes
    the `security scan` check: `dangerous` fails the entry; `caution` findings
    appear as warnings in the CI log and the reviewer reads them before merging.
    In exchange, installs at the pinned SHA accept `caution` without a prompt
@@ -49,31 +49,31 @@ meaningful:
    in the Desktop renderer with the app's full authority (the loader isolates
    errors, not capabilities), so a listed one may only use the plugin SDK:
    no prototype patching (`X.prototype.y =`, `Object.defineProperty(...prototype`),
-   no `eval`/`new Function`, no `import()` of anything but `@hermes/plugin-sdk`
+   no `eval`/`new Function`, no `import()` of anything but `@ciel/plugin-sdk`
    / `react` (app bundle chunks, blob or http URLs included), no script-tag
    injection, no reaching into the app's internal stores or its own markup
    (querying `data-slot` / `data-tour` / `data-sidebar` / `data-testid`
    elements from `document`, or a `document.body` MutationObserver, to restyle,
-   hide, click or rewrite core UI). `hermes plugins validate` refuses these at
+   hide, click or rewrite core UI). `ciel plugins validate` refuses these at
    admission (`desktop surface` check); a plugin that needs a capability the
    SDK lacks asks for an SDK hook instead of patching around it.
-9. **No runtime overrides of Hermes core.** A listed plugin extends Hermes only
+9. **No runtime overrides of Ciel core.** A listed plugin extends Ciel only
    through public surfaces: hooks, middleware, provider profiles and the
    other `register_*` APIs, and Desktop SDK slots and routes. It must not
    replace, wrap or rebind core functions, methods, module attributes or
    private dicts in place (`AIAgent.<method> = ...`, `setattr(server, ...)`,
    `sys.modules[...]`, writes into a core module's tables). Two plugins
    patching the same seam silently break each other, and every core release
-   can break both. `hermes plugins validate` refuses these at admission (`no
+   can break both. `ciel plugins validate` refuses these at admission (`no
    core override` check), and warns (without failing) on each import of an
    undocumented core module, by file and line. If the hook you need does not
    exist, open an issue describing it: we would rather add the seam than list
    a patch.
-10. **Dependency security policy is the plugin's.** Hermes's 3-day
-   `exclude-newer` release-age check covers Hermes's own dependencies only, at
-   the time Hermes locks them; a plugin's `python_dependencies` /
+10. **Dependency security policy is the plugin's.** Ciel's 3-day
+   `exclude-newer` release-age check covers Ciel's own dependencies only, at
+   the time Ciel locks them; a plugin's `python_dependencies` /
    `pyproject.toml` install under the plugin's policy (no age check), inside
-   Hermes's core constraints: Hermes's exact pins cannot move. Reviewers read the
+   Ciel's core constraints: Ciel's exact pins cannot move. Reviewers read the
    dependency list at the pinned SHA: bare floors (`>=X` with no upper bound)
    and floors on the newest release get a request for the oldest
    API-compatible floor plus an upper bound, and authors are strongly
@@ -81,22 +81,22 @@ meaningful:
    their CI) — see the developer guide's *Dependency security policy*. A
    recent floor alone is not grounds to hold an entry.
 
-11. **Credentials come through Hermes, never from files.** A plugin gets
-   secrets only through Hermes's routes. Its declared `requires_env` and
+11. **Credentials come through Ciel, never from files.** A plugin gets
+   secrets only through Ciel's routes. Its declared `requires_env` and
    `config_schema` secrets are read with `agent.secret_scope.get_secret(NAME)`,
    which honours the active profile (a bare `os.environ` read can pick up another
    profile's key under multiplexing). A subscription sign-in (Codex / ChatGPT
    today) is used only through `credentialed_provider_request` with
-   `requires_auth`, so Hermes attaches the token and the plugin never holds it. A
-   plugin never reads `.env` files, Hermes's `auth.json`, another tool's login (a
+   `requires_auth`, so Ciel attaches the token and the plugin never holds it. A
+   plugin never reads `.env` files, Ciel's `auth.json`, another tool's login (a
    vendor CLI's token file, a browser profile, a keychain) or any other
    credential store directly, and never refreshes, rotates or writes OAuth tokens
-   or presents itself as another vendor's client. If Hermes has no route for a
-   credential a plugin needs, ask for one in a Hermes issue or PR; the plugin
+   or presents itself as another vendor's client. If Ciel has no route for a
+   credential a plugin needs, ask for one in a Ciel issue or PR; the plugin
    does not work around it.
 12. **Approvals and unattended runs are respected.** A plugin never routes around
-   Hermes's approval system: no auto-approving, no disabling guards, and no
-   spawning Hermes or shell children that inherit YOLO or non-interactive mode
+   Ciel's approval system: no auto-approving, no disabling guards, and no
+   spawning Ciel or shell children that inherit YOLO or non-interactive mode
    to run commands nobody approved. Anything that waits for a person (a prompt,
    an OAuth browser flow) fails cleanly or times out under cron, the messaging
    gateway and other unattended runs instead of hanging the agent.
@@ -106,13 +106,13 @@ meaningful:
    long-running background processes, stored credentials. Telemetry and usage
    reporting are opt-in. Reviewers summarise these as disclosure lines on the
    entry PR; undisclosed behaviour found in review is a request for changes.
-14. **Compatibility metadata is truthful.** `requires_hermes` is a SemVer floor
+14. **Compatibility metadata is truthful.** `requires_ciel` is a SemVer floor
    (`">=0.21.5"`), never a CalVer date, and never newer than the current release
    (the loader skips the plugin otherwise). `version` matches the pinned code,
-   and Python dependencies resolve under Hermes's core constraints
-   (`hermes plugins validate --install-deps` is what CI runs).
+   and Python dependencies resolve under Ciel's core constraints
+   (`ciel plugins validate --install-deps` is what CI runs).
 15. **No skins or forks of bundled plugins.** A change to a bundled plugin is a
-   PR against `hermes-agent`, not a competing listing, and vendor-lookalike skins
+   PR against `ciel-agent`, not a competing listing, and vendor-lookalike skins
    are not listed under Nous branding.
 16. **One listing per plugin lineage.** A fork of a listed community plugin is
    listed only when it is materially different from the original: a different
@@ -160,7 +160,7 @@ maintainer: OwnerName
 tier: official              # official | community (default community)
 category: memory            # desktop | memory | platform | web | tools | voice | automation | models | general
                             # (default desktop) — the shelf the entry sits on at /docs/plugins
-requires_hermes: ">=0.19"   # optional
+requires_ciel: ">=0.19"   # optional
 docs_url: ""                # optional
 version: "1.4.0"            # optional human label for the sha (quote it); shown as "1.4.0 @ abcd1234"
 image: ""                   # optional https image on a GitHub host, 2:1 (e.g. 1200x600), e.g.

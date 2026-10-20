@@ -18,6 +18,12 @@ else
     exit 1
   }
 fi
+# Upstream files arrive naming themselves hermes; put them back into Ciel shape.
+python3 scripts/cielify.py
+if ! git diff --quiet; then
+  git add -A
+  git commit --quiet -m "Re-apply the Ciel rename to files brought in by $TAG"
+fi
 python3 -m pytest -q tests/tools/test_skill_manage_schema_diet.py tests/tools/test_skill_manage_batch.py \
   tests/tools/test_skill_manager_tool.py tests/tools/test_threat_patterns.py tests/tools/test_read_extract.py \
   2>&1 | tail -6
