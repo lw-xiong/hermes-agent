@@ -171,6 +171,20 @@ def _check_sensitive_path(filepath: str, task_id: str = "default") -> str | None
             f"Refusing to write to Ciel config file: {filepath}\n"
             "Agent cannot modify security-sensitive configuration. "
             "Edit ~/.ciel/config.yaml directly or use 'ciel config' instead.")
+    # Credential stores hold API keys and OAuth tokens. A prompt-injected agent
+    # rewriting these can repoint a provider at a logging endpoint, plant a key
+    # for later exfiltration, or swap the Telegram bot token. Hard-deny the
+    # write_file/patch vector (the shape injections use); a human edit is the
+    # sanctioned path, and the terminal stays available for a deliberate one.
+    home = _get_real_ciel_home()
+    if home:
+        secrets = {os.path.join(home, ".env"), os.path.join(home, "auth.json")}
+        for c in candidates:
+            if c in secrets or os.path.realpath(c) in secrets:
+                return (
+                    f"Refusing to write to credential store: {filepath}\n"
+                    "Secrets in .env / auth.json are not agent-writable. "
+                    "Edit them yourself, or set keys with 'ciel config'.")
     return None
 
 

@@ -377,7 +377,7 @@ class TestBomHandling:
         target = tmp_path / "prompt.sh"
         original = (b'set_title() { printf "\x1b]0;%s\x07" "$1"; }\n'
                     b'beep() { printf "\x07"; }\n'
-                    b'SENTINEL = "__CIEL_FENCE_a9f7b3__\x07"  # marker text is file content too\n'
+                    b'SENTINEL = "\x07"  # marker text is file content too\n'
                     b'VERSION=1\n')
         target.write_bytes(original)
         patch = (
@@ -1078,3 +1078,37 @@ class TestMultiplexProfileWriteGuardsAreProfileScoped:
             reset_ciel_home_override(tok)
         assert err is not None
         assert "Refusing to write to Ciel config file" in err
+
+
+class TestCredentialStoreWriteBlock:
+    """`.env` / `auth.json` in the active home are hard-denied to write_file/patch:
+    a prompt-injected agent must not be able to repoint a provider or swap a
+    bot token by writing the credential file."""
+
+    def _err(self, tmp_path, name, target=None):
+        import tools.file_tools_write_guards as ft
+        from ciel_constants import reset_ciel_home_override, set_ciel_home_override
+
+        tok = set_ciel_home_override(str(tmp_path))
+        try:
+            return ft._check_sensitive_path(str(target or (tmp_path / name)), "default")
+        finally:
+            reset_ciel_home_override(tok)
+
+    def test_env_blocked(self, tmp_path):
+        err = self._err(tmp_path, ".env")
+        assert err is not None and "credential store" in err
+
+    def test_auth_json_blocked(self, tmp_path):
+        err = self._err(tmp_path, "auth.json")
+        assert err is not None and "credential store" in err
+
+    def test_symlink_to_env_blocked(self, tmp_path):
+        (tmp_path / ".env").write_text("KEY=1\n")
+        link = tmp_path / "innocent.txt"
+        link.symlink_to(tmp_path / ".env")
+        err = self._err(tmp_path, "innocent.txt", target=link)
+        assert err is not None and "credential store" in err
+
+    def test_other_home_files_allowed(self, tmp_path):
+        assert self._err(tmp_path, "notes.md") is None
