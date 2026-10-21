@@ -6,7 +6,7 @@ Usage:
 
 VAULT_PATH defaults to /media/hdd/Obsidian Vault/vault. On this machine the wiki graph
 lives at vault/HermesAgent/wiki/, so point the script at that subtree:
-    python3 graph_audit.py "/media/hdd/Obsidian Vault/vault/HermesAgent/wiki"
+    python3 graph_audit.py "/media/hdd/Obsidian Vault/vault/Ciel Agent/wiki"
 
 node_modules is always excluded; --exclude adds more directory names (e.g. ClaudeCode,
 OpenCode, and any other agent workspace dir holding non-graph files).
@@ -20,7 +20,7 @@ import os
 import re
 import sys
 
-DEFAULT_VAULT = '/media/hdd/Obsidian Vault/vault/HermesAgent/wiki'
+DEFAULT_VAULT = '/media/hdd/Obsidian Vault/vault/Ciel Agent/wiki'
 # Infrastructure files that are not graph neurons and legitimately have no links.
 INFRA = {'index', 'log', 'tags', 'MEMORY', 'USER'}
 

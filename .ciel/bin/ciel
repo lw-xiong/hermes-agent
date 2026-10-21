@@ -1,5 +1,5 @@
 #!/bin/sh
-exec /media/hdd/hermes/installs/7b1795e0b6c4969f/environments/3154d4a24d1f47259b02640d16d9ef34/venv/bin/python3 -I -c 'import os, re, sys
+exec /home/lwx/.ciel/runtime/venv/bin/python3 -I -c 'import os, re, sys
 import contextlib, hashlib, io, pathlib, shutil, subprocess
 os.environ.pop('"'"'PYTHONHOME'"'"', None)
 os.environ.pop('"'"'PYTHONPATH'"'"', None)

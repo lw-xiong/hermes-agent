@@ -88,7 +88,7 @@ Apply the law with the table's EXACT decimal values above — do not invent new 
 Every wiki page needs frontmatter `title`, `item-type` (entity|concept|source|synthesis), `tags`, `created`, `updated`, `last_verified`. Tags must be inline arrays (`tags: [a, b, c]`), not YAML block lists — the health checker's `yaml.safe_load` parser handles both, but inline arrays are the vault convention. Keep filenames = page titles — short human-readable names (`Local LLM.md`, `Gateway Architecture.md`), not long kebab-case slugs (`sub-4gb-vram-inference-architecture.md`); the user can't fetch what they can't remember. Keep every wikilink resolving to a real page (no dead links). Dead-link check:
 
 ```bash
-VAULT="/media/hdd/Obsidian Vault/vault/HermesAgent/wiki"; python3 -c "import re,pathlib as P;n={p.stem for p in P.Path('$VAULT').rglob('*.md')};print([(str(p),t) for p in P.Path('$VAULT').rglob('*.md') for t in re.findall(r'\[\[([^\]]+)\]\]',p.read_text()) if t.split('|')[0].strip() not in n])"
+VAULT="/media/hdd/Obsidian Vault/vault/Ciel Agent/wiki"; python3 -c "import re,pathlib as P;n={p.stem for p in P.Path('$VAULT').rglob('*.md')};print([(str(p),t) for p in P.Path('$VAULT').rglob('*.md') for t in re.findall(r'\[\[([^\]]+)\]\]',p.read_text()) if t.split('|')[0].strip() not in n])"
 ```
 
 ## Optimizing the graph
@@ -168,7 +168,7 @@ Applies to EVERY vault write, no reminder needed. Frontmatter, filename, and dea
 3. **Merge on sight.** Never save a near-duplicate — fold twins/synonyms into one page and repoint inbound links.
 4. **Staleness is first-class.** Absolute dates in prose; bump `updated:` on edit; caveat old claims ("as of 2026-10-19, unverified since …").
 5. **Never index tool artifacts or third-party trees.** Prose placeholders go in backticks, not `[[wikilinks]]`.
-6. **Consolidation after any write burst:** dedupe, wikilink, register in `index.md`, then run `python3 ~/.ciel/skills/note-taking/obsidian/scripts/graph_audit.py "/media/hdd/Obsidian Vault/vault/HermesAgent/wiki"` (`--regen-tags` rebuilds `tags.md`). 0 dead links, 0 orphans when done.
+6. **Consolidation after any write burst:** dedupe, wikilink, register in `index.md`, then run `python3 ~/.ciel/skills/note-taking/obsidian/scripts/graph_audit.py "/media/hdd/Obsidian Vault/vault/Ciel Agent/wiki"` (`--regen-tags` rebuilds `tags.md`). 0 dead links, 0 orphans when done.
 
 **Decision log:** newest at top, format `- [D1] FINAL 2026-10-19 — one-line decision. Why: … Rejected: A (reason); B (reason)`. Status = FINAL / TENTATIVE / SUPERSEDED by D#. Superseded decisions are never deleted, only pointed at. Log into the `daily/` note under `## Decisions` or the entity/concept page concerned; `MEMORY.md` holds pointers only. A brainstormed idea is not a decision until chosen — keep facts, assumptions, and recommendations separate.
 
