@@ -36,11 +36,12 @@ the `cronjob` tool, the `ciel cron` CLI (`list`, `add`, `edit`,
   job), `context_from` (chain job A's output into job B), `workdir`
   (run in a specific dir with its `AGENTS.md` / `CLAUDE.md` loaded),
   multi-platform delivery.
-- **`script` is a PATH, never a command line.** `"vault_decay.py report"`
-  fails with `Script not found: <home>/scripts/vault_decay.py report` —
-  the whole string is path-joined, there is no argv split. Bake the
-  arguments into the script's no-arg default, then set `script` to the
-  bare filename. A job's `interpreter` is validated at run time too: a
+- **`script` is a path plus optional argv, split on whitespace.** The
+  first token resolves against `<home>/scripts/`, the rest rides on the
+  subprocess argv (`"vault_decay.py report"` works). Before this was
+  split, the whole string was path-joined and every such job failed with
+  `Script not found: <home>/scripts/vault_decay.py report` — silently,
+  run after run. A job's `interpreter` is validated at run time too: a
   moved venv fails with `dependency environment interpreter is missing`.
 - **Invariants:** 3-minute hard interrupt per run, `.tick.lock` file
   prevents duplicate ticks across processes, cron sessions pass
