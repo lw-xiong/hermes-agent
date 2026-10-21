@@ -185,6 +185,22 @@ def _check_sensitive_path(filepath: str, task_id: str = "default") -> str | None
                     f"Refusing to write to credential store: {filepath}\n"
                     "Secrets in .env / auth.json are not agent-writable. "
                     "Edit them yourself, or set keys with 'ciel config'.")
+    # Memory files are injected into EVERY future session's context, so a write
+    # here outlives the turn that made it — the same persistence vector as
+    # AGENTS.md, with a wider blast radius. The memory tool writes them by
+    # design; the write_file/patch verbs (what an injected instruction reaches
+    # for) must not. Compared both by realpath and by the symlinked home path,
+    # because MEMORY.md/USER.md normally resolve out to the vault.
+    if home:
+        store = os.path.join(home, "memories")
+        targets = {os.path.realpath(os.path.join(store, n)) for n in ("MEMORY.md", "USER.md")}
+        for c in candidates:
+            if (os.path.dirname(c) == store or os.path.realpath(c) in targets
+                    or os.path.realpath(os.path.dirname(c)) == os.path.realpath(store)):
+                return (
+                    f"Refusing to write to the memory store: {filepath}\n"
+                    "Memory files steer every future session. Use the memory tool "
+                    "(action='add'/'patch') so the write is typed and budgeted.")
     return None
 
 

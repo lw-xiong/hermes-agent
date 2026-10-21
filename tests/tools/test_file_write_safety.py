@@ -1112,3 +1112,41 @@ class TestCredentialStoreWriteBlock:
 
     def test_other_home_files_allowed(self, tmp_path):
         assert self._err(tmp_path, "notes.md") is None
+
+
+class TestMemoryStoreWriteBlock:
+    """`~/.ciel/memories/` is injected into every future session — write_file/patch
+    must not reach it (the memory tool still can)."""
+
+    def _err(self, home, target):
+        import tools.file_tools_write_guards as ft
+        from ciel_constants import reset_ciel_home_override, set_ciel_home_override
+
+        tok = set_ciel_home_override(str(home))
+        try:
+            return ft._check_sensitive_path(str(target), "default")
+        finally:
+            reset_ciel_home_override(tok)
+
+    def test_memory_md_blocked(self, tmp_path):
+        (tmp_path / "memories").mkdir()
+        err = self._err(tmp_path, tmp_path / "memories" / "MEMORY.md")
+        assert err is not None and "memory store" in err
+
+    def test_user_md_blocked(self, tmp_path):
+        (tmp_path / "memories").mkdir()
+        err = self._err(tmp_path, tmp_path / "memories" / "USER.md")
+        assert err is not None and "memory store" in err
+
+    def test_symlinked_memory_blocked(self, tmp_path):
+        """MEMORY.md is normally a symlink into the vault; the vault target must
+        be blocked too, not just the home-side path."""
+        vault = tmp_path / "vault"; vault.mkdir()
+        (tmp_path / "memories").mkdir()
+        (vault / "MEMORY.md").write_text("facts")
+        (tmp_path / "memories" / "MEMORY.md").symlink_to(vault / "MEMORY.md")
+        err = self._err(tmp_path, vault / "MEMORY.md")
+        assert err is not None and "memory store" in err
+
+    def test_other_home_files_still_allowed(self, tmp_path):
+        assert self._err(tmp_path, tmp_path / "notes.md") is None
