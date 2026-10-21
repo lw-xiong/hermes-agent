@@ -42,3 +42,15 @@ con = sqlite3.connect('file:<CIEL_HOME>/state.db?mode=ro', uri=True)
 4. **Pin cheap models for side tasks** — `auxiliary.*.model`, per-cron-job model, `delegation.model` (children carry most tokens).
 
 `cache_read >> input_tokens` is normal architecture, not a bug — every turn re-reads history. Only compression boundaries reset it.
+
+## Never make the `<available_skills>` index depend on the prompt
+
+The index is deliberately byte-stable for the whole conversation: `agent/skills_index_delta.py`
+delivers mid-conversation changes as a per-turn note behind the cached prefix instead of editing
+the system prompt. Any "predictive skill loading" that ranks, filters or reorders the index per
+turn destroys that — the provider prefix cache misses, and the entire system prompt plus history
+is re-billed at full price to save a few hundred tokens of index rows.
+
+Do the arithmetic before shipping such an optimisation: this profile's index is ~6.4 KB (~1.6k
+tokens) and a keyword scorer runs in ~0.05 ms — a microbenchmark win that cannot pay for one
+prefix-cache miss. Optimise the index by making rows shorter, never by making them vary.
