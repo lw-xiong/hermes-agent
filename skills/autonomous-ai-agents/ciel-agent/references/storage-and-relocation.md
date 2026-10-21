@@ -54,3 +54,8 @@ readlink -f ~/.ciel/skills ~/.ciel/memories   # both must resolve onto the targe
 ciel doctor
 ```
 Restart any running gateway/desktop/CLI session so it re-resolves paths. An fstab entry with `defaults` auto-mounts at boot, so the symlink survives reboots; a non-fstab/manual mount does not — verify before promising persistence.
+## Relocating a copied venv
+
+`cp -a` a venv and its `bin/python*` symlinks still point at the old base interpreter, as does `pyvenv.cfg`'s `home`. Relink `bin/python`, `bin/python3`, `bin/python3.14` to `<new CIEL_HOME>/tools/python-*/bin/python3.14`, rewrite `home`, confirm with `readlink -f <venv>/bin/python3`.
+
+Before deleting the old tree, run `ls -l /proc/*/exe | grep <old tree>`: a process started under the old base keeps working off deleted inodes, then dies on its next lazy stdlib import. `__pycache__` from a moved venv is safe to delete; stale `.pyc` paths are harmless, relinked interpreters are not.
