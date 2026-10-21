@@ -12,6 +12,7 @@ import contextlib
 import contextvars
 import logging
 import os
+import shlex
 import shutil
 import signal
 import stat
@@ -429,6 +430,22 @@ def _script_argv(
     return [python_exe, str(path)], env_overlay, None
 
 
+def _split_script_field(script_path: str) -> tuple[str, list[str]]:
+    """``"vault_decay.py report"`` → ``("vault_decay.py", ["report"])``.
+
+    The job's ``script`` field is a PATH, and every consumer path-joins it whole — so the
+    obvious way to write arguments turns the job into "Script not found: <home>/scripts/
+    vault_decay.py report", which fails every run with no hint that argv was the problem.
+    Split it here instead: the first token is the path, the rest is argv. A string that does
+    not parse as shell words is left intact (it can only fail the way it always did).
+    """
+    try:
+        parts = shlex.split(script_path)
+    except ValueError:
+        return script_path, []
+    return (parts[0], parts[1:]) if parts else (script_path, [])
+
+
 def _run_job_script(
     script_path: str, workdir: Optional[str] = None,
     cancel_event: Optional[_CancelEventLike] = None, interpreter: Optional[str] = None,
@@ -444,7 +461,8 @@ def _run_job_script(
     instead of the scripts-dir parent. See #69396. interpreter: the job's optional Python for
     ``.py`` scripts (#8714).
     """
-    path, err = _resolve_script_path(script_path)
+    script_name, script_args = _split_script_field(script_path)
+    path, err = _resolve_script_path(script_name)
     if path is None:
         return False, err
     script_timeout = _get_script_timeout()
@@ -452,6 +470,7 @@ def _run_job_script(
         argv, env_overlay, err = _script_argv(path, interpreter)
         if argv is None:
             return False, err
+        argv = [*argv, *script_args]
         from tools.environments.local import build_subprocess_env
         # Lossy decode only: keep the platform-default (locale) encoding — gating ``encoding=``
         # to win32 was deliberate (#66566: unconditional UTF-8 leaked into POSIX) — but

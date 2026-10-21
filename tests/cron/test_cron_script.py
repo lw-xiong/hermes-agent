@@ -166,6 +166,35 @@ class TestRunJobScript:
         assert str(cron_env / "scripts") in output
 
 
+    def test_script_field_args_reach_argv(self, cron_env):
+        """A job written as "args.py report" must run with argv, not fail as a missing path."""
+        from cron.scheduler_script import _run_job_script
+
+        script = cron_env / "scripts" / "args.py"
+        script.write_text("import sys\nprint(sys.argv[1:])\n")
+
+        success, output = _run_job_script("args.py report --deep")
+        assert success is True
+        assert output == "['report', '--deep']"
+
+    def test_script_field_quoted_arg_with_space(self, cron_env):
+        from cron.scheduler_script import _run_job_script
+
+        script = cron_env / "scripts" / "quoted.py"
+        script.write_text("import sys\nprint(sys.argv[1:])\n")
+
+        success, output = _run_job_script('quoted.py "two words"')
+        assert success is True
+        assert output == "['two words']"
+
+    def test_unparseable_script_field_still_names_the_folder(self, cron_env):
+        """A stray quote must not crash the splitter — it fails the way it always did."""
+        from cron.scheduler_script import _run_job_script
+
+        success, output = _run_job_script('unbalanced "quote.py')
+        assert success is False
+        assert "Script not found" in output
+
     def test_script_subprocess_env_sanitized(self, cron_env, monkeypatch):
         """Cron scripts must not inherit Ciel provider env (SECURITY.md §2.3)."""
         from tools.environments.local_env_policy import _CIEL_PROVIDER_ENV_BLOCKLIST
